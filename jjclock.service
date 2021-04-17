@@ -1,5 +1,5 @@
 [Unit]
-Description=JJ Clock Boot Script
+Description=JJ Clock
 After=network.target
 
 [Service]
