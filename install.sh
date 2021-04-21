@@ -5,7 +5,7 @@ sudo apt-get -y install git
 sudo apt-get -y install python3
 sudo apt-get -y install hostapd
 sudo apt-get -y install dnsmasq
-sudo apt-get -y install netfilter-persistent iptables-persistent
+#sudo apt-get -y install netfilter-persistent iptables-persistent
 
 # python packages
 pip3 install pygame
