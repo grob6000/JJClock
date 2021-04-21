@@ -11,9 +11,9 @@ sudo apt-get -y install dnsmasq
 #sudo apt-get -y install netfilter-persistent iptables-persistent
 
 # python packages
-pip3 install pygame
-pip3 install gpiozero
-pip3 install pillow
+sudo pip3 install pygame
+sudo pip3 install gpiozero
+sudo pip3 install pillow
 
 # download/update
 cd ~
