@@ -17,7 +17,7 @@ import time
 ## CONSTANTS ##
 
 screensize = (1448, 1072) # Set the width and height of the screen [width, height]
-display_vcom = -2.00 # v - check on cable...
+display_vcom = -2.55 # v - as per cable
 
 buttongpio = 23
 debounce = 50 #ms
@@ -90,6 +90,7 @@ userbutton.when_pressed = onButton
 
 # init pygame
 print("init pygame engine")
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 pygame.init()
 screen = pygame.display.set_mode(screensize)
 pygame.display.set_caption("My Game")
