@@ -92,8 +92,8 @@ userbutton.when_pressed = onButton
 print("init pygame engine")
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 pygame.init()
-screen = pygame.display.set_mode(screensize)
-pygame.display.set_caption("My Game")
+#screen = pygame.display.set_mode(screensize)
+#pygame.display.set_caption("My Game")
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
 
 # init epd display
