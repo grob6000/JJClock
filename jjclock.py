@@ -13,6 +13,7 @@ from gpiozero.pins.mock import MockFactory
 from IT8951.display import AutoEPDDisplay
 from IT8951 import constants
 import time
+from PIL import Image
 
 ## CONSTANTS ##
 
@@ -75,15 +76,8 @@ def updateDisplay(pygamesurf):
   img = Image.fromstring('RGBA', screensize, data)
   displayImage(img, epddisplay)
 
-def testDisplay(gridsize=20):
-  global epddisplay
-  print("test image for display")
-  epddisplay.frame_buf.paste(0xFF, box=(0,0,epddisplay.width,epddisplay.height)) # fill white
-  for y in range(0,int(epddisplay.height/gridsize)+1):
-    for x in range(0,int(epddisplay.width/gridsize)+1):
-      if (x+y)%2==0: # make an alternating pattern
-        epddisplay.frame_buf.paste(0x00, box=(x*gridsize,y*gridsize,min((x+1)*gridsize-1,epddisplay.width),min((y+1)*gridsize-1,epddisplay.height))) # draw black squares
-  epddisplay.draw_full(constants.DisplayModes.GC16)
+def testDisplay(gridsize=100):
+  displayImage(Image.open("./img/test.png"))
    
 ## SCRIPT ##
 
