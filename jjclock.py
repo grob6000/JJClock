@@ -78,11 +78,11 @@ def updateDisplay(pygamesurf):
 def testDisplay(gridsize=100):
   global epddisplay
   print("test image for display")
-  epddisplay.display.frame_buf.paste(0xFF, box=(0,0,epddisplay.width,epddisplay.height)) # fill white
+  epddisplay.frame_buf.paste(0xFF, box=(0,0,epddisplay.width,epddisplay.height)) # fill white
   for y in range(0,int(epddisplay.height/gridsize)):
     for x in range(0,int(epddisplay.width/gridsize)):
       if (x+y)%2==0: # make an alternating pattern
-        epddisplay.display.frame_buf.paste(0x00, box=(x*gridsize,y*gridsize,min((x+1)*gridsize-1,display.width),min((y+1)*gridsize-1,display.height))) # draw black squares
+        epddisplay.frame_buf.paste(0x00, box=(x*gridsize,y*gridsize,min((x+1)*gridsize-1,display.width),min((y+1)*gridsize-1,display.height))) # draw black squares
   
 ## SCRIPT ##
 
