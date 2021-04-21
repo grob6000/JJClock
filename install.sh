@@ -19,9 +19,10 @@ sudo apt-get install libtiff5 -y
 #sudo apt-get -y install netfilter-persistent iptables-persistent
 
 # python packages
+python3 -m pip install --upgrade pip
 #sudo pip3 install pygame
-sudo pip3 install gpiozero
-sudo pip3 install pillow
+python3 -m pip install --upgrade gpiozero
+python3 -m pip install --upgrade Pillow
 
 # raspberry pi config
 sudo raspi-config nonint do_spi 0 # enable SPI
