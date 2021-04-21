@@ -83,7 +83,8 @@ def testDisplay(gridsize=100):
     for x in range(0,int(epddisplay.width/gridsize)):
       if (x+y)%2==0: # make an alternating pattern
         epddisplay.frame_buf.paste(0x00, box=(x*gridsize,y*gridsize,min((x+1)*gridsize-1,epddisplay.width),min((y+1)*gridsize-1,epddisplay.height))) # draw black squares
-  
+  epddisplay.draw_full(constants.DisplayModes.GC16)
+   
 ## SCRIPT ##
 
 # init gpio
