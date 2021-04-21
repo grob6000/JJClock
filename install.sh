@@ -35,13 +35,13 @@ cd ~/JJClock
 git checkout main
 git pull --force
 
-mkdir ./oldconfig
-
 # install epd driver
 cd ./IT8951
 sudo pip3 install -r requirements.txt
 sudo pip3 install ./
 cd ~/JJClock
+
+mkdir ./oldconfig
 
 # set up hostapd
 cp /etc/hostapd/hostapd.conf ./oldconfig/hostapd_$NOW.conf
