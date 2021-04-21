@@ -13,7 +13,7 @@ from gpiozero import Device, Button
 from IT8951.display import AutoEPDDisplay
 from IT8951 import constants
 import time
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 ## CONSTANTS ##
 
@@ -23,7 +23,7 @@ display_vcom = -2.55 # v - as per cable
 buttongpio = 23
 debounce = 50 #ms
 
-modelist = ["wificonfig","displaytest","clock_euro","clock_brexit"]
+modelist = ["menu","wificonfig","clock_euro","clock_brexit","clock_digital"]
 
 iface = "wlan0"
 ap_ssid = "JJClockSetup"
@@ -33,16 +33,30 @@ ip_mask = (255,255,255,0)
 dhcp_start = (192,168,99,10)
 dhcp_end = (192,168,99,20)
 
+menu_across = 4
+menu_down = 2
+
+menu = [
+         {"icon":"./img/wifi.png","text":"Config Mode","mode":"wificonfig"},
+         {"icon":"./img/eu.png","text":"Euro","mode":"clock_euro"},
+         {"icon":"./img/uk.png","text":"Brexit","mode":"clock_brexit"},
+         {"icon":"./img/digital.png","text":"Digital","mode":"clock_digital"}
+       ]
+
 ## GLOBALS ##
 pleasequit = False
 currentmode = modelist[0]
 wifimode = "unknown"
 epddisplay = None
+menuitemselected = 0
 
 ## FUNCTIONS ##
 
 def onButton():
   print("button pressed")
+  if not inmenu:
+    inmenu = True
+    displayMenu()
 
 def changeMode(mode):
   global wifimode
@@ -78,6 +92,20 @@ def updateDisplay(pygamesurf):
 
 def testDisplay(gridsize=100):
   displayImage(Image.open("./img/test.png"))
+  
+def showMenu():
+  global menuitemselected
+  global menu
+  ipp = menu_across * menu_down
+  page = int(menuitemselected / ipp)
+  pi_select = menuitemselected % ipp
+  for pi in range(0, ipp):
+    mi = pi+(page*ipp)
+    if len(menu) > mi:
+      menuimg = Image.new('L', (250,250))
+      menuimg.paste(
+  
+  
    
 ## SCRIPT ##
 
@@ -100,6 +128,11 @@ print("init display")
 epddisplay = AutoEPDDisplay(vcom=display_vcom)
 changeMode("displaytest")
 time.sleep(2)
+displayImage(Image.open("./img/splash.png"))
+time.sleep(2)
+
+# splash screen
+print("splash")
 
 #localdir = os.path.dirname(os.path.realpath(__file__))
 #print(localdir)
