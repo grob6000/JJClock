@@ -44,6 +44,7 @@ def onButton():
   print("button pressed")
 
 def changeMode(mode):
+  global wifimode
   print("changing mode to " + mode)
   if mode == "wificonfig":
     # TO-DO set wifi to AP mode
@@ -63,16 +64,19 @@ def changeMode(mode):
   
   
 def displayImage(img):
+  global epddisplay
   epddisplay.frame_buf.paste(img, (0,0))
   epddisplay.draw_full(constants.DisplayModes.GC16)
 
 def updateDisplay(pygamesurf):
+  global epddisplay
   print("updating display")
   data = pygame.image.tostring(pygamesurf, 'RGBA')
   img = Image.fromstring('RGBA', screensize, data)
   displayImage(img, epddisplay)
 
 def testDisplay(gridsize=100):
+  global epddisplay
   print("test image for display")
   epddisplay.display.frame_buf.paste(0xFF, box=(0,0,epddisplay.width,epddisplay.height)) # fill white
   for y in range(0,int(epddisplay.height/gridsize)):
