@@ -82,7 +82,7 @@ def testDisplay(gridsize=100):
   for y in range(0,int(epddisplay.height/gridsize)):
     for x in range(0,int(epddisplay.width/gridsize)):
       if (x+y)%2==0: # make an alternating pattern
-        epddisplay.frame_buf.paste(0x00, box=(x*gridsize,y*gridsize,min((x+1)*gridsize-1,display.width),min((y+1)*gridsize-1,display.height))) # draw black squares
+        epddisplay.frame_buf.paste(0x00, box=(x*gridsize,y*gridsize,min((x+1)*gridsize-1,epddisplay.width),min((y+1)*gridsize-1,epddisplay.height))) # draw black squares
   
 ## SCRIPT ##
 
