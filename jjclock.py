@@ -35,7 +35,7 @@ dhcp_end = (192,168,99,20)
 ## GLOBALS ##
 pleasequit = False
 currentmode = modelist[0]
-wifimode = None
+wifimode = "unknown"
 epddisplay = None
 
 ## FUNCTIONS ##
