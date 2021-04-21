@@ -103,7 +103,6 @@ def showMenu():
     mi = pi+(page*ipp)
     if len(menu) > mi:
       menuimg = Image.new('L', (250,250))
-      menuimg.paste(
   
   
    
