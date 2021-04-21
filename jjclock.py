@@ -112,8 +112,8 @@ while not pleasequit:
 	#	rerender = True
 	#pygame.event.clear()
     print("tick")
-	clock.tick(60) # --- Limit to 1 frame per second
-   
+    clock.tick(60) # --- Limit to 1 frame per second
+
 # Close the window and quit.
 print("quitting")
 pygame.quit()
