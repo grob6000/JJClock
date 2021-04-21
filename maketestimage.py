@@ -3,7 +3,7 @@ from PIL import Image, ImageDraw, ImageFont
 size = (1448,1072)
 gridsize = 50
 
-bounds = (20,20,1400,1000) # x1, y1, x2, y2
+bounds = (10,10,1410,1060) # x1, y1, x2, y2
 bbox = (bounds[0],bounds[1],bounds[2]-bounds[0],bounds[3]-bounds[1]) # x, y, w, h
 
 # make an image
