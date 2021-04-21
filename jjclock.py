@@ -75,7 +75,7 @@ def updateDisplay(pygamesurf):
   img = Image.fromstring('RGBA', screensize, data)
   displayImage(img, epddisplay)
 
-def testDisplay(gridsize=100):
+def testDisplay(gridsize=20):
   global epddisplay
   print("test image for display")
   epddisplay.frame_buf.paste(0xFF, box=(0,0,epddisplay.width,epddisplay.height)) # fill white
@@ -105,21 +105,21 @@ clock = pygame.time.Clock() # Used to manage how fast the screen updates
 print("init display")
 epddisplay = AutoEPDDisplay(vcom=display_vcom)
 changeMode("displaytest")
-time.sleep(5)
+time.sleep(2)
 
 #localdir = os.path.dirname(os.path.realpath(__file__))
 #print(localdir)
 
 while not pleasequit:
   	# handle events
-	if pygame.event.peek(pygame.QUIT):
-		pleasequit = True
-	if pygame.event.peek(pygame.VIDEOEXPOSE) or pygame.event.peek(pygame.VIDEORESIZE):
-		rerender = True
-	pygame.event.clear()
+	#if pygame.event.peek(pygame.QUIT):
+	#	pleasequit = True
+	#if pygame.event.peek(pygame.VIDEOEXPOSE) or pygame.event.peek(pygame.VIDEORESIZE):
+	#	rerender = True
+	#pygame.event.clear()
     
-	clock.tick(12)     # --- Limit to 5 frames per second
-    
+	clock.tick(60)     # --- Limit to 1 frame per second
+   
 # Close the window and quit.
 print("quitting")
 pygame.quit()
