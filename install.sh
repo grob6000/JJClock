@@ -3,12 +3,19 @@
 NOW=$( date '+%F_%H%M%S' )
 
 # install required programs
+sudo apt-get update
 sudo apt-get -y install git
 sudo apt-get -y install python3
 sudo apt-get -y install python3-pip
 sudo apt-get -y install python3-pygame
 sudo apt-get -y install hostapd
 sudo apt-get -y install dnsmasq
+sudo apt-get install libjpeg-dev -y
+sudo apt-get install zlib1g-dev -y
+sudo apt-get install libfreetype6-dev -y
+sudo apt-get install liblcms1-dev -y
+sudo apt-get install libopenjp2-7 -y
+sudo apt-get install libtiff5 -y
 #sudo apt-get -y install netfilter-persistent iptables-persistent
 
 # python packages
@@ -32,8 +39,9 @@ mkdir ./oldconfig
 
 # install epd driver
 cd ./IT8951
-pip3 install -r requirements.txt
-pip3 install ./
+sudo pip3 install -r requirements.txt
+sudo pip3 install ./
+cd ~/JJClock
 
 # set up hostapd
 cp /etc/hostapd/hostapd.conf ./oldconfig/hostapd_$NOW.conf
