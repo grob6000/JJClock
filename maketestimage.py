@@ -1,7 +1,7 @@
 from PIL import Image
 
 size = (1448,1072)
-gridsize = 100
+gridsize = 50
 
 img = Image.new('L', size)
 img.paste(0xFF, box=(0,0,size[0],size[1])) # fill white

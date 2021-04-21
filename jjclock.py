@@ -9,7 +9,7 @@ import random
 import math
 import os
 from gpiozero import Device, Button
-from gpiozero.pins.mock import MockFactory
+#from gpiozero.pins.mock import MockFactory
 from IT8951.display import AutoEPDDisplay
 from IT8951 import constants
 import time
@@ -83,7 +83,7 @@ def testDisplay(gridsize=100):
 
 # init gpio
 print("init gpio")
-Device.pin_factory = MockFactory()
+#Device.pin_factory = MockFactory()
 userbutton = Button(buttongpio, bounce_time=debounce/1000.0)
 userbutton.when_pressed = onButton
 
@@ -111,7 +111,7 @@ while not pleasequit:
 	#if pygame.event.peek(pygame.VIDEOEXPOSE) or pygame.event.peek(pygame.VIDEORESIZE):
 	#	rerender = True
 	#pygame.event.clear()
-    
+    print("tick")
 	clock.tick(60)     # --- Limit to 1 frame per second
    
 # Close the window and quit.
