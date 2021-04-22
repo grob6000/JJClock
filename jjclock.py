@@ -252,10 +252,8 @@ def onButton():
   global menuitemselected
   print("button pressed")
   if currentmode == "menu":
-    menuitemselected = (menuitemselected+1)%len(menu)
-    screen = 
-    renderMenu(screen, draw, selecteditem=menuitemselected)
-    
+    menuitemselected = (menuitemselected+1)%len(menu) 
+    displayRender(renderMenu, selecteditem=menuitemselected)
   else:
     changeMode("menu")
   timerReset()
