@@ -87,8 +87,8 @@ def renderClockDigital(screen, draw, **kwargs):
     digy = screen.size[1]/2-tsz[1]/2
     draw.text((screen.size[0]/2-tsz[0]/2, digy), t, font=digitalfont, fill=0x00)
     dstring = kwargs["timestamp"].strftime("%A, %-d %B %Y")
-    tsz2 = stdfont.getsize(dstring)
-    draw.text((screen.size[0]/2-tsz2[0]/2, digy + tsz[1] + 50), dstring, font=stdfont, fill=0x00)
+    tsz2 = stdfnt.getsize(dstring)
+    draw.text((screen.size[0]/2-tsz2[0]/2, digy + tsz[1] + 50), dstring, font=stdfnt, fill=0x00)
   return screen
 
 def renderClockEuro(screen, draw, **kwargs):
@@ -106,7 +106,7 @@ def renderConfig(screen, draw, **kwargs):
   return screen
 
 def renderNotImplemented(screen, draw, **kwargs):
-  global stdfont
+  global stdfnt
   fill(screen)
   if "mode" in kwargs:
     t = "Uh-oh. '" + kwargs["mode"] + "' has not been implemented!"
