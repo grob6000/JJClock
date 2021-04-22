@@ -8,6 +8,7 @@ import os
 import random
 import math
 import os
+import serial
 from gpiozero import Device, Button
 #from gpiozero.pins.mock import MockFactory
 from IT8951.display import AutoEPDDisplay
