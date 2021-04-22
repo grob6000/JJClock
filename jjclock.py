@@ -67,36 +67,66 @@ tz = pytz.UTC
 tf = timezonefinder.TimezoneFinder()
 currentdt = datetime.datetime.now()
 
+# standard font
+stdfnt = ImageFont.truetype("./font/ebgaramondmedium.ttf",20)
+
+
 ## FUNCTIONS ##
 def fill(img, color=0xFF):
   img.paste(color, box=(0,0,img.size[0],img.size[1]))
   return img
 
 ## CLOCK RENDERERS ##  
-digitalfont = ImageFont.truetype("./font/digital.ttf",150)
-def renderClockDigital(screen, draw, dt):
+digitalfont = ImageFont.truetype("./font/digital.ttf",300)
+def renderClockDigital(screen, draw, **kwargs):
   global digitalfont
   fill(screen)
-  t = "{0:02d}:{1:02d}".format(dt.hour, dt.minute)
-  tsz = digitalfont.getsize(t)
-  draw.text((screen.size[0]/2-tsz[0]/2, screen.size[1]/2-tsz[1]/2), t, font=digitalfont, fill=0x00)
+  if "timestamp" in kwargs:
+    t = "{0:02d}:{1:02d}".format(kwargs["timestamp"].hour, kwargs["timestamp"].minute)
+    tsz = digitalfont.getsize(t)
+    digy = screen.size[1]/2-tsz[1]/2
+    draw.text((screen.size[0]/2-tsz[0]/2, digy), t, font=digitalfont, fill=0x00)
+    dstring = kwargs["timestamp"].strftime("%A, %-d %B %Y")
+    tsz2 = stdfont.getsize(dstring)
+    draw.text((screen.size[0]/2-tsz2[0]/2, digy + tsz[1] + 50), dstring, font=stdfont, fill=0x00)
   return screen
 
-def renderClockEuro(screen, draw, dt):
-  return screen
+def renderClockEuro(screen, draw, **kwargs):
+  return renderNotImplemented(screen, draw, **kwargs)
   
-def renderClockBrexit(screen, draw, dt):
-  return screen
+def renderClockBrexit(screen, draw, **kwargs):
+  return renderNotImplemented(screen, draw, **kwargs)
 
 renderers = {"clock_euro":renderClockEuro, "clock_brexit":renderClockBrexit, "clock_digital":renderClockDigital}
 
+def renderMenu(screen, draw, **kwargs):
+  return screen
+
+def renderConfig(screen, draw, **kwargs):
+  return screen
+
+def renderNotImplemented(screen, draw, **kwargs):
+  global stdfont
+  fill(screen)
+  if "mode" in kwargs:
+    t = "Uh-oh. '" + kwargs["mode"] + "' has not been implemented!"
+  else:
+    t = "Uh-ok. Mode has not been implemented!"
+  tsz = fnt.getsize(t)
+  draw.text((screen.size[0]/2-tsz[0]/2, screen.size[1]/2-tsz[1]/2), t, font=stdfnt, fill=0x00)
+  return screen
+
+def renderSplash(screen, draw, **kwargs):
+  screen.paste(Image.open("./img/splash.png"))
+  return screen
+  
 def parseNMEA(line):
 
   global tf
   global tz
   global systzname
   
-  print(line)
+  #print(line)
   fields = line.decode('ascii').split(",")
   cmd = fields[0]
   data = {}
@@ -127,8 +157,8 @@ def parseNMEA(line):
         lng = lng * -1
       data["lng"] = lng
 
-    # timezone - check 1/min if all preconditions met
-    if second == 0 and data["signalok"] and "lat" in data and "lng" in data:
+    # timezone - check 1/min if all preconditions met (signal quality indicator we will ignore; as long as we have a fix it's probably fine for TZ)
+    if second == 0 and "lat" in data and "lng" in data:
       tzname = tf.certain_timezone_at(lat=data["lat"],lng=data["lng"])
       tz = pytz.timezone(tzname)
       if not tzname == systzname:
@@ -196,38 +226,42 @@ def loadPersistentMode():
 def changeMode(mode):
   global modelist
   global currentmode
-  if mode in modelist:
+  global renderers
+  global menuitemselected
+  global menu
+  r = None
+  kwargs = {"mode":mode}
+  if mode in modelist and not mode == currentmode:
     print("changing mode to " + mode)
     currentmode = mode
     if mode == "wificonfig":
       # set wifi to AP mode
       setWifiMode("ap")
-      showNotImplemented(mode) # todo - show wifi information
+      r = renderConfig
     else:
       setWifiMode("client") # all other modes should be in client state (if no wifi configured, will be disconnected...)
       if mode == "menu":
-        showMenu()
+        r = renderMenu
+        kwargs["selecteditem"] = menuitemselected
+        kwargs["menu"] = menu
       elif mode == "splash":
-        displayImage(Image.open("./img/splash.png"))
+        r = renderSplash
       elif mode in renderers:
+        r = renderers[mode]
+        if "clock" in mode:
+          kwargs["timestamp"] = currentdt
         screen = Image.new('L', boxsize)        
         draw = ImageDraw.Draw(screen)
         displayImage(renderers[mode](screen,draw,currentdt))
-        showNotImplemented(mode)
-      savePersistentMode(mode)
+      else:
+        r = renderNotImplemented
+    savePersistentMode(mode)
+    screen = Image.new('L', boxsize)        
+    draw = ImageDraw.Draw(screen)
+    displayImage(r(screen,draw,**kwargs))    
   else:
     print("invalid mode " + mode + " - not changing")
-      
-def showNotImplemented(mode="unknown"):
-  global boxsize
-  screen = Image.new('L', boxsize)
-  screen.paste(0xFF, box=(0,0,screen.size[0],screen.size[1]))
-  draw = ImageDraw.Draw(screen)
-  fnt = ImageFont.truetype("./font/ebgaramondmedium.ttf",20)
-  t = "Uh-oh. '" + mode + "' has not been implemented!"
-  tsz = fnt.getsize(t)
-  draw.text((screen.size[0]/2-tsz[0]/2, screen.size[1]/2-tsz[1]/2), t, font=fnt, fill=0x00)
-  displayImage(screen)
+
   
 def displayImage(img, x=0, y=0, resize=False):
   global epddisplay
