@@ -329,7 +329,8 @@ def updateTime(dt):
     if currentmode in renderers:
       screen = Image.new('L', boxsize)
       draw = ImageDraw.Draw(screen)
-      screen = renderers[currentmode](screen, draw, dt)
+      kwargs = {"timestamp":dt}
+      screen = renderers[currentmode](screen, draw, **kwargs)
       displayImage(screen)
 
 ## SCRIPT ##
