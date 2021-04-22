@@ -94,7 +94,7 @@ def renderClockDigital(screen, draw, **kwargs):
     tsz = digitalfont.getsize(t)
     dstring = kwargs["timestamp"].strftime("%A, %-d %B %Y")
     tsz2 = digitaldatefont.getsize(dstring)
-    digy = int((screen.size[1]-tsz[1]-tsz[2]-50)/2)
+    digy = int((screen.size[1]-tsz[1]-tsz2[1]-50)/2)
     draw.text((screen.size[0]/2-tsz[0]/2, digy), t, font=digitalfont, fill=0x00)
     draw.text((screen.size[0]/2-tsz2[0]/2, digy + tsz[1] + 50), dstring, font=digitaldatefont, fill=0x00)
   return screen
