@@ -250,10 +250,11 @@ def timerTick():
   
 def onButton():
   global menuitemselected
+  global menu
   print("button pressed")
   if currentmode == "menu":
     menuitemselected = (menuitemselected+1)%len(menu) 
-    displayRender(renderMenu, selecteditem=menuitemselected)
+    displayRender(renderMenu, menu=menu, selecteditem=menuitemselected)
   else:
     changeMode("menu")
   timerReset()
