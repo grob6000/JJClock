@@ -166,7 +166,7 @@ def showMenu():
       screen.paste(menuimg, (x,y))
   
   draw = ImageDraw.Draw(screen)
-  pagetext = "Page {0} of {1}".format(page+1, ceil(len(menu)/ipp))
+  pagetext = "Page {0} of {1}".format(page+1, math.ceil(len(menu)/ipp))
   ptsz = fnt.getsize(pagetext)
   draw.text((int(screen.size[0]/2-ptsz[0]/2), 20), pagetext, font=fnt, fill=0x00)
   
