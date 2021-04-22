@@ -65,7 +65,7 @@ menutimer=-1
 systzname = ""
 tz = pytz.UTC
 tf = timezonefinder.TimezoneFinder()
-currentdt = datetime.now()
+currentdt = datetime.datetime.now()
 
 ## FUNCTIONS ##
 def fill(img, color=0xFF):
