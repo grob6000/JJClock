@@ -3,11 +3,12 @@ Description=JJ Clock
 After=network.target
 
 [Service]
-Type=idle
-ExecStart=/usr/bin/python3 /home/pi/JJClock/jjclock.py
-WorkingDirectory=~/JJClock
-User=pi
+ExecStart=/usr/bin/python3 -u /home/pi/JJClock/jjclock.py
+WorkingDirectory=/home/pi/JJClock
+StandardError=inherit
+StandardOutput=inherit
 Restart=always
+User=pi
 
 [Install]
 WantedBy=multi-user.target

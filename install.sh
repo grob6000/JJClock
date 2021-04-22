@@ -65,6 +65,6 @@ sudo systemctl disable dnsmasq.service # disabled by default
 sudo cp ./jjclock.service /etc/systemd/system/
 sudo chmod 644 /etc/systemd/system/jjclock.service
 sudo systemctl daemon-reload
-#sudo systemctl enable jjclock.service
-#sudo systemctl start jjclock.service
-sudo systemctl disable jjclock.service
+sudo systemctl enable jjclock.service
+sudo systemctl start jjclock.service
+#sudo systemctl disable jjclock.service

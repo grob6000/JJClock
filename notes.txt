@@ -1,1 +1,13 @@
-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
+github token: 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
+
+to-do:
+
+* change between ap and client mode when going into config mode
+* use github api to check for updates 1/day within python script
+  - if available, run update script (stops process)
+* flask server
+  - landing page: menu for wifi, updates
+  - wifi page: list known wifi networks (scrape wpa_supplicant.conf), allow removing, allow adding one new one
+  - updates: allow changing update time, allow manually triggering update check, if update available allow triggering update script
+* euro mode, brexit mode renderers
+* separate renderers into another script
