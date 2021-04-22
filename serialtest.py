@@ -1,9 +1,5 @@
 import serial
 import datetime
-
-ser = serial.Serial('/dev/serial0', 9600)
-while (True):
-  ln = ser.readline()
   
 def parseNMEA(line):
   fields = line.split(",")
@@ -17,7 +13,13 @@ def parseNMEA(line):
     month = int(fields[9][2:4])
     year = int(fields[9][4:6]) + 2000 
     signalok = bool(fields[2] == "A")
-    
-  dt = datetime.datetime(year, month, day, hour, minute, second)
-  
-  print(dt)
+    dt = datetime.datetime(year, month, day, hour, minute, second)
+    return dt
+  else:
+    return None
+
+ser = serial.Serial('/dev/serial0', 9600)
+while (True):
+  dt = parseNMEA(ser.readline())
+  if dt:
+    print(dt)
