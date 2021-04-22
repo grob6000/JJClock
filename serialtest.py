@@ -2,7 +2,7 @@ import serial
 import datetime
   
 def parseNMEA(line):
-  fields = line.split(",")
+  fields = line.decode('ascii').split(",")
   cmd = fields[0]
   
   if cmd == "$GPRMC":
@@ -14,12 +14,14 @@ def parseNMEA(line):
     year = int(fields[9][4:6]) + 2000 
     signalok = bool(fields[2] == "A")
     dt = datetime.datetime(year, month, day, hour, minute, second)
-    return dt
+    return {"timestamp":dt,"signalok":signalok}
   else:
-    return None
+    return {}
 
 ser = serial.Serial('/dev/serial0', 9600)
 while (True):
   dt = parseNMEA(ser.readline())
-  if dt:
-    print(dt)
+  if "timestamp" in dt:
+    print dt["timestamp"]
+  if "signalok" in dt:
+    print dt["signalok"]
