@@ -34,6 +34,8 @@ debounce = 50 #ms
 
 modelist = ["splash", "menu","wificonfig","clock_euro","clock_brexit","clock_digital"]
 
+renderers = ["clock_euro":renderClockEuro, "clock_brexit":renderClockBrexit, "clock_digital":renderClockDigital]
+
 iface = "wlan0"
 ap_ssid = "JJClockSetup"
 ap_pass = "12071983"
@@ -59,7 +61,84 @@ epddisplay = None
 menuitemselected = 0
 menutimer=-1
 
+systzname = ""
+tz = pytz.UTC
+tf = timezonefinder.TimezoneFinder()
+currentdt = datetime.now()
+
 ## FUNCTIONS ##
+def fill(img, color=0xFF):
+  img.paste(color, box=(0,0,img.size[0],img.size[1]))
+  return img
+  
+digitalfont = ImageFont.truetype("./font/digital.ttf",150)
+def renderClockDigital(screen, draw, dt):
+  global digitalfont
+  fill(screen)
+  t = "{0:02d}:{1:02d}".format(dt.hour, dt.minute)
+  tsz = digitalfont.getsize(t)
+  draw.text((screen.size[0]/2-tsz[0]/2, screen.size[1]/2-tsz[1]/2), t, font=digitalfont, fill=0x00)
+  return screen
+
+def renderClockEuro(screen, draw, dt):
+  return screen
+  
+def renderClockBrexit(screen, draw, dt):
+  return screen
+
+def parseNMEA(line):
+
+  global tf
+  global tz
+  global systzname
+  
+  print(line)
+  fields = line.decode('ascii').split(",")
+  cmd = fields[0]
+  data = {}
+  
+  if cmd == "$GPRMC":
+    
+    # utc time
+    hour = int(fields[1][0:2])
+    minute = int(fields[1][2:4])
+    second = int(fields[1][4:6])
+    day = int(fields[9][0:2])
+    month = int(fields[9][2:4])
+    year = int(fields[9][4:6]) + 2000 
+    data["timestamp"] = datetime.datetime(year, month, day, hour, minute, second, tzinfo=pytz.UTC)
+
+    # signal validity
+    data["signalok"] = bool(fields[2] == "A")
+    
+    # lat and lng
+    if len(fields[3])>0:
+      lat = float(fields[3][0:2]) + float(fields[3][2:])/60
+      if fields[4] == "S":
+        lat = lat * -1
+      data["lat"] = lat
+    if len(fields[5])>0:
+      lng = float(fields[5][0:3]) + float(fields[5][3:])/60
+      if fields[6] == "W":
+        lng = lng * -1
+      data["lng"] = lng
+
+    # timezone - check 1/min if all preconditions met
+    if second == 0 and data["signalok"] and "lat" in data and "lng" in data:
+      tzname = tf.certain_timezone_at(lat=data["lat"],lng=data["lng"])
+      tz = pytz.timezone(tzname)
+      if not tzname == systzname:
+        # TO-DO update system timezone
+        print("update system timezone")
+        r = subprocess.run(["sudo","timedatectl","set-timezone",tzname])
+        if r.returncode == 0:
+          systzname = tzname
+          print("success")
+    # local time
+    data["localtime"] = data["timestamp"].astimezone(tz)
+    
+  return data
+
 
 def timerReset():
   global menutimeout
@@ -126,7 +205,10 @@ def changeMode(mode):
         showMenu()
       elif mode == "splash":
         displayImage(Image.open("./img/splash.png"))
-      else:
+      elif mode in renderers:
+        screen = Image.new('L', boxsize)        
+        draw = ImageDraw.Draw(screen)
+        displayImage(renderers[mode](screen,draw,currentdt))
         showNotImplemented(mode)
       savePersistentMode(mode)
   else:
@@ -156,12 +238,12 @@ def displayImage(img, x=0, y=0, resize=False):
   epddisplay.frame_buf.paste(img, (cropbox[0]+x,cropbox[1]+y)) # paste to buffer
   epddisplay.draw_full(constants.DisplayModes.GC16) # display
 
-def updateDisplay(pygamesurf):
-  global epddisplay
-  print("updating display")
-  data = pygame.image.tostring(pygamesurf, 'RGBA')
-  img = Image.fromstring('RGBA', screensize, data)
-  displayImage(img, epddisplay)
+#def updateDisplay(pygamesurf):
+#  global epddisplay
+#  print("updating display")
+#  data = pygame.image.tostring(pygamesurf, 'RGBA')
+#  img = Image.fromstring('RGBA', screensize, data)
+#  displayImage(img, epddisplay)
 
 def testDisplay(gridsize=100):
   displayImage(Image.open("./img/test.png"))
@@ -204,7 +286,17 @@ def showMenu():
   draw.text((int(screen.size[0]/2-ptsz[0]/2), 20), pagetext, font=fnt, fill=0x00)
   
   displayImage(screen)
-  
+
+def updateTime(dt):
+  global currentdt
+  currentdt = dt
+  if dt.second == 0 and "clock" in currentmode:
+    if currentmode in renderers:
+      screen = Image.new('L', boxsize)
+      draw = screen.ImageDraw.Draw()
+      screen = renderers[currentmode](screen, draw, dt)
+      displayImage(screen)
+
 ## SCRIPT ##
 
 # init gpio
@@ -235,6 +327,9 @@ changeMode(loadPersistentMode())
 #localdir = os.path.dirname(os.path.realpath(__file__))
 #print(localdir)
 
+# gps serial
+ser = serial.Serial('/dev/serial0', 9600, timeout=1)
+
 lastticktime = time.time()
 while not pleasequit:
   	# handle events
@@ -249,7 +344,15 @@ while not pleasequit:
     if t > lastticktime + 1:
       lastticktime = t
       timerTick()
+    
+    # if NMEA has been received, update the time
+    if ser.in_waiting>0:
+      d = parseNMEA(ser.readline())
+      if "localtime" in d:
+        updateTime(d["localtime"])
+      
 
 # Close the window and quit.
 print("quitting")
+ser.close()
 #pygame.quit()

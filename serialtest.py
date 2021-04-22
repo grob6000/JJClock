@@ -6,7 +6,6 @@ import subprocess
 
 systzname = ""
 tz = pytz.UTC
-
 def parseNMEA(line):
 
   global tz
