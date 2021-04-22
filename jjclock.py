@@ -110,8 +110,10 @@ def loadPersistentMode():
   
 def changeMode(mode):
   global modelist
+  global currentmode
   if mode in modelist:
     print("changing mode to " + mode)
+    currentmode = mode
     if mode == "wificonfig":
       # set wifi to AP mode
       setWifiMode("ap")
