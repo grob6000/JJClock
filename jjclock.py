@@ -19,6 +19,14 @@ from PIL import Image, ImageDraw, ImageFont
 
 screensize = (1448, 1072) # Set the width and height of the screen [width, height]
 display_vcom = -2.55 # v - as per cable
+cropbox = (10,10,1410,1060) # area we should work within / x1, y1, x2, y2
+boxsize = (cropbox[2]-cropbox[0],cropbox[3]-cropbox[1]) # x,y
+clx = int((cropbox[2] + cropbox[0])/2)
+cly = int((cropbox[3] + cropbox[1])/2)
+
+menusize = (4,3)
+menupatchsize = (200,200)
+menuicondim = 120
 
 buttongpio = 23
 debounce = 50 #ms
@@ -33,8 +41,6 @@ ip_mask = (255,255,255,0)
 dhcp_start = (192,168,99,10)
 dhcp_end = (192,168,99,20)
 
-menu_across = 4
-menu_down = 2
 
 menu = [
          {"icon":"./img/wifi.png","text":"Config Mode","mode":"wificonfig"},
@@ -42,6 +48,7 @@ menu = [
          {"icon":"./img/uk.png","text":"Brexit","mode":"clock_brexit"},
          {"icon":"./img/digital.png","text":"Digital","mode":"clock_digital"}
        ]
+menutimeout = 10 # seconds
 
 ## GLOBALS ##
 pleasequit = False
@@ -49,15 +56,38 @@ currentmode = modelist[0]
 wifimode = "unknown"
 epddisplay = None
 menuitemselected = 0
+menutimer=-1
 
 ## FUNCTIONS ##
 
-def onButton():
-  print("button pressed")
-  if not inmenu:
-    inmenu = True
-    displayMenu()
+def timerReset():
+  global menutimeout
+  global menutimer
+  menutimer = menutimeout
 
+def timerTick():
+  global menutimer
+  if menutimer > 0:
+    menutimer = menutimer - 1
+  if menutimer == 0:
+    menutimer = -1 # disable
+    onMenuTimeout()
+  
+def onButton():
+  global menuitemselected
+  print("button pressed")
+  if currentmode == "menu":
+    menuitemselected = (menuitemselected+1)%len(menu)
+    displayMenu()
+  else:
+    changeMode("menu")
+  timerReset()
+
+def onMenuTimeout():
+  global menuitemselected
+  print("menu timeout")
+  changeMode(menu[menuitemselected]["mode"])
+    
 def changeMode(mode):
   global wifimode
   print("changing mode to " + mode)
@@ -78,10 +108,18 @@ def changeMode(mode):
     testDisplay()
   
   
-def displayImage(img):
+def displayImage(img, x=0, y=0, resize=False):
   global epddisplay
-  epddisplay.frame_buf.paste(img, (0,0))
-  epddisplay.draw_full(constants.DisplayModes.GC16)
+  global boxsize
+  global cropbox
+  if resize:
+    ratio = min(img.size[0]/boxsize[0],img.size[1]/boxsize[1]) # calculate ration required to fit image
+    imgadj = img.resize((img.size[0]*ratio,img.size[1]*ratio), Image.ANTIALIAS)
+  else:
+    imgadj = img
+  imgadj = imgadj.crop((0,0,boxsize[0],boxsize[1])) # crop to visible box
+  epddisplay.frame_buf.paste(img, (cropbox[0]+x,cropbox[1]+y)) # paste to buffer
+  epddisplay.draw_full(constants.DisplayModes.GC16) # display
 
 def updateDisplay(pygamesurf):
   global epddisplay
@@ -96,13 +134,40 @@ def testDisplay(gridsize=100):
 def showMenu():
   global menuitemselected
   global menu
-  ipp = menu_across * menu_down
+  global menusize
+  global menupatchsize
+  global menuicondim
+  
+  ipp = menusize[0] * menusize[1] # number of items per page
   page = int(menuitemselected / ipp)
-  pi_select = menuitemselected % ipp
+  pi_select = menuitemselected % ipp # index of item selected on page
+  
+  fnt = ImageFont.truetype("./font/ebgaramondmedium.ttf",20)
+  
+  screen = Image.new('L', boxsize)
+  screen.paste(0xFF, box=(0,0,screen.size[0],screen.size[1]))
+  
   for pi in range(0, ipp):
     mi = pi+(page*ipp)
     if len(menu) > mi:
-      menuimg = Image.new('L', (250,250))
+      menuimg = Image.new('L', menupatchsize)
+      menuimg.paste(0xFF, box=(0,0,menuimg.size[0],menuimg.size[1]))
+      menuimg.paste(Image.open(menu[mi]["icon"]).resize((menuicondim,menuicondim),Image.ANTIALIAS),(int((menupatchsize[0]-menuicondim)/2),20))
+      draw = ImageDraw.Draw(menuimg)
+      fsz = fnt.getsize(menu[mi]["text"])
+      draw.text((int(menuimg.size[0]/2-fsz[0]/2), menuicondim + 30),menu[mi]["text"],font=fnt,fill=0x00)
+      x = int((pi % menusize[0] + 0.5) * (screen.size[0] / menusize[0]) - menupatchsize[0]/2)
+      y = int((int(pi / menusize[0]) + 0.5) * (screen.size[1] / menusize[1]) - menupatchsize[1]/2)
+      if pi == pi_select: # show this item as selected with surrounding box
+        screen.paste(0x80, box=(x-20, y-20, x+menupatchsize[0]+20, y+menupatchsize[1]+20))
+      screen.paste(menuimg, (x,y))
+  
+  draw = ImageDraw.Draw(screen)
+  pagetext = "Page {0} of {1}".format(page+1, ceil(len(menu)/ipp))
+  ptsz = fnt.getsize(pagetext)
+  draw.text((int(screen.size[0]/2-ptsz[0]/2), 20), pagetext, font=fnt, fill=0x00)
+  
+  displayImage(screen)
   
   
    
@@ -144,7 +209,8 @@ while not pleasequit:
 	#	rerender = True
 	#pygame.event.clear()
     print("tick")
-    clock.tick(60) # --- Limit to 1 frame per second
+    clock.tick(1) # --- Limit to 1 frame per second
+    timerTick()
 
 # Close the window and quit.
 print("quitting")
