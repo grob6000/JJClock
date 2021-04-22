@@ -53,7 +53,7 @@ menutimeout = 10 # seconds
 ## GLOBALS ##
 pleasequit = False
 currentmode = modelist[0]
-wifimode = "unknown"
+currentwifimode = "unknown"
 epddisplay = None
 menuitemselected = 0
 menutimer=-1
@@ -87,29 +87,45 @@ def onMenuTimeout():
   global menuitemselected
   print("menu timeout")
   changeMode(menu[menuitemselected]["mode"])
+
+def setWifiMode(newwifimode):
+  global currentwifimode
+  if (newwifimode == currentwifimode):
+    print("wifi mode unchanged")
+  elif newwifimode == "ap":
+    print("NOT IMPLEMENTED - wifi mode AP")
+    currentwifimode = newwifimode
+  elif newwifimode == "client":
+    print("NOT IMPLEMENTED - wifi mode Client")
+    currentwifimode = newwifimode
+  else:
+    print("invalid wifi mode, no change")
     
 def changeMode(mode):
-  global wifimode
   global modelist
   if mode in modelist:
-  
     print("changing mode to " + mode)
     if mode == "wificonfig":
-      # TO-DO set wifi to AP mode
-      # TO-DO run DHCP server
-      # TO-DO start config webserver
-      # TO-DO display details on screen
-      wifimode = "ap"
+      # set wifi to AP mode
+      setWifiMode("ap")
+      showNotImplemented(mode) # todo - show wifi information
     else:
-      # check current mode; ensure is in client mode
-      if not wifimode == "client":
-        # TO-DOset wifi to client mode
-        wifimode = "client"
-    if mode == "menu":
-      # TO-DO generate test image
-      # TO-DO display on screen
-      showMenu()
-  
+      setWifiMode("client") # all other modes should be in client state (if no wifi configured, will be disconnected...)
+      if mode == "menu":
+        showMenu()
+      else:
+        showNotImplemented(mode)
+      
+def showNotImplemented(mode="unknown"):
+  global boxsize
+  screen = Image.new('L', boxsize)
+  screen.paste(0xFF, box=(0,0,screen.size[0],screen.size[1]))
+  draw = ImageDraw.Draw(screen)
+  fnt = ImageFont.truetype("./font/ebgaramondmedium.ttf",20)
+  t = "Uh-oh. '" + mode + "' has not been implemented!"
+  tsz = fnt.getsize(t)
+  draw.text((screen.size[0]/2-tsz[0]/2, screen.size[1]/2-tsz[1]/2), t, font=fnt, fill=0x00)
+  displayImage(screen)
   
 def displayImage(img, x=0, y=0, resize=False):
   global epddisplay
@@ -140,6 +156,7 @@ def showMenu():
   global menusize
   global menupatchsize
   global menuicondim
+  global boxsize
   
   ipp = menusize[0] * menusize[1] # number of items per page
   page = int(menuitemselected / ipp)

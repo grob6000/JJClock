@@ -75,6 +75,17 @@ def showMenu():
   
   displayImage(screen)
 
+def showNotImplemented(mode="unknown"):
+  global boxsize
+  screen = Image.new('L', boxsize)
+  screen.paste(0xFF, box=(0,0,screen.size[0],screen.size[1]))
+  draw = ImageDraw.Draw(screen)
+  fnt = ImageFont.truetype("./font/ebgaramondmedium.ttf",20)
+  t = "Uh-oh. '" + mode + "' has not been implemented!"
+  tsz = fnt.getsize(t)
+  draw.text((screen.size[0]/2-tsz[0]/2, screen.size[1]/2-tsz[1]/2), t, font=fnt, fill=0x00)
+  displayImage(screen)
+  
 # make an image
 img = Image.new('L', screensize)
 img.paste(0xDF, box=(0,0,screensize[0],screensize[1])) # fill white
@@ -122,4 +133,5 @@ clx = int((cropbox[2] + cropbox[0])/2)
 cly = int((cropbox[3] + cropbox[1])/2)
 
 showMenu()
+showNotImplemented("testmode")
 
