@@ -43,7 +43,7 @@ while (True):
     print(d["timestamp"])
   if "signalok" in d:
     print(d["signalok"])
-  if "lat" in dt and "lng" in dt:
+  if "lat" in d and "lng" in d:
     tzname = tf.certain_timezone_at(lat=d["lat"],lng=d["lng"])
     tz = pytz.timezone(tzname)
     localtime = tz.localize(d["timestamp"])
