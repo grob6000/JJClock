@@ -20,22 +20,17 @@ def parseNMEA(line):
     
     if len(fields[3])>0:
       lat = float(fields[3][0:2]) + float(fields[3][2:])/60
-    else:
-      lat = 0
-    if fields[4] == "S":
-      lat = lat * -1
+      if fields[4] == "S":
+        lat = lat * -1
+      data["lat"] = lat
       
     if len(fields[5])>0:
       lng = float(fields[5][0:3]) + float(fields[5][3:])/60
-    else:
-      lng = 0
-    if fields[6] == "W":
-      lng = lng * -1
+      if fields[6] == "W":
+        lng = lng * -1
+      data["lng"] = lng
       
-    return {"timestamp":dt,"signalok":signalok,"lat":lat,"lng":lng}
-  
-  else:
-    return {}
+  return data
 
 ser = serial.Serial('/dev/serial0', 9600)
 while (True):
