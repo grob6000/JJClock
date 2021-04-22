@@ -106,6 +106,7 @@ def renderClockBrexit(screen, draw, **kwargs):
   return renderNotImplemented(screen, draw, **kwargs)
 
 renderers = {"clock_euro":renderClockEuro, "clock_brexit":renderClockBrexit, "clock_digital":renderClockDigital}
+updateintervals = {"clock_brexit":5} # default is 1 min, set this to other values (in minutes) where required
 
 def renderMenu(screen, draw, **kwargs):
 
@@ -347,8 +348,10 @@ def updateTime(dt):
   global currentdt
   currentdt = dt
   print(dt)
-  if dt.second == 0 and "clock" in currentmode:
-    if currentmode in renderers:
+  ui = 1
+  if currentmode in updateintervals:
+    ui = updateintervals[currentmode]
+  if dt.second == 0 and "clock" in currentmode and currentmode in renderers and (dt.minute + dt.hour*60) % updateintervals[currentmode] == 0:
       displayRender(renderers[currentmode], timestamp=dt, mode=currentmode)
 
 ## SCRIPT ##
