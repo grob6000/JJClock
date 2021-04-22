@@ -16,10 +16,17 @@ def parseNMEA(line):
     signalok = bool(fields[2] == "A")
     dt = datetime.datetime(year, month, day, hour, minute, second)
     
-    lat = float(fields[3])
+    try:
+      lat = float(fields[3])
+    except ValueError:
+      lat = 0
     if fields[4] == "S":
       lat = lat * -1
-    lng = float(fields[5])
+      
+    try:
+      lng = float(fields[5])
+    except ValueError:
+      lng = 0
     if fields[6] == "W":
       lng = lng * -1
       
