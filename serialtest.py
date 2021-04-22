@@ -22,6 +22,6 @@ ser = serial.Serial('/dev/serial0', 9600)
 while (True):
   dt = parseNMEA(ser.readline())
   if "timestamp" in dt:
-    print dt["timestamp"]
+    print(dt["timestamp"])
   if "signalok" in dt:
-    print dt["signalok"]
+    print(dt["signalok"])
