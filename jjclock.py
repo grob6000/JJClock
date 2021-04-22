@@ -78,7 +78,7 @@ def onButton():
   print("button pressed")
   if currentmode == "menu":
     menuitemselected = (menuitemselected+1)%len(menu)
-    displayMenu()
+    showMenu()
   else:
     changeMode("menu")
   timerReset()
@@ -90,22 +90,25 @@ def onMenuTimeout():
     
 def changeMode(mode):
   global wifimode
-  print("changing mode to " + mode)
-  if mode == "wificonfig":
-    # TO-DO set wifi to AP mode
-    # TO-DO run DHCP server
-    # TO-DO start config webserver
-    # TO-DO display details on screen
-    wifimode = "ap"
-  else:
-    # check current mode; ensure is in client mode
-    if not wifimode == "client":
-      # TO-DOset wifi to client mode
-      wifimode = "client"
-  if mode == "displaytest":
-    # TO-DO generate test image
-    # TO-DO display on screen
-    testDisplay()
+  global modelist
+  if mode in modelist:
+  
+    print("changing mode to " + mode)
+    if mode == "wificonfig":
+      # TO-DO set wifi to AP mode
+      # TO-DO run DHCP server
+      # TO-DO start config webserver
+      # TO-DO display details on screen
+      wifimode = "ap"
+    else:
+      # check current mode; ensure is in client mode
+      if not wifimode == "client":
+        # TO-DOset wifi to client mode
+        wifimode = "client"
+    if mode == "menu":
+      # TO-DO generate test image
+      # TO-DO display on screen
+      showMenu()
   
   
 def displayImage(img, x=0, y=0, resize=False):
