@@ -4,6 +4,7 @@ import datetime
 def parseNMEA(line):
   fields = line.decode('ascii').split(",")
   cmd = fields[0]
+  data = {}
   
   if cmd == "$GPRMC":
     
@@ -13,19 +14,20 @@ def parseNMEA(line):
     day = int(fields[9][0:2])
     month = int(fields[9][2:4])
     year = int(fields[9][4:6]) + 2000 
-    signalok = bool(fields[2] == "A")
-    dt = datetime.datetime(year, month, day, hour, minute, second)
+    data["timestamp"] = datetime.datetime(year, month, day, hour, minute, second)
+
+    data["signalok"] = bool(fields[2] == "A")
     
-    try:
-      lat = float(fields[3])
-    except ValueError:
+    if len(fields[3])>0:
+      lat = float(fields[3][0:2]) + float(fields[3][2:])/60
+    else:
       lat = 0
     if fields[4] == "S":
       lat = lat * -1
       
-    try:
-      lng = float(fields[5])
-    except ValueError:
+    if len(fields[5])>0:
+      lng = float(fields[5][0:3]) + float(fields[5][3:])/60
+    else:
       lng = 0
     if fields[6] == "W":
       lng = lng * -1
