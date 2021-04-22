@@ -46,7 +46,7 @@ while (True):
   if "lat" in d and "lng" in d:
     tzname = tf.certain_timezone_at(lat=d["lat"],lng=d["lng"])
     tz = pytz.timezone(tzname)
-    localtime = tz.localize(d["timestamp"])
+    localtime = d["timestamp"].astimezone(tz)
     print("lat={0} lng={1} tz={2} localtime={3}".format(d["lat"],d["lng"],tzname,localtime))
     
     
