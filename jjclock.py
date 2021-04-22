@@ -34,7 +34,7 @@ debounce = 50 #ms
 
 modelist = ["splash", "menu","wificonfig","clock_euro","clock_brexit","clock_digital"]
 
-renderers = ["clock_euro":renderClockEuro, "clock_brexit":renderClockBrexit, "clock_digital":renderClockDigital]
+renderers = {"clock_euro":renderClockEuro, "clock_brexit":renderClockBrexit, "clock_digital":renderClockDigital}
 
 iface = "wlan0"
 ap_ssid = "JJClockSetup"
