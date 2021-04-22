@@ -34,8 +34,6 @@ debounce = 50 #ms
 
 modelist = ["splash", "menu","wificonfig","clock_euro","clock_brexit","clock_digital"]
 
-renderers = {"clock_euro":renderClockEuro, "clock_brexit":renderClockBrexit, "clock_digital":renderClockDigital}
-
 iface = "wlan0"
 ap_ssid = "JJClockSetup"
 ap_pass = "12071983"
@@ -70,7 +68,8 @@ currentdt = datetime.now()
 def fill(img, color=0xFF):
   img.paste(color, box=(0,0,img.size[0],img.size[1]))
   return img
-  
+
+## CLOCK RENDERERS ##  
 digitalfont = ImageFont.truetype("./font/digital.ttf",150)
 def renderClockDigital(screen, draw, dt):
   global digitalfont
@@ -85,6 +84,8 @@ def renderClockEuro(screen, draw, dt):
   
 def renderClockBrexit(screen, draw, dt):
   return screen
+
+renderers = {"clock_euro":renderClockEuro, "clock_brexit":renderClockBrexit, "clock_digital":renderClockDigital}
 
 def parseNMEA(line):
 
