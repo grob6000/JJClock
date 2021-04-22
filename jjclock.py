@@ -31,7 +31,7 @@ menuicondim = 120
 buttongpio = 23
 debounce = 50 #ms
 
-modelist = ["menu","wificonfig","clock_euro","clock_brexit","clock_digital"]
+modelist = ["splash", "menu","wificonfig","clock_euro","clock_brexit","clock_digital"]
 
 iface = "wlan0"
 ap_ssid = "JJClockSetup"
@@ -100,7 +100,14 @@ def setWifiMode(newwifimode):
     currentwifimode = newwifimode
   else:
     print("invalid wifi mode, no change")
-    
+
+def savePersistentMode(mode):
+  print("NOT IMPLEMENTED - persist mode as file")
+
+def loadPersistentMode():
+  return "clock_digital" # default for now
+  print("NOT IMPLEMENTED - load persistent mode from file")
+  
 def changeMode(mode):
   global modelist
   if mode in modelist:
@@ -113,8 +120,13 @@ def changeMode(mode):
       setWifiMode("client") # all other modes should be in client state (if no wifi configured, will be disconnected...)
       if mode == "menu":
         showMenu()
+      elif mode == "splash":
+        displayImage(Image.open("./img/splash.png"))
       else:
         showNotImplemented(mode)
+      savePersistentMode(mode)
+  else:
+    print("invalid mode " + mode + " - not changing")
       
 def showNotImplemented(mode="unknown"):
   global boxsize
@@ -189,8 +201,6 @@ def showMenu():
   
   displayImage(screen)
   
-  
-   
 ## SCRIPT ##
 
 # init gpio
@@ -210,13 +220,13 @@ clock = pygame.time.Clock() # Used to manage how fast the screen updates
 # init epd display
 print("init display")
 epddisplay = AutoEPDDisplay(vcom=display_vcom)
-changeMode("displaytest")
-time.sleep(2)
-displayImage(Image.open("./img/splash.png"))
+
+# splash
+changeMode("splash")
 time.sleep(2)
 
-# splash screen
-print("splash")
+# load last mode
+changeMode(loadPersistentMode())
 
 #localdir = os.path.dirname(os.path.realpath(__file__))
 #print(localdir)
