@@ -4,6 +4,7 @@ import timezonefinder
 import pytz
 
 def parseNMEA(line):
+  print(line)
   fields = line.decode('ascii').split(",")
   cmd = fields[0]
   data = {}
@@ -16,7 +17,7 @@ def parseNMEA(line):
     day = int(fields[9][0:2])
     month = int(fields[9][2:4])
     year = int(fields[9][4:6]) + 2000 
-    data["timestamp"] = datetime.datetime(year, month, day, hour, minute, second)
+    data["timestamp"] = datetime.datetime(year, month, day, hour, minute, second, tzinfo=pytz.UTC)
 
     data["signalok"] = bool(fields[2] == "A")
     
@@ -47,6 +48,6 @@ while (True):
     tzname = tf.certain_timezone_at(lat=d["lat"],lng=d["lng"])
     tz = pytz.timezone(tzname)
     localtime = d["timestamp"].astimezone(tz)
-    print("lat={0} lng={1} tz={2} localtime={3}".format(d["lat"],d["lng"],tzname,localtime))
+    print("lat={0} lng={1} tz={2} localtime={3}".format(d["lat"],d["lng"],tz,localtime))
     
     
