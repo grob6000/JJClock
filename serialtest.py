@@ -1,6 +1,8 @@
 import serial
 import datetime
-  
+import timezonefinder
+import pytz
+
 def parseNMEA(line):
   fields = line.decode('ascii').split(",")
   cmd = fields[0]
@@ -33,11 +35,18 @@ def parseNMEA(line):
   return data
 
 ser = serial.Serial('/dev/serial0', 9600)
+tf = timezonefinder.TimezoneFinder()
+
 while (True):
-  dt = parseNMEA(ser.readline())
-  if "timestamp" in dt:
-    print(dt["timestamp"])
-  if "signalok" in dt:
-    print(dt["signalok"])
+  d = parseNMEA(ser.readline())
+  if "timestamp" in d:
+    print(d["timestamp"])
+  if "signalok" in d:
+    print(d["signalok"])
   if "lat" in dt and "lng" in dt:
-    print("lat={0} lng={1}".format(dt["lat"],dt["lng"]))
+    tzname = tf.certain_timezone_at(lat=d["lat"],lng=d["lng"])
+    tz = pytz.timezone(tzname)
+    localtime = tz.localize(d["timestamp"])
+    print("lat={0} lng={1} tz={2} localtime={3}".format(d["lat"],d["lng"],tzname,localtime))
+    
+    
