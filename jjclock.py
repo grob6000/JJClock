@@ -297,7 +297,7 @@ def updateTime(dt):
   if dt.second == 0 and "clock" in currentmode:
     if currentmode in renderers:
       screen = Image.new('L', boxsize)
-      draw = screen.ImageDraw.Draw()
+      draw = ImageDraw.Draw(screen)
       screen = renderers[currentmode](screen, draw, dt)
       displayImage(screen)
 
