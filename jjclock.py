@@ -56,7 +56,7 @@ menutimeout = 10 # seconds
 
 ## GLOBALS ##
 pleasequit = False
-currentmode = modelist[0]
+currentmode = -1 # initialise as an invalid mode; any mode change will trigger change
 currentwifimode = "unknown"
 epddisplay = None
 menuitemselected = 0
@@ -319,18 +319,18 @@ def changeMode(mode):
     print("invalid mode " + mode + " - not changing")
 
   
-def displayImage(img, x=0, y=0, resize=False):
-  global epddisplay
-  global boxsize
-  global cropbox
-  if resize:
-    ratio = min(img.size[0]/boxsize[0],img.size[1]/boxsize[1]) # calculate ration required to fit image
-    imgadj = img.resize((img.size[0]*ratio,img.size[1]*ratio), Image.ANTIALIAS)
-  else:
-    imgadj = img
-  imgadj = imgadj.crop((0,0,boxsize[0],boxsize[1])) # crop to visible box
-  epddisplay.frame_buf.paste(img, (cropbox[0]+x,cropbox[1]+y)) # paste to buffer
-  epddisplay.draw_full(constants.DisplayModes.GC16) # display
+#def displayImage(img, x=0, y=0, resize=False):
+#  global epddisplay
+#  global boxsize
+#  global cropbox
+#  if resize:
+#    ratio = min(img.size[0]/boxsize[0],img.size[1]/boxsize[1]) # calculate ration required to fit image
+#    imgadj = img.resize((img.size[0]*ratio,img.size[1]*ratio), Image.ANTIALIAS)
+#  else:
+#    imgadj = img
+#  imgadj = imgadj.crop((0,0,boxsize[0],boxsize[1])) # crop to visible box
+#  epddisplay.frame_buf.paste(img, (cropbox[0]+x,cropbox[1]+y)) # paste to buffer
+#  epddisplay.draw_full(constants.DisplayModes.GC16) # display
 
 #def updateDisplay(pygamesurf):
 #  global epddisplay
@@ -339,16 +339,15 @@ def displayImage(img, x=0, y=0, resize=False):
 #  img = Image.fromstring('RGBA', screensize, data)
 #  displayImage(img, epddisplay)
 
-def testDisplay(gridsize=100):
-  displayImage(Image.open("./img/test.png"))
+#def testDisplay(gridsize=100):
+#  displayImage(Image.open("./img/test.png"))
   
 def updateTime(dt):
   global currentdt
   currentdt = dt
   if dt.second == 0 and "clock" in currentmode:
     if currentmode in renderers:
-      kwargs = {"timestamp":dt}
-      displayRender(renderers[currentmode],**kwargs)
+      displayRender(renderers[currentmode], timestamp=dt, mode=currentmode)
 
 ## SCRIPT ##
 
