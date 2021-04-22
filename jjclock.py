@@ -72,12 +72,19 @@ stdfnt = ImageFont.truetype("./font/ebgaramondmedium.ttf",24)
 
 
 ## FUNCTIONS ##
+
+## CLOCK RENDERERS ##  
+
+# render helpers #
+
 def fill(img, color=0xFF):
   img.paste(color, box=(0,0,img.size[0],img.size[1]))
   return img
 
-## CLOCK RENDERERS ##  
+# renderers #
+
 digitalfont = ImageFont.truetype("./font/digital.ttf",300)
+digitaldatefont = ImageFont.truetype("./font/ebgaramondmedium.ttf",50)
 def renderClockDigital(screen, draw, **kwargs):
   global digitalfont
   fill(screen)
@@ -87,8 +94,8 @@ def renderClockDigital(screen, draw, **kwargs):
     digy = screen.size[1]/2-tsz[1]/2
     draw.text((screen.size[0]/2-tsz[0]/2, digy), t, font=digitalfont, fill=0x00)
     dstring = kwargs["timestamp"].strftime("%A, %-d %B %Y")
-    tsz2 = stdfnt.getsize(dstring)
-    draw.text((screen.size[0]/2-tsz2[0]/2, digy + tsz[1] + 50), dstring, font=stdfnt, fill=0x00)
+    tsz2 = digitaldatefont.getsize(dstring)
+    draw.text((screen.size[0]/2-tsz2[0]/2, digy + tsz[1] + 50), dstring, font=digitaldatefont, fill=0x00)
   return screen
 
 def renderClockEuro(screen, draw, **kwargs):
@@ -130,23 +137,23 @@ def renderMenu(screen, draw, **kwargs):
       menuimg = Image.new('L', menupatchsize)
       menuimg.paste(0xFF, box=(0,0,menuimg.size[0],menuimg.size[1]))
       menuimg.paste(Image.open(kwargs["menu"][mi]["icon"]).resize((menuicondim,menuicondim),Image.ANTIALIAS),(int((menupatchsize[0]-menuicondim)/2),20))
-      draw = ImageDraw.Draw(menuimg)
+      draw2 = ImageDraw.Draw(menuimg)
       fsz = stdfnt.getsize(kwargs["menu"][mi]["text"])
-      draw.text((int(menuimg.size[0]/2-fsz[0]/2), menuicondim + 30),kwargs["menu"][mi]["text"],font=stdfnt,fill=0x00)
+      draw2.text((int(menuimg.size[0]/2-fsz[0]/2), menuicondim + 30),kwargs["menu"][mi]["text"],font=stdfnt,fill=0x00)
       x = int((pi % menusize[0] + 0.5) * (screen.size[0] / menusize[0]) - menupatchsize[0]/2)
       y = int((int(pi / menusize[0]) + 0.5) * (screen.size[1] / menusize[1]) - menupatchsize[1]/2)
       if pi == pi_select: # show this item as selected with surrounding box
         screen.paste(0x80, box=(x-20, y-20, x+menupatchsize[0]+20, y+menupatchsize[1]+20))
       screen.paste(menuimg, (x,y))
   
-  draw = ImageDraw.Draw(screen)
+  #draw = ImageDraw.Draw(screen)
   pagetext = "Page {0} of {1}".format(page+1, math.ceil(len(kwargs["menu"])/ipp))
   ptsz = stdfnt.getsize(pagetext)
   draw.text((int(screen.size[0]/2-ptsz[0]/2), 20), pagetext, font=stdfnt, fill=0x00)
   return screen
 
 def renderConfig(screen, draw, **kwargs):
-  return screen
+  return renderNotImplemented(screen, draw, **kwargs)
 
 def renderNotImplemented(screen, draw, **kwargs):
   global stdfnt
@@ -162,6 +169,16 @@ def renderNotImplemented(screen, draw, **kwargs):
 def renderSplash(screen, draw, **kwargs):
   screen.paste(Image.open("./img/splash.png"))
   return screen
+  
+def displayRender(r, **kwargs):
+  global epddisplay
+  global cropbox
+  global boxsize
+  screen = Image.new("L", boxsize)
+  draw = ImageDraw.Draw(screen)
+  screen = r(screen,draw,**kwargs)
+  epddisplay.frame_buf.paste(screen, (cropbox[0],cropbox[1])) # paste to buffer
+  epddisplay.draw_full(constants.DisplayModes.GC16) # display
   
 def parseNMEA(line):
 
@@ -236,7 +253,9 @@ def onButton():
   print("button pressed")
   if currentmode == "menu":
     menuitemselected = (menuitemselected+1)%len(menu)
-    showMenu()
+    screen = 
+    renderMenu(screen, draw, selecteditem=menuitemselected)
+    
   else:
     changeMode("menu")
   timerReset()
@@ -296,9 +315,7 @@ def changeMode(mode):
       else:
         r = renderNotImplemented
     savePersistentMode(mode)
-    screen = Image.new('L', boxsize)        
-    draw = ImageDraw.Draw(screen)
-    displayImage(r(screen,draw,**kwargs))    
+    displayRender(r,**kwargs)
   else:
     print("invalid mode " + mode + " - not changing")
 
@@ -331,11 +348,8 @@ def updateTime(dt):
   currentdt = dt
   if dt.second == 0 and "clock" in currentmode:
     if currentmode in renderers:
-      screen = Image.new('L', boxsize)
-      draw = ImageDraw.Draw(screen)
       kwargs = {"timestamp":dt}
-      screen = renderers[currentmode](screen, draw, **kwargs)
-      displayImage(screen)
+      displayRender(renderers[currentmode],**kwargs)
 
 ## SCRIPT ##
 
