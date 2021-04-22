@@ -2,7 +2,7 @@
 # Lots of love from George 2021
 
 ## INCLUDES ##
-import pygame
+#import pygame
 import datetime
 import os
 import random
@@ -66,6 +66,7 @@ def timerReset():
   menutimer = menutimeout
 
 def timerTick():
+  print("tick")
   global menutimer
   if menutimer > 0:
     menutimer = menutimer - 1
@@ -233,6 +234,7 @@ changeMode(loadPersistentMode())
 #localdir = os.path.dirname(os.path.realpath(__file__))
 #print(localdir)
 
+lastticktime = time.time()
 while not pleasequit:
   	# handle events
 	#if pygame.event.peek(pygame.QUIT):
@@ -240,10 +242,13 @@ while not pleasequit:
 	#if pygame.event.peek(pygame.VIDEOEXPOSE) or pygame.event.peek(pygame.VIDEORESIZE):
 	#	rerender = True
 	#pygame.event.clear()
-    print("tick")
-    clock.tick(1) # --- Limit to 1 frame per second
-    timerTick()
+    
+    # tick every 1 sec
+    t = time.time()
+    if t > lastticktime + 1:
+      lastticktime = t
+      timerTick()
 
 # Close the window and quit.
 print("quitting")
-pygame.quit()
+#pygame.quit()
