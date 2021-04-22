@@ -250,9 +250,6 @@ def changeMode(mode):
         r = renderers[mode]
         if "clock" in mode:
           kwargs["timestamp"] = currentdt
-        screen = Image.new('L', boxsize)        
-        draw = ImageDraw.Draw(screen)
-        displayImage(renderers[mode](screen,draw,currentdt))
       else:
         r = renderNotImplemented
     savePersistentMode(mode)
