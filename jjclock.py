@@ -14,6 +14,9 @@ from gpiozero import Device, Button
 from IT8951.display import AutoEPDDisplay
 from IT8951 import constants
 import time
+import pytz
+import timezonefinder
+import subprocess
 from PIL import Image, ImageDraw, ImageFont
 
 ## CONSTANTS ##
