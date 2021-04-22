@@ -68,7 +68,7 @@ tf = timezonefinder.TimezoneFinder()
 currentdt = datetime.datetime.now()
 
 # standard font
-stdfnt = ImageFont.truetype("./font/ebgaramondmedium.ttf",20)
+stdfnt = ImageFont.truetype("./font/ebgaramondmedium.ttf",24)
 
 
 ## FUNCTIONS ##
@@ -100,6 +100,49 @@ def renderClockBrexit(screen, draw, **kwargs):
 renderers = {"clock_euro":renderClockEuro, "clock_brexit":renderClockBrexit, "clock_digital":renderClockDigital}
 
 def renderMenu(screen, draw, **kwargs):
+
+  #global menuitemselected
+  #global menu
+  global menusize
+  global menupatchsize
+  global menuicondim
+  #global boxsize
+  
+  fill(screen)
+  
+  if not "selecteditem" in kwargs:
+    kwargs["selecteditem"] = 0
+  if not "menu" in kwargs:
+    return screen
+    
+  ipp = menusize[0] * menusize[1] # number of items per page
+  page = int(kwargs["selecteditem"] / ipp)
+  pi_select = kwargs["selecteditem"] % ipp # index of item selected on page
+  
+  #fnt = ImageFont.truetype("./font/ebgaramondmedium.ttf",20)
+  
+  #screen = Image.new('L', boxsize)
+  #screen.paste(0xFF, box=(0,0,screen.size[0],screen.size[1]))
+  
+  for pi in range(0, ipp):
+    mi = pi+(page*ipp)
+    if len(kwargs["menu"]) > mi:
+      menuimg = Image.new('L', menupatchsize)
+      menuimg.paste(0xFF, box=(0,0,menuimg.size[0],menuimg.size[1]))
+      menuimg.paste(Image.open(kwargs["menu"][mi]["icon"]).resize((menuicondim,menuicondim),Image.ANTIALIAS),(int((menupatchsize[0]-menuicondim)/2),20))
+      draw = ImageDraw.Draw(menuimg)
+      fsz = stdfnt.getsize(kwargs["menu"][mi]["text"])
+      draw.text((int(menuimg.size[0]/2-fsz[0]/2), menuicondim + 30),kwargs["menu"][mi]["text"],font=stdfnt,fill=0x00)
+      x = int((pi % menusize[0] + 0.5) * (screen.size[0] / menusize[0]) - menupatchsize[0]/2)
+      y = int((int(pi / menusize[0]) + 0.5) * (screen.size[1] / menusize[1]) - menupatchsize[1]/2)
+      if pi == pi_select: # show this item as selected with surrounding box
+        screen.paste(0x80, box=(x-20, y-20, x+menupatchsize[0]+20, y+menupatchsize[1]+20))
+      screen.paste(menuimg, (x,y))
+  
+  draw = ImageDraw.Draw(screen)
+  pagetext = "Page {0} of {1}".format(page+1, math.ceil(len(kwargs["menu"])/ipp))
+  ptsz = stdfnt.getsize(pagetext)
+  draw.text((int(screen.size[0]/2-ptsz[0]/2), 20), pagetext, font=stdfnt, fill=0x00)
   return screen
 
 def renderConfig(screen, draw, **kwargs):
@@ -112,7 +155,7 @@ def renderNotImplemented(screen, draw, **kwargs):
     t = "Uh-oh. '" + kwargs["mode"] + "' has not been implemented!"
   else:
     t = "Uh-ok. Mode has not been implemented!"
-  tsz = fnt.getsize(t)
+  tsz = stdfnt.getsize(t)
   draw.text((screen.size[0]/2-tsz[0]/2, screen.size[1]/2-tsz[1]/2), t, font=stdfnt, fill=0x00)
   return screen
 
@@ -283,45 +326,6 @@ def displayImage(img, x=0, y=0, resize=False):
 def testDisplay(gridsize=100):
   displayImage(Image.open("./img/test.png"))
   
-def showMenu():
-  global menuitemselected
-  global menu
-  global menusize
-  global menupatchsize
-  global menuicondim
-  global boxsize
-  
-  ipp = menusize[0] * menusize[1] # number of items per page
-  page = int(menuitemselected / ipp)
-  pi_select = menuitemselected % ipp # index of item selected on page
-  
-  fnt = ImageFont.truetype("./font/ebgaramondmedium.ttf",20)
-  
-  screen = Image.new('L', boxsize)
-  screen.paste(0xFF, box=(0,0,screen.size[0],screen.size[1]))
-  
-  for pi in range(0, ipp):
-    mi = pi+(page*ipp)
-    if len(menu) > mi:
-      menuimg = Image.new('L', menupatchsize)
-      menuimg.paste(0xFF, box=(0,0,menuimg.size[0],menuimg.size[1]))
-      menuimg.paste(Image.open(menu[mi]["icon"]).resize((menuicondim,menuicondim),Image.ANTIALIAS),(int((menupatchsize[0]-menuicondim)/2),20))
-      draw = ImageDraw.Draw(menuimg)
-      fsz = fnt.getsize(menu[mi]["text"])
-      draw.text((int(menuimg.size[0]/2-fsz[0]/2), menuicondim + 30),menu[mi]["text"],font=fnt,fill=0x00)
-      x = int((pi % menusize[0] + 0.5) * (screen.size[0] / menusize[0]) - menupatchsize[0]/2)
-      y = int((int(pi / menusize[0]) + 0.5) * (screen.size[1] / menusize[1]) - menupatchsize[1]/2)
-      if pi == pi_select: # show this item as selected with surrounding box
-        screen.paste(0x80, box=(x-20, y-20, x+menupatchsize[0]+20, y+menupatchsize[1]+20))
-      screen.paste(menuimg, (x,y))
-  
-  draw = ImageDraw.Draw(screen)
-  pagetext = "Page {0} of {1}".format(page+1, math.ceil(len(menu)/ipp))
-  ptsz = fnt.getsize(pagetext)
-  draw.text((int(screen.size[0]/2-ptsz[0]/2), 20), pagetext, font=fnt, fill=0x00)
-  
-  displayImage(screen)
-
 def updateTime(dt):
   global currentdt
   currentdt = dt
