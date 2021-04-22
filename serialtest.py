@@ -64,14 +64,6 @@ tf = timezonefinder.TimezoneFinder()
 
 while (True):
   d = parseNMEA(ser.readline())
-  if "timestamp" in d:
-    print(d["timestamp"])
-  if "signalok" in d:
-    print(d["signalok"])
-  if "lat" in d and "lng" in d:
-    tzname = tf.certain_timezone_at(lat=d["lat"],lng=d["lng"])
-    tz = pytz.timezone(tzname)
-    localtime = d["timestamp"].astimezone(tz)
-    print("lat={0} lng={1} tz={2} localtime={3}".format(d["lat"],d["lng"],tz,localtime))
-    
+  if "localtime" in d:
+    print(d["localtime"])
     
