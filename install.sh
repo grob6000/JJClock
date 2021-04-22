@@ -23,6 +23,7 @@ python3 -m pip install --upgrade pip
 #sudo pip3 install pygame
 python3 -m pip install --upgrade gpiozero
 python3 -m pip install --upgrade Pillow
+python3 -m pip install --upgrade serial
 
 # raspberry pi config
 sudo raspi-config nonint do_spi 0 # enable SPI
