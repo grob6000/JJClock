@@ -351,13 +351,14 @@ def changeMode(mode):
   
 def updateTime(dt):
   global currentdt
+  global renderers
   currentdt = dt
   print(dt)
   ui = 1
   if currentmode in updateintervals:
     ui = updateintervals[currentmode]
-  if (dt.second == 0) and ("clock" in currentmode) and (currentmode in renderers) and ((dt.minute + dt.hour*60) % updateintervals[currentmode] == 0):
-      displayRender(renderers[currentmode], timestamp=dt, mode=currentmode)
+  if (dt.second == 0) and ("clock" in currentmode) and (currentmode in renderers) and ((dt.minute + dt.hour*60) % ui == 0):
+    displayRender(renderers[currentmode], timestamp=dt, mode=currentmode)
 
 ## SCRIPT ##
 
