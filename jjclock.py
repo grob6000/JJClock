@@ -199,7 +199,7 @@ def parseNMEA(line):
   if cmd == "$GPRMC":
     
     # utc time
-    if (len(fields[1]) >= 6) and (len(fields[9] >= 6):
+    if (len(fields[1]) >= 6) and (len(fields[9]) >= 6):
       hour = int(fields[1][0:2])
       minute = int(fields[1][2:4])
       second = int(fields[1][4:6])
