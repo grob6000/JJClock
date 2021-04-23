@@ -224,19 +224,18 @@ def parseNMEA(line):
       data["lng"] = lng
 
     # timezone - check 1/min if all preconditions met (signal quality indicator we will ignore; as long as we have a fix it's probably fine for TZ)
-    if second == 0 and "lat" in data and "lng" in data:
-      tzname = tf.certain_timezone_at(lat=data["lat"],lng=data["lng"])
-      tz = pytz.timezone(tzname)
-      if not tzname == systzname:
-        # TO-DO update system timezone
-        print("update system timezone")
-        r = subprocess.run(["sudo","timedatectl","set-timezone",tzname])
-        if r.returncode == 0:
-          systzname = tzname
-          print("success")
-          
-    # local time
     if "timestamp" in data:
+      if second == 0 and "lat" in data and "lng" in data:
+        tzname = tf.certain_timezone_at(lat=data["lat"],lng=data["lng"])
+        tz = pytz.timezone(tzname)
+        if not tzname == systzname:
+          # TO-DO update system timezone
+          print("update system timezone")
+          r = subprocess.run(["sudo","timedatectl","set-timezone",tzname])
+          if r.returncode == 0:
+            systzname = tzname
+            print("success")
+      # local time - use exising tz if applicable
       data["localtime"] = data["timestamp"].astimezone(tz)
     
   return data
