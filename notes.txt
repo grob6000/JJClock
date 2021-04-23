@@ -3,11 +3,21 @@ github token: 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
 to-do:
 
 * change between ap and client mode when going into config mode
-* use github api to check for updates 1/day within python script
-  - if available, run update script (stops process)
 * flask server
   - landing page: menu for wifi, updates
   - wifi page: list known wifi networks (scrape wpa_supplicant.conf), allow removing, allow adding one new one
-  - updates: allow changing update time, allow manually triggering update check, if update available allow triggering update script
-* euro mode, brexit mode renderers
-* separate renderers into another script
+  - updates: allow changing update time, allow manually triggering update check, if update available allow triggering update
+ script
+* nice robust update bash script
+ - check script directory, if not ~ then copy to ~ and run that
+   * python should copy, run from ~ itself, and quit nicely (e.g. including showing an update screen)
+ - wait a second (for python to quit)
+ - stop service
+ - git update
+ - if 'start.sh' in folder, run this, otherwise default start service
+ - delete self
+* use github api to check for updates 1/day within python script
+  - if available, run update script (stops process)
+* euro mode
+* brexit mode
+
