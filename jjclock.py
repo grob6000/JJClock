@@ -352,8 +352,9 @@ def changeMode(mode):
 def updateTime(dt):
   global currentdt
   global renderers
+  global currentmode
   currentdt = dt
-  print(dt)
+  #print(dt)
   ui = 1
   if currentmode in updateintervals:
     ui = updateintervals[currentmode]
@@ -411,6 +412,7 @@ while not pleasequit:
     # if NMEA has been received, update the time
     if ser.in_waiting>0:
       d = parseNMEA(ser.readline())
+      print(d)
       if "localtime" in d:
         updateTime(d["localtime"])
       
