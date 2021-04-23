@@ -91,12 +91,15 @@ def renderClockDigital(screen, draw, **kwargs):
   fill(screen)
   if "timestamp" in kwargs:
     t = "{0:02d}:{1:02d}".format(kwargs["timestamp"].hour, kwargs["timestamp"].minute)
-    tsz = digitalfont.getsize(t)
     dstring = kwargs["timestamp"].strftime("%A, %-d %B %Y")
-    tsz2 = digitaldatefont.getsize(dstring)
-    digy = int((screen.size[1]-tsz[1]-tsz2[1]-50)/2)
-    draw.text((screen.size[0]/2-tsz[0]/2, digy), t, font=digitalfont, fill=0x00)
-    draw.text((screen.size[0]/2-tsz2[0]/2, digy + tsz[1] + 50), dstring, font=digitaldatefont, fill=0x00)
+  else:
+    t = "--:--"
+    dstring = "Please Wait..."
+  tsz = digitalfont.getsize(t)
+  tsz2 = digitaldatefont.getsize(dstring)
+  digy = int((screen.size[1]-tsz[1]-tsz2[1]-50)/2)
+  draw.text((screen.size[0]/2-tsz[0]/2, digy), t, font=digitalfont, fill=0x00)
+  draw.text((screen.size[0]/2-tsz2[0]/2, digy + tsz[1] + 50), dstring, font=digitaldatefont, fill=0x00)
   return screen
 
 def renderClockEuro(screen, draw, **kwargs):
@@ -196,13 +199,14 @@ def parseNMEA(line):
   if cmd == "$GPRMC":
     
     # utc time
-    hour = int(fields[1][0:2])
-    minute = int(fields[1][2:4])
-    second = int(fields[1][4:6])
-    day = int(fields[9][0:2])
-    month = int(fields[9][2:4])
-    year = int(fields[9][4:6]) + 2000 
-    data["timestamp"] = datetime.datetime(year, month, day, hour, minute, second, tzinfo=pytz.UTC)
+    if (len(fields[1]) >= 6) and (len(fields[9] >= 6):
+      hour = int(fields[1][0:2])
+      minute = int(fields[1][2:4])
+      second = int(fields[1][4:6])
+      day = int(fields[9][0:2])
+      month = int(fields[9][2:4])
+      year = int(fields[9][4:6]) + 2000 
+      data["timestamp"] = datetime.datetime(year, month, day, hour, minute, second, tzinfo=pytz.UTC)
 
     # signal validity
     data["signalok"] = bool(fields[2] == "A")
@@ -230,8 +234,10 @@ def parseNMEA(line):
         if r.returncode == 0:
           systzname = tzname
           print("success")
+          
     # local time
-    data["localtime"] = data["timestamp"].astimezone(tz)
+    if "timestamp" in data:
+      data["localtime"] = data["timestamp"].astimezone(tz)
     
   return data
 
