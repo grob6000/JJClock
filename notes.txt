@@ -20,4 +20,5 @@ to-do:
   - if available, run update script (stops process)
 * euro mode
 * brexit mode
-
+* get timezone from system at boot (well before GPS has gone hot)
+* flask page - timezone settings (i.e. allow manual selection)
