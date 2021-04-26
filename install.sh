@@ -27,6 +27,7 @@ python3 -m pip install --upgrade Pillow
 sudo pip3 install pyserial
 sudo pip3 install timezonefinder
 sudo pip3 install pytz
+sudo pip3 install pydbus
 
 # raspberry pi config
 sudo raspi-config nonint do_spi 0 # enable SPI
