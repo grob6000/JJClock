@@ -18,6 +18,7 @@ import pytz
 import timezonefinder
 import subprocess
 from PIL import Image, ImageDraw, ImageFont
+import pydbus
 
 ## CONSTANTS ##
 
@@ -395,6 +396,7 @@ changeMode(loadPersistentMode())
 ser = serial.Serial('/dev/serial0', 9600, timeout=1)
 
 lastticktime = time.time()
+
 while not pleasequit:
   	# handle events
 	#if pygame.event.peek(pygame.QUIT):
@@ -415,6 +417,13 @@ while not pleasequit:
       if "localtime" in d:
         print(d)
         updateTime(d["localtime"])
+      if "signalok" in d:
+        if not d["signalok"]:
+          #timedated = pydbus.SystemBus().get(".timedate1")
+          #if timedated.NTPSynchronized: # only update if NTP ok - however don't have alternative right now
+            updateTime(datetime.datetime.now())
+          #else:
+          #  renderSplash()
       
 
 # Close the window and quit.

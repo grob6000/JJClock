@@ -32,6 +32,7 @@ sudo pip3 install pytz
 sudo raspi-config nonint do_spi 0 # enable SPI
 sudo raspi-config nonint do_hostname "jjclock" # set hostname
 sudo raspi-config nonint do_serial 1 # disable serial terminal
+sudo timedatectl set-ntp True # enable ntp
 
 # download/update
 cd ~
