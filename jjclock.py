@@ -386,6 +386,12 @@ epddisplay = AutoEPDDisplay(vcom=display_vcom)
 changeMode("splash")
 time.sleep(2)
 
+# load system timezone
+timedated = pydbus.SystemBus().get(".timedate1")
+systzname = timedated.Timezone
+print("system timezone: " + systzname)
+tz = pytz.timezone(systzname)
+
 # load last mode
 changeMode(loadPersistentMode())
 
