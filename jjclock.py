@@ -420,15 +420,17 @@ while not pleasequit:
     # if NMEA has been received, update the time
     if ser.in_waiting>0:
       d = parseNMEA(ser.readline())
+      t = None
       if "localtime" in d:
-        print("nmea received: " + d)
-        updateTime(d["localtime"])
+        t = d["localtime"])
+        p = "using nmea time: "
       elif "signalok" in d:
         t = datetime.datetime.now()
-        print("using system time: " + t.strftime("%H:%M:%S %z"))
-        updateTime(datetime.datetime.now())
+        p = "using system time: "
+      if t:
+        print(p + t.strftime("%H:%M:%S %z"))
+        updateTime(t)
       
-
 # Close the window and quit.
 print("quitting")
 ser.close()
