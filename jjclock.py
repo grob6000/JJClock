@@ -421,14 +421,12 @@ while not pleasequit:
     if ser.in_waiting>0:
       d = parseNMEA(ser.readline())
       if "localtime" in d:
-        print(d)
+        print("nmea received: " + d)
         updateTime(d["localtime"])
-      else:
-          #timedated = pydbus.SystemBus().get(".timedate1")
-          #if timedated.NTPSynchronized: # only update if NTP ok - however don't have alternative right now
-            updateTime(datetime.datetime.now())
-          #else:
-          #  renderSplash()
+      elif "signalok" in d:
+        t = datetime.datetime.now()
+        print("using system time: " + t.strftime("%H:%M:%S %z"))
+        updateTime(datetime.datetime.now())
       
 
 # Close the window and quit.
