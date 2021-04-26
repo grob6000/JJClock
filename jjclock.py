@@ -412,8 +412,8 @@ while not pleasequit:
     # if NMEA has been received, update the time
     if ser.in_waiting>0:
       d = parseNMEA(ser.readline())
-      print(d)
       if "localtime" in d:
+        print(d)
         updateTime(d["localtime"])
       
 
