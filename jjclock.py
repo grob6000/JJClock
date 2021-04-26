@@ -423,8 +423,7 @@ while not pleasequit:
       if "localtime" in d:
         print(d)
         updateTime(d["localtime"])
-      if "signalok" in d:
-        if not d["signalok"]:
+      else:
           #timedated = pydbus.SystemBus().get(".timedate1")
           #if timedated.NTPSynchronized: # only update if NTP ok - however don't have alternative right now
             updateTime(datetime.datetime.now())
