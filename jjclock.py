@@ -422,7 +422,7 @@ while not pleasequit:
       d = parseNMEA(ser.readline())
       t = None
       if "localtime" in d:
-        t = d["localtime"])
+        t = d["localtime"]
         p = "using nmea time: "
       elif "signalok" in d:
         t = datetime.datetime.now()
