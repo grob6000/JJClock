@@ -20,6 +20,10 @@ import subprocess
 from PIL import Image, ImageDraw, ImageFont
 import pydbus
 
+## LOCAL MODULES ##
+
+import jjrenderer
+
 ## CONSTANTS ##
 
 screensize = (1448, 1072) # Set the width and height of the screen [width, height]
@@ -29,9 +33,7 @@ boxsize = (cropbox[2]-cropbox[0],cropbox[3]-cropbox[1]) # x,y
 clx = int((cropbox[2] + cropbox[0])/2)
 cly = int((cropbox[3] + cropbox[1])/2)
 
-menusize = (4,3)
-menupatchsize = (200,200)
-menuicondim = 120
+
 
 buttongpio = 23
 debounce = 50 #ms
@@ -47,12 +49,7 @@ dhcp_start = (192,168,99,10)
 dhcp_end = (192,168,99,20)
 
 
-menu = [
-         {"icon":"./img/wifi.png","text":"Config Mode","mode":"wificonfig"},
-         {"icon":"./img/eu.png","text":"Euro","mode":"clock_euro"},
-         {"icon":"./img/uk.png","text":"Brexit","mode":"clock_brexit"},
-         {"icon":"./img/digital.png","text":"Digital","mode":"clock_digital"}
-       ]
+
 menutimeout = 10 # seconds
 
 ## GLOBALS ##
@@ -68,121 +65,16 @@ tz = pytz.UTC
 tf = timezonefinder.TimezoneFinder()
 currentdt = datetime.datetime.now()
 
-# standard font
-stdfnt = ImageFont.truetype("./font/ebgaramondmedium.ttf",24)
-
-
 ## FUNCTIONS ##
 
-## CLOCK RENDERERS ##  
-
-# render helpers #
-
-def fill(img, color=0xFF):
-  img.paste(color, box=(0,0,img.size[0],img.size[1]))
-  return img
-
-# renderers #
-
-digitalfont = ImageFont.truetype("./font/digital.ttf",300)
-digitaldatefont = ImageFont.truetype("./font/ebgaramondmedium.ttf",50)
-def renderClockDigital(screen, draw, **kwargs):
-  global digitalfont
-  global digitaldatefont
-  fill(screen)
-  if "timestamp" in kwargs:
-    t = "{0:02d}:{1:02d}".format(kwargs["timestamp"].hour, kwargs["timestamp"].minute)
-    dstring = kwargs["timestamp"].strftime("%A, %-d %B %Y")
-  else:
-    t = "--:--"
-    dstring = "Please Wait..."
-  tsz = digitalfont.getsize(t)
-  tsz2 = digitaldatefont.getsize(dstring)
-  digy = int((screen.size[1]-tsz[1]-tsz2[1]-50)/2)
-  draw.text((screen.size[0]/2-tsz[0]/2, digy), t, font=digitalfont, fill=0x00)
-  draw.text((screen.size[0]/2-tsz2[0]/2, digy + tsz[1] + 50), dstring, font=digitaldatefont, fill=0x00)
-  return screen
-
-def renderClockEuro(screen, draw, **kwargs):
-  return renderNotImplemented(screen, draw, **kwargs)
+## CLOCK RENDERERS ##   
   
-def renderClockBrexit(screen, draw, **kwargs):
-  return renderNotImplemented(screen, draw, **kwargs)
-
-renderers = {"clock_euro":renderClockEuro, "clock_brexit":renderClockBrexit, "clock_digital":renderClockDigital}
-updateintervals = {"clock_brexit":5} # default is 1 min, set this to other values (in minutes) where required
-
-def renderMenu(screen, draw, **kwargs):
-
-  #global menuitemselected
-  #global menu
-  global menusize
-  global menupatchsize
-  global menuicondim
-  #global boxsize
-  
-  fill(screen)
-  
-  if not "selecteditem" in kwargs:
-    kwargs["selecteditem"] = 0
-  if not "menu" in kwargs:
-    return screen
-    
-  ipp = menusize[0] * menusize[1] # number of items per page
-  page = int(kwargs["selecteditem"] / ipp)
-  pi_select = kwargs["selecteditem"] % ipp # index of item selected on page
-  
-  #fnt = ImageFont.truetype("./font/ebgaramondmedium.ttf",20)
-  
-  #screen = Image.new('L', boxsize)
-  #screen.paste(0xFF, box=(0,0,screen.size[0],screen.size[1]))
-  
-  for pi in range(0, ipp):
-    mi = pi+(page*ipp)
-    if len(kwargs["menu"]) > mi:
-      menuimg = Image.new('L', menupatchsize)
-      menuimg.paste(0xFF, box=(0,0,menuimg.size[0],menuimg.size[1]))
-      menuimg.paste(Image.open(kwargs["menu"][mi]["icon"]).resize((menuicondim,menuicondim),Image.ANTIALIAS),(int((menupatchsize[0]-menuicondim)/2),20))
-      draw2 = ImageDraw.Draw(menuimg)
-      fsz = stdfnt.getsize(kwargs["menu"][mi]["text"])
-      draw2.text((int(menuimg.size[0]/2-fsz[0]/2), menuicondim + 30),kwargs["menu"][mi]["text"],font=stdfnt,fill=0x00)
-      x = int((pi % menusize[0] + 0.5) * (screen.size[0] / menusize[0]) - menupatchsize[0]/2)
-      y = int((int(pi / menusize[0]) + 0.5) * (screen.size[1] / menusize[1]) - menupatchsize[1]/2)
-      if pi == pi_select: # show this item as selected with surrounding box
-        screen.paste(0x80, box=(x-20, y-20, x+menupatchsize[0]+20, y+menupatchsize[1]+20))
-      screen.paste(menuimg, (x,y))
-  
-  #draw = ImageDraw.Draw(screen)
-  pagetext = "Page {0} of {1}".format(page+1, math.ceil(len(kwargs["menu"])/ipp))
-  ptsz = stdfnt.getsize(pagetext)
-  draw.text((int(screen.size[0]/2-ptsz[0]/2), 20), pagetext, font=stdfnt, fill=0x00)
-  return screen
-
-def renderConfig(screen, draw, **kwargs):
-  return renderNotImplemented(screen, draw, **kwargs)
-
-def renderNotImplemented(screen, draw, **kwargs):
-  global stdfnt
-  fill(screen)
-  if "mode" in kwargs:
-    t = "Uh-oh. '" + kwargs["mode"] + "' has not been implemented!"
-  else:
-    t = "Uh-ok. Mode has not been implemented!"
-  tsz = stdfnt.getsize(t)
-  draw.text((screen.size[0]/2-tsz[0]/2, screen.size[1]/2-tsz[1]/2), t, font=stdfnt, fill=0x00)
-  return screen
-
-def renderSplash(screen, draw, **kwargs):
-  screen.paste(Image.open("./img/splash.png"))
-  return screen
-  
-def displayRender(r, **kwargs):
+def displayRender(renderer, **kwargs):
   global epddisplay
   global cropbox
   global boxsize
   screen = Image.new("L", boxsize)
-  draw = ImageDraw.Draw(screen)
-  screen = r(screen,draw,**kwargs)
+  screen = renderer.doRender(screen,**kwargs)
   epddisplay.frame_buf.paste(screen, (cropbox[0],cropbox[1])) # paste to buffer
   epddisplay.draw_full(constants.DisplayModes.GC16) # display
   
@@ -385,6 +277,9 @@ epddisplay = AutoEPDDisplay(vcom=display_vcom)
 # splash
 changeMode("splash")
 time.sleep(2)
+
+# generate renderers
+
 
 # load system timezone
 timedated = pydbus.SystemBus().get(".timedate1")
