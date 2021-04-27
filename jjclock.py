@@ -169,7 +169,7 @@ def onButton():
   print("button pressed")
   if currentmode == "menu":
     menuitemselected = (menuitemselected+1)%len(menu) 
-    displayRender(renderMenu, menu=menu, selecteditem=menuitemselected)
+    displayRender(rinstances["menu"], menu=menu, selecteditem=menuitemselected)
   else:
     changeMode("menu")
   timerReset()
