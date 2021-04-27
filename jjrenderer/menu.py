@@ -8,9 +8,9 @@ class RendererMenu(Renderer):
   menuicondim = 120
   defaultmenu = [{"mode":"default","renderer":Renderer()}]
   
-  def __init__(self, menuitems=defaultmenu):
+  def __init__(self, menu=defaultmenu):
     # populate menu entries
-    self.menu = menuitems
+    self.menu = menu
   
   def getName(self):
     return "menu"
@@ -32,9 +32,9 @@ class RendererMenu(Renderer):
       if len(self.menu) > mi:
         menuimg = Image.new('L', RendererMenu.menupatchsize)
         fill(menuimg)
-        menuimg.paste(getImage(self.menu[mi]["renderer"].getMenuItem()["icon"]).resize((RendererMenu.menuicondim,RendererMenu.menuicondim),Image.ANTIALIAS),(int((RendererMenu.menupatchsize[0]-RendererMenu.menuicondim)/2),20))
+        menuimg.paste(getImage(self.menu[mi].getMenuItem()["icon"]).resize((RendererMenu.menuicondim,RendererMenu.menuicondim),Image.ANTIALIAS),(int((RendererMenu.menupatchsize[0]-RendererMenu.menuicondim)/2),20))
         draw2 = ImageDraw.Draw(menuimg)
-        t = self.menu[mi]["renderer"].getMenuItem()["text"]
+        t = self.menu[mi].getMenuItem()["text"]
         fsz = stdfnt.getsize(t)
         draw2.text((int(menuimg.size[0]/2-fsz[0]/2), RendererMenu.menuicondim + 30),t,font=stdfnt,fill=0x00)
         x = int((pi % RendererMenu.menusize[0] + 0.5) * (screen.size[0] / RendererMenu.menusize[0]) - RendererMenu.menupatchsize[0]/2)

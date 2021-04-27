@@ -57,6 +57,12 @@ ip_mask = (255,255,255,0)
 dhcp_start = (192,168,99,10)
 dhcp_end = (192,168,99,20)
 
+menu = [jjrenderer.renderers["RendererConfig"]]
+for k,r in jjrenderer.renderers.items():
+  name = r.getName(None)
+  if "clock" in name:
+    menu.append(r())
+    
 menutimeout = 10 # seconds
 
 ## GLOBALS ##
@@ -172,7 +178,7 @@ def onButton():
 def onMenuTimeout():
   global menuitemselected
   print("menu timeout")
-  changeMode(menu[menuitemselected]["mode"])
+  changeMode(menu[menuitemselected].getName())
 
 def setWifiMode(newwifimode):
   global currentwifimode
