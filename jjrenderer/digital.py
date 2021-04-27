@@ -1,9 +1,9 @@
-from renderer import *
+from jjrenderer.renderer import *
 
 # digital clock
 class RendererDigitalClock(Renderer):
-  digitalfont = ImageFont.truetype("../font/digital.ttf",300)
-  digitaldatefont = ImageFont.truetype("../font/ebgaramondmedium.ttf",50)
+  digitalfont = getFont("digital",300)
+  digitaldatefont = getFont("ebgaramondmedium", 50)
   def getName(self):
     return "clock_digital"
   def getMenuItem(self):

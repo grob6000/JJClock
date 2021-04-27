@@ -1,4 +1,4 @@
-from renderer import *
+from jjrenderer.renderer import *
 
 class RendererConfig(Renderer):
   def getName(self):

@@ -1,4 +1,4 @@
-from renderer import *
+from jjrenderer.renderer import *
 from math import ceil
 
 class RendererMenu(Renderer):

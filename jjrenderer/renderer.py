@@ -2,22 +2,27 @@ from PIL import Image, ImageDraw, ImageFont
 import glob
 import os.path
 import datetime
+from pathlib import Path
 
-## REUSABLE STUFF #
-stdfnt = ImageFont.truetype("../font/ebgaramondmedium.ttf",24)
+_localdir = os.path.dirname(os.path.realpath(__file__))
+_fontpath = Path(_localdir).parent.joinpath("font").absolute()
 
 def fill(img, color=0xFF):
   img.paste(color, box=(0,0,img.size[0],img.size[1]))
   return img
 
-def getFont(fontname, fontsize):
-  fname = "../font/" + fontname + ".ttf"
-  return ImageFont.truetype(fname, fontsize)
+def getFont(fontname="ebgaramondmedium", fontsize=24):
+  print(_fontpath)
+  return ImageFont.truetype(os.path.join(_fontpath, fontname + ".ttf"), fontsize)
 
 def getImage(imagename):
-  if os.path.isfile("../img/" + imagename):
-    return Image.open("../img/" + imagename)
-  elif os.path.isfile("../img/" + imagename + ".png"):
+
+  p = Path("../img/" + imagename).absolute()
+  if os.path.isfile(p):
+    return Image.open(p)
+  
+  p = Path("../img/" + imagename + ".png").absolute()
+  if os.path.isfile(p):
     return Image.open("../img/" + imagename + ".png")
   else:
     raise FileNotFoundError("Image file could not be found: " + imagename)
@@ -56,6 +61,7 @@ class Renderer:
   
   def doRender(self, screen, **kwargs):
     fill(screen) # fill screen with white
+    stdfnt = getFont()
     draw = ImageDraw.Draw(screen)
     tsz = stdfnt.getsize("X")
     maxlen = int((screen.size[0] - 100) / tsz[0])

@@ -1,4 +1,4 @@
-from renderer import *
+from jjrenderer.renderer import *
 
 import random
 import importlib

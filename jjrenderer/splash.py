@@ -1,4 +1,4 @@
-from renderer import *
+from jjrenderer.renderer import *
 
 class RendererSplash(Renderer):
   def getName(self):
@@ -7,13 +7,7 @@ class RendererSplash(Renderer):
     return {"icon":"default.png","text":"Splash"}
   def doRender(self, screen, **kwargs):
     screen.paste(Image.open("./img/splash.png"))
+    return screen
 
 if __name__ == "__main__":
   testRenderer(RendererTemplate)
-
-def RendererSplash(jjrenderer.Renderer):
-  def getName(self):
-    return "splash"
-  def doRender(self, screen, **kwargs):
-    screen.paste(getImage("splash.png"))
-    return screen  

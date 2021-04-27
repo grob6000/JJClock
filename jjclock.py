@@ -2,23 +2,25 @@
 # Lots of love from George 2021
 
 ## INCLUDES ##
-#import pygame
 import datetime
 import os
 import random
 import math
 import os
 import serial
-from gpiozero import Device, Button
-#from gpiozero.pins.mock import MockFactory
-from IT8951.display import AutoEPDDisplay
-from IT8951 import constants
 import time
 import pytz
 import timezonefinder
-import subprocess
 from PIL import Image, ImageDraw, ImageFont
-import pydbus
+from sys import platform
+
+if "linux" in platform:
+  from gpiozero import Device, Button
+  #from gpiozero.pins.mock import MockFactory
+  from IT8951.display import AutoEPDDisplay
+  from IT8951 import constants
+  import pydbus
+  import subprocess
 
 ## LOCAL MODULES ##
 
@@ -33,12 +35,19 @@ boxsize = (cropbox[2]-cropbox[0],cropbox[3]-cropbox[1]) # x,y
 clx = int((cropbox[2] + cropbox[0])/2)
 cly = int((cropbox[3] + cropbox[1])/2)
 
-
-
 buttongpio = 23
 debounce = 50 #ms
 
-modelist = ["splash", "menu","wificonfig","clock_euro","clock_brexit","clock_digital"]
+modelist = ["splash","menu","config"]
+# load renderers, generate menu
+rinstances = {}
+for k,r in jjrenderer.renderers.items():
+    rinst = r()
+    name = rinst.getName()
+    rinstances[name] = rinst
+    if not name in modelist:
+      modelist.append(name)
+print(modelist)
 
 iface = "wlan0"
 ap_ssid = "JJClockSetup"
@@ -47,8 +56,6 @@ ip_addr = (192,168,99,1)
 ip_mask = (255,255,255,0)
 dhcp_start = (192,168,99,10)
 dhcp_end = (192,168,99,20)
-
-
 
 menutimeout = 10 # seconds
 
@@ -75,8 +82,11 @@ def displayRender(renderer, **kwargs):
   global boxsize
   screen = Image.new("L", boxsize)
   screen = renderer.doRender(screen,**kwargs)
-  epddisplay.frame_buf.paste(screen, (cropbox[0],cropbox[1])) # paste to buffer
-  epddisplay.draw_full(constants.DisplayModes.GC16) # display
+  if epddisplay:
+    epddisplay.frame_buf.paste(screen, (cropbox[0],cropbox[1])) # paste to buffer
+    epddisplay.draw_full(constants.DisplayModes.GC16) # display
+  else:
+    screen.show()
   
 def parseNMEA(line):
 
@@ -140,7 +150,7 @@ def timerReset():
   menutimer = menutimeout
 
 def timerTick():
-  #print("tick")
+  print("tick")
   global menutimer
   if menutimer > 0:
     menutimer = menutimer - 1
@@ -206,13 +216,12 @@ def changeMode(mode):
         kwargs["selecteditem"] = menuitemselected
         kwargs["menu"] = menu
       elif mode == "splash":
-        r = renderSplash
-      elif mode in renderers:
-        r = renderers[mode]
-        if "clock" in mode:
-          kwargs["timestamp"] = currentdt
+        r = jjrenderer.renderers["RendererSplash"]()
+      elif mode in rinstances:
+        r = rinstances[mode]
+        kwargs["timestamp"] = currentdt
       else:
-        r = renderNotImplemented
+        r = jjrenderer.Renderer()
     savePersistentMode(mode)
     displayRender(r,**kwargs)
   else:
@@ -244,59 +253,59 @@ def changeMode(mode):
   
 def updateTime(dt):
   global currentdt
-  global renderers
-  global currentmode
+  #global renderers
+  #global currentmode
   currentdt = dt
   #print(dt)
-  ui = 1
-  if currentmode in updateintervals:
-    ui = updateintervals[currentmode]
-  if (dt.second == 0) and ("clock" in currentmode) and (currentmode in renderers) and ((dt.minute + dt.hour*60) % ui == 0):
-    displayRender(renderers[currentmode], timestamp=dt, mode=currentmode)
+  ui = rinstances[currentmode].getUpdateInterval()
+  if (dt.second == 0) and ("clock" in currentmode) and (currentmode in rinstances) and ((dt.minute + dt.hour*60) % ui == 0):
+    displayRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
 
 ## SCRIPT ##
 
 # init gpio
-print("init gpio")
-#Device.pin_factory = MockFactory()
-userbutton = Button(buttongpio, bounce_time=debounce/1000.0)
-userbutton.when_pressed = onButton
-
-# init pygame
-#print("init pygame engine")
-#os.environ["SDL_VIDEODRIVER"] = "dummy"
-#pygame.init()
-#screen = pygame.display.set_mode(screensize)
-#pygame.display.set_caption("My Game")
-#clock = pygame.time.Clock() # Used to manage how fast the screen updates
+if "linux" in platform:
+  print("init gpio")
+  #Device.pin_factory = MockFactory()
+  userbutton = Button(buttongpio, bounce_time=debounce/1000.0)
+  userbutton.when_pressed = onButton
+else:
+  print("GPIO not available on this platform, no button enabled.")
 
 # init epd display
-print("init display")
-epddisplay = AutoEPDDisplay(vcom=display_vcom)
+if "linux" in platform:
+  print("init display")
+  epddisplay = AutoEPDDisplay(vcom=display_vcom)
+else:
+  print("no display on this platform.")
+  epddisplay = None
 
 # splash
 changeMode("splash")
 time.sleep(2)
-
-# generate renderers
-
-
+    
 # load system timezone
-timedated = pydbus.SystemBus().get(".timedate1")
-systzname = timedated.Timezone
+if "linux" in platform:
+  timedated = pydbus.SystemBus().get(".timedate1")
+  systzname = timedated.Timezone
+else:
+  print("no dbus, using UTC")
+  systzname = "UTC"
 print("system timezone: " + systzname)
 tz = pytz.timezone(systzname)
 
 # load last mode
 changeMode(loadPersistentMode())
 
-#localdir = os.path.dirname(os.path.realpath(__file__))
-#print(localdir)
-
 # gps serial
-ser = serial.Serial('/dev/serial0', 9600, timeout=1)
+if "linux" in platform:
+  ser = serial.Serial('/dev/serial0', 9600, timeout=1)
+else:
+  ser = None
+  print("no serial")
 
 lastticktime = time.time()
+tlastupdate = datetime.datetime.now()
 
 while not pleasequit:
   	# handle events
@@ -313,19 +322,25 @@ while not pleasequit:
       timerTick()
     
     # if NMEA has been received, update the time
-    if ser.in_waiting>0:
-      d = parseNMEA(ser.readline())
-      t = None
-      if "localtime" in d:
-        t = d["localtime"]
-        p = "using nmea time: "
-      elif "signalok" in d:
-        t = datetime.datetime.now()
-        p = "using system time: "
-      if t:
-        print(p + t.strftime("%H:%M:%S %z"))
+    if ser:
+        if ser.in_waiting>0:
+          d = parseNMEA(ser.readline())
+          t = None
+          if "localtime" in d:
+            t = d["localtime"]
+            p = "using nmea time: "
+          elif "signalok" in d:
+            t = datetime.datetime.now()
+            p = "using system time: "
+          if t:
+            print(p + t.strftime("%H:%M:%S %z"))
+            updateTime(t)
+    else:
+      t = datetime.datetime.now()
+      if ((datetime.datetime.now() - tlastupdate).total_seconds() >= 1):
+        tlastupdate = t
         updateTime(t)
-      
+
 # Close the window and quit.
 print("quitting")
 ser.close()
