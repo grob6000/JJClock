@@ -57,12 +57,11 @@ ip_mask = (255,255,255,0)
 dhcp_start = (192,168,99,10)
 dhcp_end = (192,168,99,20)
 
-menu = [jjrenderer.renderers["RendererConfig"]]
-for k,r in jjrenderer.renderers.items():
-  name = r.getName(None)
-  if "clock" in name:
-    menu.append(r())
-menurenderer = jjrenderer.renderers["RendererMenu"]    
+menu = [rinstances["config"]]
+for k, r in rinstances.items():
+  if "clock" in k:
+    menu.append(r)
+    
 menutimeout = 10 # seconds
 
 ## GLOBALS ##
@@ -211,23 +210,19 @@ def changeMode(mode):
   if mode in modelist and not mode == currentmode:
     print("changing mode to " + mode)
     currentmode = mode
-    if mode == "wificonfig":
+    if mode == "config":
       # set wifi to AP mode
       setWifiMode("ap")
-      r = renderConfig
     else:
       setWifiMode("client") # all other modes should be in client state (if no wifi configured, will be disconnected...)
-      if mode == "menu":
-        r = menurenderer
+    if mode == "menu":
         kwargs["selecteditem"] = menuitemselected
         kwargs["menu"] = menu
-      elif mode == "splash":
-        r = jjrenderer.renderers["RendererSplash"]()
-      elif mode in rinstances:
-        r = rinstances[mode]
-        kwargs["timestamp"] = currentdt
-      else:
-        r = jjrenderer.Renderer()
+    if mode in rinstances:
+      r = rinstances[mode]
+      kwargs["timestamp"] = currentdt
+    else:
+      r = jjrenderer.Renderer()
     savePersistentMode(mode)
     displayRender(r,**kwargs)
   else:
