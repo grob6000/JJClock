@@ -6,6 +6,7 @@ from pathlib import Path
 
 _localdir = os.path.dirname(os.path.realpath(__file__))
 _fontpath = Path(_localdir).parent.joinpath("font").absolute()
+_imgpath = Path(_localdir).parent.joinpath("img").absolute()
 
 def fill(img, color=0xFF):
   img.paste(color, box=(0,0,img.size[0],img.size[1]))
@@ -16,14 +17,12 @@ def getFont(fontname="ebgaramondmedium", fontsize=24):
   return ImageFont.truetype(os.path.join(_fontpath, fontname + ".ttf"), fontsize)
 
 def getImage(imagename):
-
-  p = Path("../img/" + imagename).absolute()
+  p = Path(_imgpath).joinpath(imagename).absolute()
   if os.path.isfile(p):
     return Image.open(p)
-  
-  p = Path("../img/" + imagename + ".png").absolute()
+  p = Path(_imgpath).joinpath(imagename + ".png").absolute()
   if os.path.isfile(p):
-    return Image.open("../img/" + imagename + ".png")
+    return Image.open(p)
   else:
     raise FileNotFoundError("Image file could not be found: " + imagename)
 

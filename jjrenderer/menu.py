@@ -6,15 +6,19 @@ class RendererMenu(Renderer):
   menusize = (4,3)
   menupatchsize = (200,200)
   menuicondim = 120
-  defaultmenu = [{"mode":"default","renderer":Renderer()}]
+  defaultmenu = [Renderer()]
   
   def __init__(self, menu=defaultmenu):
     # populate menu entries
-    self.menu = menu
+    self.setMenu(menu)
   
   def getName(self):
     return "menu"
   
+  def setMenu(self, menu):
+    self.menu = menu
+    # in case of pre-drawing menu screens, put that here
+    
   def doRender(self, screen, **kwargs):
     
     fill(screen)
@@ -23,16 +27,24 @@ class RendererMenu(Renderer):
     if not "selecteditem" in kwargs:
       kwargs["selecteditem"] = 0
     
+    if "menu" in kwargs:
+      self.setMenu(kwargs["menu"])
     ipp = RendererMenu.menusize[0] * RendererMenu.menusize[1] # number of items per page
     page = int(kwargs["selecteditem"] / ipp)
     pi_select = kwargs["selecteditem"] % ipp # index of item selected on page
+    
+    stdfnt = getFont()
     
     for pi in range(0, ipp):
       mi = pi+(page*ipp)
       if len(self.menu) > mi:
         menuimg = Image.new('L', RendererMenu.menupatchsize)
         fill(menuimg)
-        menuimg.paste(getImage(self.menu[mi].getMenuItem()["icon"]).resize((RendererMenu.menuicondim,RendererMenu.menuicondim),Image.ANTIALIAS),(int((RendererMenu.menupatchsize[0]-RendererMenu.menuicondim)/2),20))
+        try:
+          img = getImage(self.menu[mi].getMenuItem()["icon"])
+        except FileNotFoundError:
+          img = getImage("default.png")
+        menuimg.paste(img.resize((RendererMenu.menuicondim,RendererMenu.menuicondim),Image.ANTIALIAS),(int((RendererMenu.menupatchsize[0]-RendererMenu.menuicondim)/2),20))
         draw2 = ImageDraw.Draw(menuimg)
         t = self.menu[mi].getMenuItem()["text"]
         fsz = stdfnt.getsize(t)
