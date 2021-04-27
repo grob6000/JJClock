@@ -62,7 +62,7 @@ for k,r in jjrenderer.renderers.items():
   name = r.getName(None)
   if "clock" in name:
     menu.append(r())
-    
+menurenderer = jjrenderer.renderers["RendererMenu"]    
 menutimeout = 10 # seconds
 
 ## GLOBALS ##
@@ -218,7 +218,7 @@ def changeMode(mode):
     else:
       setWifiMode("client") # all other modes should be in client state (if no wifi configured, will be disconnected...)
       if mode == "menu":
-        r = renderMenu
+        r = menurenderer
         kwargs["selecteditem"] = menuitemselected
         kwargs["menu"] = menu
       elif mode == "splash":
