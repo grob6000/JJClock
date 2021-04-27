@@ -2,23 +2,29 @@
 # Lots of love from George 2021
 
 ## INCLUDES ##
-#import pygame
 import datetime
 import os
 import random
 import math
 import os
 import serial
-from gpiozero import Device, Button
-#from gpiozero.pins.mock import MockFactory
-from IT8951.display import AutoEPDDisplay
-from IT8951 import constants
 import time
 import pytz
 import timezonefinder
-import subprocess
 from PIL import Image, ImageDraw, ImageFont
-import pydbus
+from sys import platform
+
+if "linux" in platform:
+  from gpiozero import Device, Button
+  #from gpiozero.pins.mock import MockFactory
+  from IT8951.display import AutoEPDDisplay
+  from IT8951 import constants
+  import pydbus
+  import subprocess
+
+## LOCAL MODULES ##
+
+import jjrenderer
 
 ## CONSTANTS ##
 
@@ -29,14 +35,19 @@ boxsize = (cropbox[2]-cropbox[0],cropbox[3]-cropbox[1]) # x,y
 clx = int((cropbox[2] + cropbox[0])/2)
 cly = int((cropbox[3] + cropbox[1])/2)
 
-menusize = (4,3)
-menupatchsize = (200,200)
-menuicondim = 120
-
 buttongpio = 23
 debounce = 50 #ms
 
-modelist = ["splash", "menu","wificonfig","clock_euro","clock_brexit","clock_digital"]
+modelist = ["splash","menu","config"]
+# load renderers, generate menu
+rinstances = {}
+for k,r in jjrenderer.renderers.items():
+    rinst = r()
+    name = rinst.getName()
+    rinstances[name] = rinst
+    if not name in modelist:
+      modelist.append(name)
+print(modelist)
 
 iface = "wlan0"
 ap_ssid = "JJClockSetup"
@@ -46,13 +57,11 @@ ip_mask = (255,255,255,0)
 dhcp_start = (192,168,99,10)
 dhcp_end = (192,168,99,20)
 
-
-menu = [
-         {"icon":"./img/wifi.png","text":"Config Mode","mode":"wificonfig"},
-         {"icon":"./img/eu.png","text":"Euro","mode":"clock_euro"},
-         {"icon":"./img/uk.png","text":"Brexit","mode":"clock_brexit"},
-         {"icon":"./img/digital.png","text":"Digital","mode":"clock_digital"}
-       ]
+menu = [rinstances["config"]]
+for k, r in rinstances.items():
+  if "clock" in k:
+    menu.append(r)
+    
 menutimeout = 10 # seconds
 
 ## GLOBALS ##
@@ -68,123 +77,21 @@ tz = pytz.UTC
 tf = timezonefinder.TimezoneFinder()
 currentdt = datetime.datetime.now()
 
-# standard font
-stdfnt = ImageFont.truetype("./font/ebgaramondmedium.ttf",24)
-
-
 ## FUNCTIONS ##
 
-## CLOCK RENDERERS ##  
-
-# render helpers #
-
-def fill(img, color=0xFF):
-  img.paste(color, box=(0,0,img.size[0],img.size[1]))
-  return img
-
-# renderers #
-
-digitalfont = ImageFont.truetype("./font/digital.ttf",300)
-digitaldatefont = ImageFont.truetype("./font/ebgaramondmedium.ttf",50)
-def renderClockDigital(screen, draw, **kwargs):
-  global digitalfont
-  global digitaldatefont
-  fill(screen)
-  if "timestamp" in kwargs:
-    t = "{0:02d}:{1:02d}".format(kwargs["timestamp"].hour, kwargs["timestamp"].minute)
-    dstring = kwargs["timestamp"].strftime("%A, %-d %B %Y")
-  else:
-    t = "--:--"
-    dstring = "Please Wait..."
-  tsz = digitalfont.getsize(t)
-  tsz2 = digitaldatefont.getsize(dstring)
-  digy = int((screen.size[1]-tsz[1]-tsz2[1]-50)/2)
-  draw.text((screen.size[0]/2-tsz[0]/2, digy), t, font=digitalfont, fill=0x00)
-  draw.text((screen.size[0]/2-tsz2[0]/2, digy + tsz[1] + 50), dstring, font=digitaldatefont, fill=0x00)
-  return screen
-
-def renderClockEuro(screen, draw, **kwargs):
-  return renderNotImplemented(screen, draw, **kwargs)
+## CLOCK RENDERERS ##   
   
-def renderClockBrexit(screen, draw, **kwargs):
-  return renderNotImplemented(screen, draw, **kwargs)
-
-renderers = {"clock_euro":renderClockEuro, "clock_brexit":renderClockBrexit, "clock_digital":renderClockDigital}
-updateintervals = {"clock_brexit":5} # default is 1 min, set this to other values (in minutes) where required
-
-def renderMenu(screen, draw, **kwargs):
-
-  #global menuitemselected
-  #global menu
-  global menusize
-  global menupatchsize
-  global menuicondim
-  #global boxsize
-  
-  fill(screen)
-  
-  if not "selecteditem" in kwargs:
-    kwargs["selecteditem"] = 0
-  if not "menu" in kwargs:
-    return screen
-    
-  ipp = menusize[0] * menusize[1] # number of items per page
-  page = int(kwargs["selecteditem"] / ipp)
-  pi_select = kwargs["selecteditem"] % ipp # index of item selected on page
-  
-  #fnt = ImageFont.truetype("./font/ebgaramondmedium.ttf",20)
-  
-  #screen = Image.new('L', boxsize)
-  #screen.paste(0xFF, box=(0,0,screen.size[0],screen.size[1]))
-  
-  for pi in range(0, ipp):
-    mi = pi+(page*ipp)
-    if len(kwargs["menu"]) > mi:
-      menuimg = Image.new('L', menupatchsize)
-      menuimg.paste(0xFF, box=(0,0,menuimg.size[0],menuimg.size[1]))
-      menuimg.paste(Image.open(kwargs["menu"][mi]["icon"]).resize((menuicondim,menuicondim),Image.ANTIALIAS),(int((menupatchsize[0]-menuicondim)/2),20))
-      draw2 = ImageDraw.Draw(menuimg)
-      fsz = stdfnt.getsize(kwargs["menu"][mi]["text"])
-      draw2.text((int(menuimg.size[0]/2-fsz[0]/2), menuicondim + 30),kwargs["menu"][mi]["text"],font=stdfnt,fill=0x00)
-      x = int((pi % menusize[0] + 0.5) * (screen.size[0] / menusize[0]) - menupatchsize[0]/2)
-      y = int((int(pi / menusize[0]) + 0.5) * (screen.size[1] / menusize[1]) - menupatchsize[1]/2)
-      if pi == pi_select: # show this item as selected with surrounding box
-        screen.paste(0x80, box=(x-20, y-20, x+menupatchsize[0]+20, y+menupatchsize[1]+20))
-      screen.paste(menuimg, (x,y))
-  
-  #draw = ImageDraw.Draw(screen)
-  pagetext = "Page {0} of {1}".format(page+1, math.ceil(len(kwargs["menu"])/ipp))
-  ptsz = stdfnt.getsize(pagetext)
-  draw.text((int(screen.size[0]/2-ptsz[0]/2), 20), pagetext, font=stdfnt, fill=0x00)
-  return screen
-
-def renderConfig(screen, draw, **kwargs):
-  return renderNotImplemented(screen, draw, **kwargs)
-
-def renderNotImplemented(screen, draw, **kwargs):
-  global stdfnt
-  fill(screen)
-  if "mode" in kwargs:
-    t = "Uh-oh. '" + kwargs["mode"] + "' has not been implemented!"
-  else:
-    t = "Uh-ok. Mode has not been implemented!"
-  tsz = stdfnt.getsize(t)
-  draw.text((screen.size[0]/2-tsz[0]/2, screen.size[1]/2-tsz[1]/2), t, font=stdfnt, fill=0x00)
-  return screen
-
-def renderSplash(screen, draw, **kwargs):
-  screen.paste(Image.open("./img/splash.png"))
-  return screen
-  
-def displayRender(r, **kwargs):
+def displayRender(renderer, **kwargs):
   global epddisplay
   global cropbox
   global boxsize
   screen = Image.new("L", boxsize)
-  draw = ImageDraw.Draw(screen)
-  screen = r(screen,draw,**kwargs)
-  epddisplay.frame_buf.paste(screen, (cropbox[0],cropbox[1])) # paste to buffer
-  epddisplay.draw_full(constants.DisplayModes.GC16) # display
+  screen = renderer.doRender(screen,**kwargs)
+  if epddisplay:
+    epddisplay.frame_buf.paste(screen, (cropbox[0],cropbox[1])) # paste to buffer
+    epddisplay.draw_full(constants.DisplayModes.GC16) # display
+  else:
+    screen.show()
   
 def parseNMEA(line):
 
@@ -248,7 +155,7 @@ def timerReset():
   menutimer = menutimeout
 
 def timerTick():
-  #print("tick")
+  print("tick")
   global menutimer
   if menutimer > 0:
     menutimer = menutimer - 1
@@ -262,7 +169,7 @@ def onButton():
   print("button pressed")
   if currentmode == "menu":
     menuitemselected = (menuitemselected+1)%len(menu) 
-    displayRender(renderMenu, menu=menu, selecteditem=menuitemselected)
+    displayRender(rinstances["menu"], menu=menu, selecteditem=menuitemselected)
   else:
     changeMode("menu")
   timerReset()
@@ -270,7 +177,7 @@ def onButton():
 def onMenuTimeout():
   global menuitemselected
   print("menu timeout")
-  changeMode(menu[menuitemselected]["mode"])
+  changeMode(menu[menuitemselected].getName())
 
 def setWifiMode(newwifimode):
   global currentwifimode
@@ -303,24 +210,19 @@ def changeMode(mode):
   if mode in modelist and not mode == currentmode:
     print("changing mode to " + mode)
     currentmode = mode
-    if mode == "wificonfig":
+    if mode == "config":
       # set wifi to AP mode
       setWifiMode("ap")
-      r = renderConfig
     else:
       setWifiMode("client") # all other modes should be in client state (if no wifi configured, will be disconnected...)
-      if mode == "menu":
-        r = renderMenu
+    if mode == "menu":
         kwargs["selecteditem"] = menuitemselected
         kwargs["menu"] = menu
-      elif mode == "splash":
-        r = renderSplash
-      elif mode in renderers:
-        r = renderers[mode]
-        if "clock" in mode:
-          kwargs["timestamp"] = currentdt
-      else:
-        r = renderNotImplemented
+    if mode in rinstances:
+      r = rinstances[mode]
+      kwargs["timestamp"] = currentdt
+    else:
+      r = jjrenderer.Renderer()
     savePersistentMode(mode)
     displayRender(r,**kwargs)
   else:
@@ -352,56 +254,59 @@ def changeMode(mode):
   
 def updateTime(dt):
   global currentdt
-  global renderers
-  global currentmode
+  #global renderers
+  #global currentmode
   currentdt = dt
   #print(dt)
-  ui = 1
-  if currentmode in updateintervals:
-    ui = updateintervals[currentmode]
-  if (dt.second == 0) and ("clock" in currentmode) and (currentmode in renderers) and ((dt.minute + dt.hour*60) % ui == 0):
-    displayRender(renderers[currentmode], timestamp=dt, mode=currentmode)
+  ui = rinstances[currentmode].getUpdateInterval()
+  if (dt.second == 0) and ("clock" in currentmode) and (currentmode in rinstances) and ((dt.minute + dt.hour*60) % ui == 0):
+    displayRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
 
 ## SCRIPT ##
 
 # init gpio
-print("init gpio")
-#Device.pin_factory = MockFactory()
-userbutton = Button(buttongpio, bounce_time=debounce/1000.0)
-userbutton.when_pressed = onButton
-
-# init pygame
-#print("init pygame engine")
-#os.environ["SDL_VIDEODRIVER"] = "dummy"
-#pygame.init()
-#screen = pygame.display.set_mode(screensize)
-#pygame.display.set_caption("My Game")
-#clock = pygame.time.Clock() # Used to manage how fast the screen updates
+if "linux" in platform:
+  print("init gpio")
+  #Device.pin_factory = MockFactory()
+  userbutton = Button(buttongpio, bounce_time=debounce/1000.0)
+  userbutton.when_pressed = onButton
+else:
+  print("GPIO not available on this platform, no button enabled.")
 
 # init epd display
-print("init display")
-epddisplay = AutoEPDDisplay(vcom=display_vcom)
+if "linux" in platform:
+  print("init display")
+  epddisplay = AutoEPDDisplay(vcom=display_vcom)
+else:
+  print("no display on this platform.")
+  epddisplay = None
 
 # splash
 changeMode("splash")
 time.sleep(2)
-
+    
 # load system timezone
-timedated = pydbus.SystemBus().get(".timedate1")
-systzname = timedated.Timezone
+if "linux" in platform:
+  timedated = pydbus.SystemBus().get(".timedate1")
+  systzname = timedated.Timezone
+else:
+  print("no dbus, using UTC")
+  systzname = "UTC"
 print("system timezone: " + systzname)
 tz = pytz.timezone(systzname)
 
 # load last mode
 changeMode(loadPersistentMode())
 
-#localdir = os.path.dirname(os.path.realpath(__file__))
-#print(localdir)
-
 # gps serial
-ser = serial.Serial('/dev/serial0', 9600, timeout=1)
+if "linux" in platform:
+  ser = serial.Serial('/dev/serial0', 9600, timeout=1)
+else:
+  ser = None
+  print("no serial")
 
 lastticktime = time.time()
+tlastupdate = datetime.datetime.now()
 
 while not pleasequit:
   	# handle events
@@ -418,19 +323,25 @@ while not pleasequit:
       timerTick()
     
     # if NMEA has been received, update the time
-    if ser.in_waiting>0:
-      d = parseNMEA(ser.readline())
-      t = None
-      if "localtime" in d:
-        t = d["localtime"]
-        p = "using nmea time: "
-      elif "signalok" in d:
-        t = datetime.datetime.now()
-        p = "using system time: "
-      if t:
-        print(p + t.strftime("%H:%M:%S %z"))
+    if ser:
+        if ser.in_waiting>0:
+          d = parseNMEA(ser.readline())
+          t = None
+          if "localtime" in d:
+            t = d["localtime"]
+            p = "using nmea time: "
+          elif "signalok" in d:
+            t = datetime.datetime.now()
+            p = "using system time: "
+          if t:
+            print(p + t.strftime("%H:%M:%S %z"))
+            updateTime(t)
+    else:
+      t = datetime.datetime.now()
+      if ((datetime.datetime.now() - tlastupdate).total_seconds() >= 1):
+        tlastupdate = t
         updateTime(t)
-      
+
 # Close the window and quit.
 print("quitting")
 ser.close()
