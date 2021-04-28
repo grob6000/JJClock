@@ -13,6 +13,7 @@ import pytz
 import timezonefinder
 from PIL import Image, ImageDraw, ImageFont
 from sys import platform
+import threading
 
 if "linux" in platform:
   from gpiozero import Device, Button
