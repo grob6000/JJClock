@@ -60,6 +60,3 @@ class RendererMenu(Renderer):
     ptsz = stdfnt.getsize(pagetext)
     draw.text((int(screen.size[0]/2-ptsz[0]/2), 20), pagetext, font=stdfnt, fill=0x00)
     return screen
-
-if __name__ == "__main__":
-  testRenderer(RendererMenu)

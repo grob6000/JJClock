@@ -7,6 +7,3 @@ class RendererTemplate(Renderer):
     return {"icon":"default.png","text":"Template"}
   def doRender(self, screen, **kwargs):
     return super().doRender(screen,**kwargs)
-
-if __name__ == "__main__":
-  testRenderer(RendererTemplate)

@@ -18,6 +18,6 @@ for f in pyfiles:
     for c in dir(m):
       if not c.startswith("_"):
         o = getattr(importlib.__import__("jjrenderer." + mname, globals(), locals(), [c]), c)
-        print(o)
+        #print(o)
         if inspect.isclass(o) and not o==Renderer and issubclass(o, Renderer):
           renderers[c]=o

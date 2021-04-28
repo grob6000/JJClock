@@ -8,6 +8,3 @@ class RendererSplash(Renderer):
   def doRender(self, screen, **kwargs):
     screen.paste(Image.open("./img/splash.png"))
     return screen
-
-if __name__ == "__main__":
-  testRenderer(RendererTemplate)

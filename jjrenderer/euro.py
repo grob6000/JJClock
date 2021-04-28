@@ -29,6 +29,3 @@ for name, obj in l.items():
   if name.startswith("_Style"):
     styles.append(obj)
 print(styles)
-
-if __name__ == "__main__":
-  testRenderer(RendererEuroClock)

@@ -24,6 +24,3 @@ class RendererDigitalClock(Renderer):
     draw.text((screen.size[0]/2-tsz[0]/2, digy), t, font=RendererDigitalClock.digitalfont, fill=0x00)
     draw.text((screen.size[0]/2-tsz2[0]/2, digy + tsz[1] + 50), dstring, font=RendererDigitalClock.digitaldatefont, fill=0x00)
     return screen
-
-if __name__ == "__main__":
-  testRenderer(RendererDigitalClock)
