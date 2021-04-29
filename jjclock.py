@@ -125,6 +125,9 @@ def savePersistentMode(mode):
 def loadPersistentMode():
   return "clock_digital" # default for now
   print("NOT IMPLEMENTED - load persistent mode from file")
+
+def formatIP(ip):
+  return "{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}".format(ip=ip)
   
 def changeMode(mode):
   global modelist
@@ -140,6 +143,11 @@ def changeMode(mode):
     if mode == "config":
       # set wifi to AP mode
       setWifiMode("ap")
+      gpsstat = gpshandler.getStatus()
+      kwargs["ssid"] = ap_ssid
+      kwargs["password"] = ap_pass
+      kwargs["ip"] = formatIP(ip_addr)
+      kwargs["gpsstat"] = gpsstat
     else:
       setWifiMode("client") # all other modes should be in client state (if no wifi configured, will be disconnected...)
     if mode == "menu":
