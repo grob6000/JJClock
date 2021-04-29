@@ -13,7 +13,7 @@ def fill(img, color=0xFF):
   return img
 
 def getFont(fontname="ebgaramondmedium", fontsize=24):
-  print(_fontpath)
+  #print(_fontpath)
   return ImageFont.truetype(os.path.join(_fontpath, fontname + ".ttf"), fontsize)
 
 def getImage(imagename):
