@@ -13,7 +13,6 @@ import pytz
 import timezonefinder
 from PIL import Image, ImageDraw, ImageFont
 from sys import platform
-import threading
 
 if "linux" in platform:
   from gpiozero import Device, Button
@@ -123,15 +122,7 @@ def parseNMEA(line):
       if second == 0 and "lat" in data and "lng" in data:
         tzname = tf.certain_timezone_at(lat=data["lat"],lng=data["lng"])
         tz = pytz.timezone(tzname)
-        if not tzname == systzname:
-          # TO-DO update system timezone
-          print("update system timezone")
-          r = subprocess.run(["sudo","timedatectl","set-timezone",tzname])
-          if r.returncode == 0:
-            systzname = tzname
-            print("success")
-      # local time - use exising tz if applicable
-      data["localtime"] = data["timestamp"].astimezone(tz)
+
     
   return data
 
@@ -249,6 +240,24 @@ def updateTime(dt):
   if (dt.second == 0) and ("clock" in currentmode) and (currentmode in rinstances) and ((dt.minute + dt.hour*60) % ui == 0):
     displayRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
 
+def setSystemTz(tzname):
+  if not tzname == systzname:
+    if "linux" in platform:
+      print("updating system timezone")
+      r = subprocess.run(["sudo","timedatectl","set-timezone",tzname])
+      if r.returncode == 0:
+        print("success - system timezone changed to " + getSystemTz())
+    else:
+      systzname = tzname
+      print("non-linux os: cannot update system timezone. dummy value set to " + systzname)
+
+def getSystemTz():
+  if "linux" in platform:
+    return pydbus.SystemBus().get(".timedate1").Timezone
+  else:
+    print("cannot access system timezone. returning dummy.")
+    return systzname
+  
 ## SCRIPT ##
 
 # init gpio
@@ -271,37 +280,18 @@ else:
 # splash
 changeMode("splash")
 time.sleep(2)
-    
+
 # load system timezone
-if "linux" in platform:
-  timedated = pydbus.SystemBus().get(".timedate1")
-  systzname = timedated.Timezone
-else:
-  print("no dbus, using UTC")
-  systzname = "UTC"
-print("system timezone: " + systzname)
+systzname = getSystemTz()
 tz = pytz.timezone(systzname)
 
 # load last mode
 changeMode(loadPersistentMode())
 
 # gps serial
-if "linux" in platform:
-  ser = serial.Serial('/dev/serial0', 9600, timeout=1)
-else:
-  ser = None
-  print("no serial")
-
-lastticktime = time.time()
-tlastupdate = datetime.datetime.now()
+gpshandler = gpshandler.GpsHandler() # create and start gps handler
 
 while not pleasequit:
-  	# handle events
-	#if pygame.event.peek(pygame.QUIT):
-	#	pleasequit = True
-	#if pygame.event.peek(pygame.VIDEOEXPOSE) or pygame.event.peek(pygame.VIDEORESIZE):
-	#	rerender = True
-	#pygame.event.clear()
     
     # tick every 1 sec
     t = time.time()
@@ -310,19 +300,20 @@ while not pleasequit:
       timerTick()
     
     # if NMEA has been received, update the time
-    if ser:
-        if ser.in_waiting>0:
-          d = parseNMEA(ser.readline())
-          t = None
-          if "localtime" in d:
-            t = d["localtime"]
-            p = "using nmea time: "
-          elif "signalok" in d:
-            t = datetime.datetime.now()
-            p = "using system time: "
-          if t:
-            print(p + t.strftime("%H:%M:%S %z"))
-            updateTime(t)
+    if gpshandler.pollUpdated():
+      dt = gpshandler.getDateTime(local=True)
+      stat = gpshandler.getStatus()
+        if stat["hastime"]:
+          if stat["hasfix"]:
+            dt = gpshandler.getDateTime(local=True)
+          else:
+            dt = gpshandler.getDateTime(local=False).astimezone(tz)
+        else:
+          dt = datetime.datetime.now()
+          p = "using system time: "
+        if dt:
+          print(p + t.strftime("%H:%M:%S %z"))
+          updateTime(t)
     else:
       t = datetime.datetime.now()
       if ((datetime.datetime.now() - tlastupdate).total_seconds() >= 1):
