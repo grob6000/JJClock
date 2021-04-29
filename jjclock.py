@@ -86,10 +86,12 @@ def onButton():
   print("button pressed")
   if currentmode == "menu":
     menuitemselected = (menuitemselected+1)%len(menu) 
+    print("selected item = " + str(menuitemselected))
     displayRender(rinstances["menu"], menu=menu, selecteditem=menuitemselected)
   else:
     changeMode("menu")
   t_lastbuttonpress = time.monotonic()
+  print("t = " + t_lastbuttonpress)
 
 def onMenuTimeout():
   global menuitemselected
