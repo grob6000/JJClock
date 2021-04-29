@@ -8,6 +8,7 @@ import timezonefinder
 import atexit
 import time
 from sys import platform
+import datetime
 
 class GpsHandler():
   
