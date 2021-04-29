@@ -25,6 +25,7 @@ if "linux" in platform:
 ## LOCAL MODULES ##
 
 import jjrenderer
+import gpshandler
 
 ## CONSTANTS ##
 
@@ -41,13 +42,11 @@ for k,r in jjrenderer.renderers.items():
       modelist.append(name)
 print(modelist)
 
-
-
+# populate menu
 menu = [rinstances["config"]]
 for k, r in rinstances.items():
   if "clock" in k:
     menu.append(r)
-    
 menutimeout = 10 # seconds
 
 ## GLOBALS ##
@@ -58,14 +57,12 @@ epddisplay = None
 menuitemselected = 0
 menutimer=-1
 
-systzname = ""
+systzname = "UTC"
 tz = pytz.UTC
 tf = timezonefinder.TimezoneFinder()
 currentdt = datetime.datetime.now()
 
 ## FUNCTIONS ##
-
-## CLOCK RENDERERS ##   
   
 def displayRender(renderer, **kwargs):
   global epddisplay
@@ -78,54 +75,6 @@ def displayRender(renderer, **kwargs):
     epddisplay.draw_full(constants.DisplayModes.GC16) # display
   else:
     screen.show()
-  
-def parseNMEA(line):
-
-  global tf
-  global tz
-  global systzname
-  
-  #print(line)
-  fields = line.decode('ascii').split(",")
-  cmd = fields[0]
-  data = {}
-  
-  if cmd == "$GPRMC":
-    
-    # utc time
-    if (len(fields[1]) >= 6) and (len(fields[9]) >= 6):
-      hour = int(fields[1][0:2])
-      minute = int(fields[1][2:4])
-      second = int(fields[1][4:6])
-      day = int(fields[9][0:2])
-      month = int(fields[9][2:4])
-      year = int(fields[9][4:6]) + 2000 
-      data["timestamp"] = datetime.datetime(year, month, day, hour, minute, second, tzinfo=pytz.UTC)
-
-    # signal validity
-    data["signalok"] = bool(fields[2] == "A")
-    
-    # lat and lng
-    if len(fields[3])>0:
-      lat = float(fields[3][0:2]) + float(fields[3][2:])/60
-      if fields[4] == "S":
-        lat = lat * -1
-      data["lat"] = lat
-    if len(fields[5])>0:
-      lng = float(fields[5][0:3]) + float(fields[5][3:])/60
-      if fields[6] == "W":
-        lng = lng * -1
-      data["lng"] = lng
-
-    # timezone - check 1/min if all preconditions met (signal quality indicator we will ignore; as long as we have a fix it's probably fine for TZ)
-    if "timestamp" in data:
-      if second == 0 and "lat" in data and "lng" in data:
-        tzname = tf.certain_timezone_at(lat=data["lat"],lng=data["lng"])
-        tz = pytz.timezone(tzname)
-
-    
-  return data
-
 
 def timerReset():
   global menutimeout
@@ -205,30 +154,6 @@ def changeMode(mode):
     displayRender(r,**kwargs)
   else:
     print("invalid mode " + mode + " - not changing")
-
-  
-#def displayImage(img, x=0, y=0, resize=False):
-#  global epddisplay
-#  global boxsize
-#  global cropbox
-#  if resize:
-#    ratio = min(img.size[0]/boxsize[0],img.size[1]/boxsize[1]) # calculate ration required to fit image
-#    imgadj = img.resize((img.size[0]*ratio,img.size[1]*ratio), Image.ANTIALIAS)
-#  else:
-#    imgadj = img
-#  imgadj = imgadj.crop((0,0,boxsize[0],boxsize[1])) # crop to visible box
-#  epddisplay.frame_buf.paste(img, (cropbox[0]+x,cropbox[1]+y)) # paste to buffer
-#  epddisplay.draw_full(constants.DisplayModes.GC16) # display
-
-#def updateDisplay(pygamesurf):
-#  global epddisplay
-#  print("updating display")
-#  data = pygame.image.tostring(pygamesurf, 'RGBA')
-#  img = Image.fromstring('RGBA', screensize, data)
-#  displayImage(img, epddisplay)
-
-#def testDisplay(gridsize=100):
-#  displayImage(Image.open("./img/test.png"))
   
 def updateTime(dt):
   global currentdt
@@ -291,10 +216,13 @@ changeMode(loadPersistentMode())
 # gps serial
 gpshandler = gpshandler.GpsHandler() # create and start gps handler
 
+lastticktime = time.monotonic()
+tlastupdate = time.monotonic()
+
 while not pleasequit:
     
     # tick every 1 sec
-    t = time.time()
+    t = time.monotonic()
     if t > lastticktime + 1:
       lastticktime = t
       timerTick()
@@ -303,22 +231,24 @@ while not pleasequit:
     if gpshandler.pollUpdated():
       dt = gpshandler.getDateTime(local=True)
       stat = gpshandler.getStatus()
-        if stat["hastime"]:
-          if stat["hasfix"]:
-            dt = gpshandler.getDateTime(local=True)
-          else:
-            dt = gpshandler.getDateTime(local=False).astimezone(tz)
+      if stat["hastime"]:
+        if stat["hasfix"]:
+          dt = gpshandler.getDateTime(local=True)
+          p = "using nmea time + tz: "
         else:
-          dt = datetime.datetime.now()
-          p = "using system time: "
-        if dt:
-          print(p + t.strftime("%H:%M:%S %z"))
-          updateTime(t)
-    else:
-      t = datetime.datetime.now()
-      if ((datetime.datetime.now() - tlastupdate).total_seconds() >= 1):
-        tlastupdate = t
+          dt = gpshandler.getDateTime(local=False).astimezone(tz)
+          p = "using nmea time + cached tz: "
+      else:
+        dt = datetime.datetime.now()
+        p = "using system time: "
+      if dt:
+        print(p + t.strftime("%H:%M:%S %z"))
         updateTime(t)
+    else:
+      t = time.monotonic()
+      if ((t - tlastupdate) >= 1):
+        tlastupdate = t
+        updateTime(datetime.datetime.now())
 
 # Close the window and quit.
 print("quitting")

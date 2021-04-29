@@ -1,12 +1,13 @@
 # gps handler
 
-import pyserial
+import serial
 import threading
 import queue
 import pytz
 import timezonefinder
 import atexit
 import time
+from sys import platform
 
 class GpsHandler():
   
@@ -14,6 +15,7 @@ class GpsHandler():
   _tzcheckinterval = 300
   
   def __init__(self, port="/dev/serial0"):
+    self._port = port
     self._dt_utc = None
     self._signalok = False
     self._lat = None
@@ -55,6 +57,10 @@ class GpsHandler():
   
   def _run(self):
   
+    if not "linux" in platform:
+      print("no serial, handler will quit (blank values available only)")
+      return
+      
     ser = serial.Serial(self._port, GpsHandler._baud, timeout=1)
     
     lasttzcheck = time.monotonic() - GpsHandler._tzcheckinterval # keep track of when timezone was last checked; set up to trigger soonish
@@ -91,9 +97,9 @@ class GpsHandler():
     
         # get timezone - check 1/min if all preconditions met (signal quality indicator we will ignore; as long as we have a fix it's probably fine for TZ)
         tz = None
-          if dt_utc and time.monotonic() - lasttzcheck > GpsHandler._tzcheckinterval and lat and lng:
-            tzname = tf.certain_timezone_at(lat=lat,lng=lng)
-            tz = pytz.timezone(tzname)
+        if dt_utc and time.monotonic() - lasttzcheck > GpsHandler._tzcheckinterval and lat and lng:
+          tzname = tf.certain_timezone_at(lat=lat,lng=lng)
+          tz = pytz.timezone(tzname)
         
         # update data
         with self._datalock:
@@ -111,5 +117,6 @@ class GpsHandler():
         self._newdataevent.set() # set event for new data
   
     ser.close() # after quit, close the serial port
+    print("quit gpshandler thread success")
     
       
