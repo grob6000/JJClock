@@ -47,6 +47,7 @@ menu = [rinstances["config"]]
 for k, r in rinstances.items():
   if "clock" in k:
     menu.append(r)
+
 menutimeout = 10 # seconds
 
 ## GLOBALS ##
@@ -55,7 +56,10 @@ currentmode = -1 # initialise as an invalid mode; any mode change will trigger c
 currentwifimode = "unknown"
 epddisplay = None
 menuitemselected = 0
-menutimer=-1
+
+# timing
+t_lastbuttonpress = 0
+menutimeout_armed = False
 
 systzname = "UTC"
 tz = pytz.UTC
@@ -75,20 +79,6 @@ def displayRender(renderer, **kwargs):
     epddisplay.draw_full(constants.DisplayModes.GC16) # display
   else:
     screen.show()
-
-def timerReset():
-  global menutimeout
-  global menutimer
-  menutimer = menutimeout
-
-def timerTick():
-  print("tick")
-  global menutimer
-  if menutimer > 0:
-    menutimer = menutimer - 1
-  if menutimer == 0:
-    menutimer = -1 # disable
-    onMenuTimeout()
   
 def onButton():
   global menuitemselected
@@ -99,7 +89,7 @@ def onButton():
     displayRender(rinstances["menu"], menu=menu, selecteditem=menuitemselected)
   else:
     changeMode("menu")
-  timerReset()
+  t_lastbuttonpress = time.monotonic()
 
 def onMenuTimeout():
   global menuitemselected
@@ -224,16 +214,14 @@ changeMode(loadPersistentMode())
 # gps serial
 gpshandler = gpshandler.GpsHandler() # create and start gps handler
 
-lastticktime = time.monotonic()
 tlastupdate = time.monotonic()
-
 while not pleasequit:
     
     # tick every 1 sec
     t = time.monotonic()
-    if t > lastticktime + 1:
-      lastticktime = t
-      timerTick()
+    if menutimeout_armed and t - t_lastbuttonpress > menutimout:
+      menutimeout_armed = False
+      onMenuTimeout()
     
     # if NMEA has been received, update the time
     if gpshandler.pollUpdated():
