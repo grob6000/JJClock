@@ -39,13 +39,13 @@ class GpsHandler():
       self._worker.join() # wait for this to occur before allowing a quit
   
   def connect(self):
-    if self._worker.is_active():
+    if self._worker.is_alive():
       logging.warning("already connected!")
     else:
       self._worker.run()
   
   def disconnect(self):
-    if self._worker.is_active():
+    if self._worker.is_alive():
       self._stopevent.set()
       self._worker.join()
       logging.info("gps listener disconnected")
@@ -53,7 +53,7 @@ class GpsHandler():
       logging.warning("already disconnected!")
   
   def setPort(self, port):
-    wasrunning = self._worker.is_active()
+    wasrunning = self._worker.is_alive()
     if wasrunning:
       self.disconnect()
     with self._datalock:
