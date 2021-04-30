@@ -38,13 +38,13 @@ class GpsHandler():
       self._stopevent.set() # ask the worker thread to exit, which will also release the serial port
       self._worker.join() # wait for this to occur before allowing a quit
   
-  def connect():
+  def connect(self):
     if self._worker.is_active():
       logging.warning("already connected!")
     else:
       self._worker.run()
   
-  def disconnect():
+  def disconnect(self):
     if self._worker.is_active():
       self._stopevent.set()
       self._worker.join()
@@ -52,7 +52,7 @@ class GpsHandler():
     else:
       logging.warning("already disconnected!")
   
-  def setPort(port):
+  def setPort(self, port):
     wasrunning = self._worker.is_active()
     if wasrunning:
       self.disconnect()
