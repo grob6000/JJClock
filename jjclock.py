@@ -249,8 +249,8 @@ while not pleasequit:
         dt = datetime.datetime.now()
         p = "using system time: "
       if dt:
-        logging.debug(p + t.strftime("%H:%M:%S %z"))
-        updateTime(t)
+        logging.debug(p + dt.strftime("%H:%M:%S %z"))
+        updateTime(dt)
     else:
       t = time.monotonic()
       if ((t - tlastupdate) >= 2):
