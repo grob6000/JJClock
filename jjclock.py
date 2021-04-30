@@ -189,72 +189,81 @@ def getSystemTz():
   else:
     logging.warning("cannot access system timezone. returning dummy.")
     return systzname
+
+def checkForUpdate():
+  logging.warning("not implemented - check for update")
+  return False
+
+def doUpdate():
+  logging.warning("not implemented - do update. application will not restart.")
+  quit() # update will quit the script; we'll expect the updater to restart it
   
 ## SCRIPT ##
+if __name__ == "__main__":
 
-# init gpio
-if "linux" in sys.platform:
-  logging.info("init gpio")
-  #Device.pin_factory = MockFactory()
-  userbutton = Button(buttongpio, bounce_time=debounce/1000.0)
-  userbutton.when_pressed = onButton
-else:
-  logging.warning("GPIO not available on this platform, no button enabled.")
-
-# init epd display
-if "linux" in sys.platform:
-  logging.info("init display")
-  epddisplay = AutoEPDDisplay(vcom=display_vcom)
-else:
-  logging.warning("no display on this platform.")
-  epddisplay = None
-
-# splash
-#changeMode("splash")
-#time.sleep(2)
-
-# load system timezone
-systzname = getSystemTz()
-tz = pytz.timezone(systzname)
-
-# load last mode
-changeMode(loadPersistentMode())
-
-# gps serial
-gpshandler = gpshandler.GpsHandler() # create and start gps handler
-gpshandler.connect()
-
-tlastupdate = time.monotonic()
-while not pleasequit:
-    
-    t = time.monotonic()
-    if menutimeout_armed and t - t_lastbuttonpress > menutimeout:
-      menutimeout_armed = False
-      onMenuTimeout()
-    
-    # if NMEA has been received, update the time
-    if gpshandler.pollUpdated():
-      stat = gpshandler.getStatus()
-      if stat["hastime"]:
-        if stat["hasfix"]:
-          dt = gpshandler.getDateTime(local=True)
-          p = "using nmea time + tz: "
-        else:
-          dt = gpshandler.getDateTime(local=False).astimezone(tz)
-          p = "using nmea time + cached tz: "
-      else:
-        dt = datetime.datetime.now()
-        p = "using system time: "
-      if dt:
-        logging.debug(p + dt.strftime("%H:%M:%S %z"))
-        updateTime(dt)
-    else:
+  # init gpio
+  if "linux" in sys.platform:
+    logging.info("init gpio")
+    #Device.pin_factory = MockFactory()
+    userbutton = Button(buttongpio, bounce_time=debounce/1000.0)
+    userbutton.when_pressed = onButton
+  else:
+    logging.warning("GPIO not available on this platform, no button enabled.")
+  
+  # init epd display
+  if "linux" in sys.platform:
+    logging.info("init display")
+    epddisplay = AutoEPDDisplay(vcom=display_vcom)
+  else:
+    logging.warning("no display on this platform.")
+    epddisplay = None
+  
+  # splash
+  #changeMode("splash")
+  #time.sleep(2)
+  
+  # load system timezone
+  systzname = getSystemTz()
+  tz = pytz.timezone(systzname)
+  
+  # load last mode
+  changeMode(loadPersistentMode())
+  
+  # gps serial
+  gpshandler = gpshandler.GpsHandler() # create and start gps handler
+  gpshandler.connect()
+  
+  tlastupdate = time.monotonic()
+  while not pleasequit:
+      
       t = time.monotonic()
-      if ((t - tlastupdate) >= 2):
-        tlastupdate = t
-        updateTime(datetime.datetime.now())
-        
-    time.sleep(0.2) # limit to 5Hz
-
-# Close the window and quit.
-logging.info("quitting")
+      if menutimeout_armed and t - t_lastbuttonpress > menutimeout:
+        menutimeout_armed = False
+        onMenuTimeout()
+      
+      # if NMEA has been received, update the time
+      if gpshandler.pollUpdated():
+        stat = gpshandler.getStatus()
+        if stat["hastime"]:
+          if stat["hasfix"]:
+            dt = gpshandler.getDateTime(local=True)
+            p = "using nmea time + tz: "
+          else:
+            dt = gpshandler.getDateTime(local=False).astimezone(tz)
+            p = "using nmea time + cached tz: "
+        else:
+          dt = datetime.datetime.now()
+          p = "using system time: "
+        if dt:
+          logging.debug(p + dt.strftime("%H:%M:%S %z"))
+          updateTime(dt)
+      else:
+        t = time.monotonic()
+        if ((t - tlastupdate) >= 2):
+          tlastupdate = t
+          updateTime(datetime.datetime.now())
+          
+      time.sleep(0.2) # limit to 5Hz
+  
+  # Close the window and quit.
+  logging.info("quitting")
