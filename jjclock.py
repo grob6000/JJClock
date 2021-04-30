@@ -233,8 +233,9 @@ while not pleasequit:
     
     # if NMEA has been received, update the time
     if gpshandler.pollUpdated():
-      dt = gpshandler.getDateTime(local=True)
+      logging.debug("handling new data")
       stat = gpshandler.getStatus()
+      logging.debug("stat = " + str(stat))
       if stat["hastime"]:
         if stat["hasfix"]:
           dt = gpshandler.getDateTime(local=True)

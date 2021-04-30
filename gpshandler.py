@@ -96,12 +96,12 @@ class GpsHandler():
     
     lasttzcheck = time.monotonic() - GpsHandler._tzcheckinterval # keep track of when timezone was last checked; set up to trigger soonish
     while not self._stopevent.is_set(): # repeat until stop
-      logging.debug("waiting for serial input...")
+      #logging.debug("waiting for serial input...")
       line = ser.readline()# readline from serial - timeouts will return 
-      logging.debug("serial received: " + line.decode('ascii'))
+      #logging.debug("serial received: " + line.decode('ascii'))
       fields = line.decode('ascii').split(",")
       if fields[0] == "$GPRMC": # only parse GPRMC messages
-        
+        logging.debug("received message: " + str(fields))
         # utc time
         dt_utc = None
         if (len(fields[1]) >= 6) and (len(fields[9]) >= 6):
@@ -134,7 +134,7 @@ class GpsHandler():
           tzname = tf.certain_timezone_at(lat=lat,lng=lng)
           tz = pytz.timezone(tzname)
         
-        logging.debug("setting data...")
+        #logging.debug("setting data...")
         # update data
         with self._datalock:
           if dt_utc:
@@ -149,7 +149,7 @@ class GpsHandler():
             self._tz = tz
         
         self._newdataevent.set() # set event for new data
-        logging.debug("data collection success")
+        #logging.debug("data collection success")
   
     ser.close() # after quit, close the serial port
     logging.info("quit gpshandler thread success")
