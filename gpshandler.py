@@ -62,7 +62,6 @@ class GpsHandler():
       self.connect()
     
   def getDateTime(self, local=True):
-    logging.debug("getDateTime")
     with self._datalock:
       if self._dt_utc:
         if local and self._dt_utc:
@@ -72,7 +71,6 @@ class GpsHandler():
     return dt
     
   def getStatus(self):
-    logging.debug("getStatus")
     with self._datalock:
       hastime = bool(self._dt_utc)
       signalok = self._signalok
@@ -81,7 +79,6 @@ class GpsHandler():
   
   # check if data has been updated since last call
   def pollUpdated(self):
-    logging.debug("poll request, event state = {0}".format(self._newdataevent.is_set()))
     isupdated = self._newdataevent.is_set()
     self._newdataevent.clear()
     return isupdated

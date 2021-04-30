@@ -87,6 +87,7 @@ def displayRender(renderer, **kwargs):
 def onButton():
   global menuitemselected
   global menu
+  t_lastbuttonpress = time.monotonic()
   logging.info("button pressed")
   if currentmode == "menu":
     menuitemselected = (menuitemselected+1)%len(menu) 
@@ -94,8 +95,6 @@ def onButton():
     displayRender(rinstances["menu"], menu=menu, selecteditem=menuitemselected)
   else:
     changeMode("menu")
-  t_lastbuttonpress = time.monotonic()
-  logging.debug("t = " + str(t_lastbuttonpress))
 
 def onMenuTimeout():
   global menuitemselected
