@@ -12,9 +12,9 @@ import time
 import pytz
 import timezonefinder
 from PIL import Image, ImageDraw, ImageFont
-from sys import platform
+import sys
 
-if "linux" in platform:
+if "linux" in sys.platform:
   from gpiozero import Device, Button
   #from gpiozero.pins.mock import MockFactory
   from IT8951.display import AutoEPDDisplay
@@ -171,7 +171,7 @@ def updateTime(dt):
 
 def setSystemTz(tzname):
   if not tzname == systzname:
-    if "linux" in platform:
+    if "linux" in sys.platform:
       logging.info("updating system timezone")
       r = subprocess.run(["sudo","timedatectl","set-timezone",tzname])
       if r.returncode == 0:
@@ -181,7 +181,7 @@ def setSystemTz(tzname):
       logging.warning("non-linux os: cannot update system timezone. dummy value set to " + systzname)
 
 def getSystemTz():
-  if "linux" in platform:
+  if "linux" in sys.platform:
     return pydbus.SystemBus().get(".timedate1").Timezone
   else:
     logging.warning("cannot access system timezone. returning dummy.")
@@ -190,7 +190,7 @@ def getSystemTz():
 ## SCRIPT ##
 
 # init gpio
-if "linux" in platform:
+if "linux" in sys.platform:
   logging.info("init gpio")
   #Device.pin_factory = MockFactory()
   userbutton = Button(buttongpio, bounce_time=debounce/1000.0)
@@ -199,7 +199,7 @@ else:
   logging.warning("GPIO not available on this platform, no button enabled.")
 
 # init epd display
-if "linux" in platform:
+if "linux" in sys.platform:
   logging.info("init display")
   epddisplay = AutoEPDDisplay(vcom=display_vcom)
 else:
