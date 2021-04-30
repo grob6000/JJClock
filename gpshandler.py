@@ -150,6 +150,8 @@ class GpsHandler():
         
         self._newdataevent.set() # set event for new data
         #logging.debug("data collection success")
+        
+      time.sleep(0.01)
   
     ser.close() # after quit, close the serial port
     logging.info("quit gpshandler thread success")
