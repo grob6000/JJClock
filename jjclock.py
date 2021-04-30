@@ -191,7 +191,13 @@ def getSystemTz():
     return systzname
 
 def checkForUpdate():
-    
+  logging.warning("not implemented - check for update")
+  return False
+
+def doUpdate():
+  logging.warning("not implemented - do update. application will not restart.")
+  quit() # update will quit the script; we'll expect the updater to restart it
+  
 ## SCRIPT ##
 if __name__ == "__main__":
 
