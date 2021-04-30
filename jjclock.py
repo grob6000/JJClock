@@ -230,7 +230,7 @@ while not pleasequit:
       onMenuTimeout()
     
     # if NMEA has been received, update the time
-    if gpshandler.pollUpdated()
+    if gpshandler.pollUpdated():
       stat = gpshandler.getStatus()
       if stat["hastime"]:
         if stat["hasfix"]:
