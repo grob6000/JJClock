@@ -13,6 +13,7 @@ import pytz
 import timezonefinder
 from PIL import Image, ImageDraw, ImageFont
 from sys import platform
+import logging
 
 if "linux" in platform:
   from gpiozero import Device, Button
@@ -40,7 +41,7 @@ for k,r in jjrenderer.renderers.items():
     rinstances[name] = rinst
     if not name in modelist:
       modelist.append(name)
-print(modelist)
+logging.debug(str(modelist))
 
 # populate menu
 menu = [rinstances["config"]]
@@ -83,40 +84,40 @@ def displayRender(renderer, **kwargs):
 def onButton():
   global menuitemselected
   global menu
-  print("button pressed")
+  logging.info("button pressed")
   if currentmode == "menu":
     menuitemselected = (menuitemselected+1)%len(menu) 
-    print("selected item = " + str(menuitemselected))
+    logging.debug("selected item = " + str(menuitemselected))
     displayRender(rinstances["menu"], menu=menu, selecteditem=menuitemselected)
   else:
     changeMode("menu")
   t_lastbuttonpress = time.monotonic()
-  print("t = " + t_lastbuttonpress)
+  logging.debug("t = " + str(t_lastbuttonpress))
 
 def onMenuTimeout():
   global menuitemselected
-  print("menu timeout")
+  logging.info("menu timeout")
   changeMode(menu[menuitemselected].getName())
 
 def setWifiMode(newwifimode):
   global currentwifimode
   if (newwifimode == currentwifimode):
-    print("wifi mode unchanged")
+    logging.info("wifi mode unchanged")
   elif newwifimode == "ap":
-    print("NOT IMPLEMENTED - wifi mode AP")
+    logging.info("NOT IMPLEMENTED - wifi mode AP")
     currentwifimode = newwifimode
   elif newwifimode == "client":
-    print("NOT IMPLEMENTED - wifi mode Client")
+    logging.info("NOT IMPLEMENTED - wifi mode Client")
     currentwifimode = newwifimode
   else:
-    print("invalid wifi mode, no change")
+    logging.info("invalid wifi mode, no change")
 
 def savePersistentMode(mode):
   print("NOT IMPLEMENTED - persist mode as file")
 
 def loadPersistentMode():
   return "clock_digital" # default for now
-  print("NOT IMPLEMENTED - load persistent mode from file")
+  logging.info("NOT IMPLEMENTED - load persistent mode from file")
 
 def formatIP(ip):
   return "{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}".format(ip=ip)
@@ -130,7 +131,7 @@ def changeMode(mode):
   r = None
   kwargs = {"mode":mode}
   if mode in modelist and not mode == currentmode:
-    print("changing mode to " + mode)
+    logging.info("changing mode to " + mode)
     currentmode = mode
     if mode == "config":
       # set wifi to AP mode
@@ -153,7 +154,7 @@ def changeMode(mode):
     savePersistentMode(mode)
     displayRender(r,**kwargs)
   else:
-    print("invalid mode " + mode + " - not changing")
+    logging.warning("invalid mode " + mode + " - not changing")
   
 def updateTime(dt):
   global currentdt
@@ -168,38 +169,38 @@ def updateTime(dt):
 def setSystemTz(tzname):
   if not tzname == systzname:
     if "linux" in platform:
-      print("updating system timezone")
+      logging.info("updating system timezone")
       r = subprocess.run(["sudo","timedatectl","set-timezone",tzname])
       if r.returncode == 0:
-        print("success - system timezone changed to " + getSystemTz())
+        logging.info("success - system timezone changed to " + getSystemTz())
     else:
       systzname = tzname
-      print("non-linux os: cannot update system timezone. dummy value set to " + systzname)
+      logging.warning("non-linux os: cannot update system timezone. dummy value set to " + systzname)
 
 def getSystemTz():
   if "linux" in platform:
     return pydbus.SystemBus().get(".timedate1").Timezone
   else:
-    print("cannot access system timezone. returning dummy.")
+    logging.warning("cannot access system timezone. returning dummy.")
     return systzname
   
 ## SCRIPT ##
 
 # init gpio
 if "linux" in platform:
-  print("init gpio")
+  logging.info("init gpio")
   #Device.pin_factory = MockFactory()
   userbutton = Button(buttongpio, bounce_time=debounce/1000.0)
   userbutton.when_pressed = onButton
 else:
-  print("GPIO not available on this platform, no button enabled.")
+  logging.warning("GPIO not available on this platform, no button enabled.")
 
 # init epd display
 if "linux" in platform:
-  print("init display")
+  logging.info("init display")
   epddisplay = AutoEPDDisplay(vcom=display_vcom)
 else:
-  print("no display on this platform.")
+  logging.warning("no display on this platform.")
   epddisplay = None
 
 # splash
@@ -219,7 +220,6 @@ gpshandler = gpshandler.GpsHandler() # create and start gps handler
 tlastupdate = time.monotonic()
 while not pleasequit:
     
-    # tick every 1 sec
     t = time.monotonic()
     if menutimeout_armed and t - t_lastbuttonpress > menutimout:
       menutimeout_armed = False
@@ -240,7 +240,7 @@ while not pleasequit:
         dt = datetime.datetime.now()
         p = "using system time: "
       if dt:
-        print(p + t.strftime("%H:%M:%S %z"))
+        logging.debug(p + t.strftime("%H:%M:%S %z"))
         updateTime(t)
     else:
       t = time.monotonic()
@@ -249,6 +249,4 @@ while not pleasequit:
         updateTime(datetime.datetime.now())
 
 # Close the window and quit.
-print("quitting")
-ser.close()
-#pygame.quit()
+logging.info("quitting")

@@ -9,6 +9,7 @@ import atexit
 import time
 from sys import platform
 import datetime
+import logging
 
 class GpsHandler():
   
@@ -16,6 +17,7 @@ class GpsHandler():
   _tzcheckinterval = 300
   
   def __init__(self, port="/dev/serial0"):
+    logging.debug("initializing gpshandler")
     self._port = port
     self._dt_utc = None
     self._signalok = False
@@ -27,7 +29,9 @@ class GpsHandler():
     self._newdataevent = threading.Event()
     self._worker = threading.Thread(target=self._run)
     atexit.register(self.__del__) # try to terminate thread nicely on quit (give back serial port)
+    logging.debug("starting gps worker...")
     self._worker.run() # start the thread listening for NMEA data
+    logging.debug("gps worker started - port=" + self._port)
     
   def __del__(self):
     if self._worker.is_alive():
@@ -59,14 +63,17 @@ class GpsHandler():
   def _run(self):
   
     if not "linux" in platform:
-      print("no serial, handler will quit (blank values available only)")
+      logging.warning("no serial, handler will quit (blank values available only)")
       return
-      
+    
+    logging.debug("opening port" + self._port)
     ser = serial.Serial(self._port, GpsHandler._baud, timeout=1)
     
     lasttzcheck = time.monotonic() - GpsHandler._tzcheckinterval # keep track of when timezone was last checked; set up to trigger soonish
     while not self._stopevent.is_set(): # repeat until stop
+      logging.debug("waiting for serial input...")
       line = ser.readline()# readline from serial - timeouts will return 
+      logging.debug("serial received: " + line)
       fields = line.decode('ascii').split(",")
       if fields[0] == "$GPRMC": # only parse GPRMC messages
         
@@ -102,6 +109,7 @@ class GpsHandler():
           tzname = tf.certain_timezone_at(lat=lat,lng=lng)
           tz = pytz.timezone(tzname)
         
+        logging.debug("setting data...")
         # update data
         with self._datalock:
           if dt_utc:
@@ -116,8 +124,9 @@ class GpsHandler():
             self._tz = tz
         
         self._newdataevent.set() # set event for new data
+        logging.debug("data collection success")
   
     ser.close() # after quit, close the serial port
-    print("quit gpshandler thread success")
+    logging.info("quit gpshandler thread success")
     
       
