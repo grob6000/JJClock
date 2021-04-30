@@ -210,8 +210,8 @@ else:
   epddisplay = None
 
 # splash
-changeMode("splash")
-time.sleep(2)
+#changeMode("splash")
+#time.sleep(2)
 
 # load system timezone
 systzname = getSystemTz()
