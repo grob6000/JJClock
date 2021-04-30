@@ -232,7 +232,9 @@ while not pleasequit:
       onMenuTimeout()
     
     # if NMEA has been received, update the time
-    if gpshandler.pollUpdated():
+    poll = gpshandler.pollUpdated()
+    logging.debug("poll={0}".format(poll))
+    if poll:
       logging.debug("handling new data")
       stat = gpshandler.getStatus()
       logging.debug("stat = " + str(stat))
@@ -251,9 +253,11 @@ while not pleasequit:
         updateTime(t)
     else:
       t = time.monotonic()
-      if ((t - tlastupdate) >= 1):
+      if ((t - tlastupdate) >= 2):
         tlastupdate = t
         updateTime(datetime.datetime.now())
+        
+    time.sleep(0.2) # limit to 5Hz
 
 # Close the window and quit.
 logging.info("quitting")
