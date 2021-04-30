@@ -62,6 +62,7 @@ class GpsHandler():
       self.connect()
     
   def getDateTime(self, local=True):
+    logging.debug("getDateTime")
     with self._datalock:
       if self._dt:
         if local and self._dt:
@@ -71,6 +72,7 @@ class GpsHandler():
     return dt
     
   def getStatus(self):
+    logging.debug("getStatus")
     with self._datalock:
       hastime = bool(self._dt_utc)
       signalok = self._signalok
