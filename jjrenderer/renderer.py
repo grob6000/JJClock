@@ -3,6 +3,7 @@ import glob
 import os.path
 import datetime
 from pathlib import Path
+import logging
 
 _localdir = os.path.dirname(os.path.realpath(__file__))
 _fontpath = Path(_localdir).parent.joinpath("font").absolute()
@@ -13,7 +14,7 @@ def fill(img, color=0xFF):
   return img
 
 def getFont(fontname="ebgaramondmedium", fontsize=24):
-  print(_fontpath)
+  #print(_fontpath)
   return ImageFont.truetype(os.path.join(_fontpath, fontname + ".ttf"), fontsize)
 
 def getImage(imagename):
@@ -27,7 +28,7 @@ def getImage(imagename):
     raise FileNotFoundError("Image file could not be found: " + imagename)
 
 def testRenderer(rendererclass):
-  print("Test render " + rendererclass.__name__)
+  logging.info("Test render " + rendererclass.__name__)
   
   screensize = (1448, 1072) # Set the width and height of the screen [width, height]
   cropbox = (10,10,1410,1060) # area we should work within / x1, y1, x2, y2

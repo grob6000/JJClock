@@ -2,6 +2,7 @@ from jjrenderer.renderer import *
 
 import random
 import importlib
+import logging
 
 class RendererEuroClock(Renderer):
   
@@ -18,7 +19,7 @@ class RendererEuroClock(Renderer):
     
 class _StyleFrench(RendererEuroClock):
   def doRender(self, screen, **kwargs):
-    print("Francois")
+    logging.info("Francois")
     fill(screen)
     return screen
 
@@ -28,4 +29,4 @@ l = locals().copy()
 for name, obj in l.items():
   if name.startswith("_Style"):
     styles.append(obj)
-print(styles)
+logging.debug("euro styles loaded: " + str(styles))

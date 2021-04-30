@@ -12,9 +12,9 @@ import time
 import pytz
 import timezonefinder
 from PIL import Image, ImageDraw, ImageFont
-from sys import platform
+import sys
 
-if "linux" in platform:
+if "linux" in sys.platform:
   from gpiozero import Device, Button
   #from gpiozero.pins.mock import MockFactory
   from IT8951.display import AutoEPDDisplay
@@ -22,9 +22,14 @@ if "linux" in platform:
   import pydbus
   import subprocess
 
+# set up logger
+import logging
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
 ## LOCAL MODULES ##
 
 import jjrenderer
+import gpshandler
 
 ## CONSTANTS ##
 
@@ -39,15 +44,14 @@ for k,r in jjrenderer.renderers.items():
     rinstances[name] = rinst
     if not name in modelist:
       modelist.append(name)
-print(modelist)
+logging.debug(str(modelist))
 
-
-
+# populate menu
 menu = [rinstances["config"]]
 for k, r in rinstances.items():
   if "clock" in k:
     menu.append(r)
-    
+
 menutimeout = 10 # seconds
 
 ## GLOBALS ##
@@ -56,16 +60,17 @@ currentmode = -1 # initialise as an invalid mode; any mode change will trigger c
 currentwifimode = "unknown"
 epddisplay = None
 menuitemselected = 0
-menutimer=-1
 
-systzname = ""
+# timing
+t_lastbuttonpress = 0
+menutimeout_armed = False
+
+systzname = "UTC"
 tz = pytz.UTC
 tf = timezonefinder.TimezoneFinder()
 currentdt = datetime.datetime.now()
 
 ## FUNCTIONS ##
-
-## CLOCK RENDERERS ##   
   
 def displayRender(renderer, **kwargs):
   global epddisplay
@@ -79,111 +84,49 @@ def displayRender(renderer, **kwargs):
   else:
     screen.show()
   
-def parseNMEA(line):
-
-  global tf
-  global tz
-  global systzname
-  
-  #print(line)
-  fields = line.decode('ascii').split(",")
-  cmd = fields[0]
-  data = {}
-  
-  if cmd == "$GPRMC":
-    
-    # utc time
-    if (len(fields[1]) >= 6) and (len(fields[9]) >= 6):
-      hour = int(fields[1][0:2])
-      minute = int(fields[1][2:4])
-      second = int(fields[1][4:6])
-      day = int(fields[9][0:2])
-      month = int(fields[9][2:4])
-      year = int(fields[9][4:6]) + 2000 
-      data["timestamp"] = datetime.datetime(year, month, day, hour, minute, second, tzinfo=pytz.UTC)
-
-    # signal validity
-    data["signalok"] = bool(fields[2] == "A")
-    
-    # lat and lng
-    if len(fields[3])>0:
-      lat = float(fields[3][0:2]) + float(fields[3][2:])/60
-      if fields[4] == "S":
-        lat = lat * -1
-      data["lat"] = lat
-    if len(fields[5])>0:
-      lng = float(fields[5][0:3]) + float(fields[5][3:])/60
-      if fields[6] == "W":
-        lng = lng * -1
-      data["lng"] = lng
-
-    # timezone - check 1/min if all preconditions met (signal quality indicator we will ignore; as long as we have a fix it's probably fine for TZ)
-    if "timestamp" in data:
-      if second == 0 and "lat" in data and "lng" in data:
-        tzname = tf.certain_timezone_at(lat=data["lat"],lng=data["lng"])
-        tz = pytz.timezone(tzname)
-        if not tzname == systzname:
-          # TO-DO update system timezone
-          print("update system timezone")
-          r = subprocess.run(["sudo","timedatectl","set-timezone",tzname])
-          if r.returncode == 0:
-            systzname = tzname
-            print("success")
-      # local time - use exising tz if applicable
-      data["localtime"] = data["timestamp"].astimezone(tz)
-    
-  return data
-
-
-def timerReset():
-  global menutimeout
-  global menutimer
-  menutimer = menutimeout
-
-def timerTick():
-  print("tick")
-  global menutimer
-  if menutimer > 0:
-    menutimer = menutimer - 1
-  if menutimer == 0:
-    menutimer = -1 # disable
-    onMenuTimeout()
-  
 def onButton():
   global menuitemselected
   global menu
-  print("button pressed")
+  global menutimeout_armed
+  global t_lastbuttonpress
+  global currentmode
+  t_lastbuttonpress = time.monotonic()
+  logging.info("button pressed, t={0}".format(t_lastbuttonpress))
   if currentmode == "menu":
     menuitemselected = (menuitemselected+1)%len(menu) 
+    logging.debug("selected item = " + str(menuitemselected))
     displayRender(rinstances["menu"], menu=menu, selecteditem=menuitemselected)
   else:
+    menutimeout_armed = True
     changeMode("menu")
-  timerReset()
 
 def onMenuTimeout():
   global menuitemselected
-  print("menu timeout")
+  logging.info("menu timeout")
   changeMode(menu[menuitemselected].getName())
 
 def setWifiMode(newwifimode):
   global currentwifimode
   if (newwifimode == currentwifimode):
-    print("wifi mode unchanged")
+    logging.info("wifi mode unchanged")
   elif newwifimode == "ap":
-    print("NOT IMPLEMENTED - wifi mode AP")
+    logging.info("NOT IMPLEMENTED - wifi mode AP")
     currentwifimode = newwifimode
   elif newwifimode == "client":
-    print("NOT IMPLEMENTED - wifi mode Client")
+    logging.info("NOT IMPLEMENTED - wifi mode Client")
     currentwifimode = newwifimode
   else:
-    print("invalid wifi mode, no change")
+    logging.info("invalid wifi mode, no change")
 
 def savePersistentMode(mode):
-  print("NOT IMPLEMENTED - persist mode as file")
+  logging.info("NOT IMPLEMENTED - persist mode as file")
 
 def loadPersistentMode():
   return "clock_digital" # default for now
-  print("NOT IMPLEMENTED - load persistent mode from file")
+  logging.info("NOT IMPLEMENTED - load persistent mode from file")
+
+def formatIP(ip):
+  return "{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}".format(ip=ip)
   
 def changeMode(mode):
   global modelist
@@ -194,11 +137,16 @@ def changeMode(mode):
   r = None
   kwargs = {"mode":mode}
   if mode in modelist and not mode == currentmode:
-    print("changing mode to " + mode)
+    logging.info("changing mode to " + mode)
     currentmode = mode
     if mode == "config":
       # set wifi to AP mode
       setWifiMode("ap")
+      gpsstat = gpshandler.getStatus()
+      kwargs["ssid"] = ap_ssid
+      kwargs["password"] = ap_pass
+      kwargs["ip"] = formatIP(ip_addr)
+      kwargs["gpsstat"] = gpsstat
     else:
       setWifiMode("client") # all other modes should be in client state (if no wifi configured, will be disconnected...)
     if mode == "menu":
@@ -212,31 +160,7 @@ def changeMode(mode):
     savePersistentMode(mode)
     displayRender(r,**kwargs)
   else:
-    print("invalid mode " + mode + " - not changing")
-
-  
-#def displayImage(img, x=0, y=0, resize=False):
-#  global epddisplay
-#  global boxsize
-#  global cropbox
-#  if resize:
-#    ratio = min(img.size[0]/boxsize[0],img.size[1]/boxsize[1]) # calculate ration required to fit image
-#    imgadj = img.resize((img.size[0]*ratio,img.size[1]*ratio), Image.ANTIALIAS)
-#  else:
-#    imgadj = img
-#  imgadj = imgadj.crop((0,0,boxsize[0],boxsize[1])) # crop to visible box
-#  epddisplay.frame_buf.paste(img, (cropbox[0]+x,cropbox[1]+y)) # paste to buffer
-#  epddisplay.draw_full(constants.DisplayModes.GC16) # display
-
-#def updateDisplay(pygamesurf):
-#  global epddisplay
-#  print("updating display")
-#  data = pygame.image.tostring(pygamesurf, 'RGBA')
-#  img = Image.fromstring('RGBA', screensize, data)
-#  displayImage(img, epddisplay)
-
-#def testDisplay(gridsize=100):
-#  displayImage(Image.open("./img/test.png"))
+    logging.warning("invalid mode " + mode + " - not changing")
   
 def updateTime(dt):
   global currentdt
@@ -248,87 +172,89 @@ def updateTime(dt):
   if (dt.second == 0) and ("clock" in currentmode) and (currentmode in rinstances) and ((dt.minute + dt.hour*60) % ui == 0):
     displayRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
 
+def setSystemTz(tzname):
+  if not tzname == systzname:
+    if "linux" in sys.platform:
+      logging.info("updating system timezone")
+      r = subprocess.run(["sudo","timedatectl","set-timezone",tzname])
+      if r.returncode == 0:
+        logging.info("success - system timezone changed to " + getSystemTz())
+    else:
+      systzname = tzname
+      logging.warning("non-linux os: cannot update system timezone. dummy value set to " + systzname)
+
+def getSystemTz():
+  if "linux" in sys.platform:
+    return pydbus.SystemBus().get(".timedate1").Timezone
+  else:
+    logging.warning("cannot access system timezone. returning dummy.")
+    return systzname
+  
 ## SCRIPT ##
 
 # init gpio
-if "linux" in platform:
-  print("init gpio")
+if "linux" in sys.platform:
+  logging.info("init gpio")
   #Device.pin_factory = MockFactory()
   userbutton = Button(buttongpio, bounce_time=debounce/1000.0)
   userbutton.when_pressed = onButton
 else:
-  print("GPIO not available on this platform, no button enabled.")
+  logging.warning("GPIO not available on this platform, no button enabled.")
 
 # init epd display
-if "linux" in platform:
-  print("init display")
+if "linux" in sys.platform:
+  logging.info("init display")
   epddisplay = AutoEPDDisplay(vcom=display_vcom)
 else:
-  print("no display on this platform.")
+  logging.warning("no display on this platform.")
   epddisplay = None
 
 # splash
-changeMode("splash")
-time.sleep(2)
-    
+#changeMode("splash")
+#time.sleep(2)
+
 # load system timezone
-if "linux" in platform:
-  timedated = pydbus.SystemBus().get(".timedate1")
-  systzname = timedated.Timezone
-else:
-  print("no dbus, using UTC")
-  systzname = "UTC"
-print("system timezone: " + systzname)
+systzname = getSystemTz()
 tz = pytz.timezone(systzname)
 
 # load last mode
 changeMode(loadPersistentMode())
 
 # gps serial
-if "linux" in platform:
-  ser = serial.Serial('/dev/serial0', 9600, timeout=1)
-else:
-  ser = None
-  print("no serial")
+gpshandler = gpshandler.GpsHandler() # create and start gps handler
+gpshandler.connect()
 
-lastticktime = time.time()
-tlastupdate = datetime.datetime.now()
-
+tlastupdate = time.monotonic()
 while not pleasequit:
-  	# handle events
-	#if pygame.event.peek(pygame.QUIT):
-	#	pleasequit = True
-	#if pygame.event.peek(pygame.VIDEOEXPOSE) or pygame.event.peek(pygame.VIDEORESIZE):
-	#	rerender = True
-	#pygame.event.clear()
     
-    # tick every 1 sec
-    t = time.time()
-    if t > lastticktime + 1:
-      lastticktime = t
-      timerTick()
+    t = time.monotonic()
+    if menutimeout_armed and t - t_lastbuttonpress > menutimeout:
+      menutimeout_armed = False
+      onMenuTimeout()
     
     # if NMEA has been received, update the time
-    if ser:
-        if ser.in_waiting>0:
-          d = parseNMEA(ser.readline())
-          t = None
-          if "localtime" in d:
-            t = d["localtime"]
-            p = "using nmea time: "
-          elif "signalok" in d:
-            t = datetime.datetime.now()
-            p = "using system time: "
-          if t:
-            print(p + t.strftime("%H:%M:%S %z"))
-            updateTime(t)
+    if gpshandler.pollUpdated():
+      stat = gpshandler.getStatus()
+      if stat["hastime"]:
+        if stat["hasfix"]:
+          dt = gpshandler.getDateTime(local=True)
+          p = "using nmea time + tz: "
+        else:
+          dt = gpshandler.getDateTime(local=False).astimezone(tz)
+          p = "using nmea time + cached tz: "
+      else:
+        dt = datetime.datetime.now()
+        p = "using system time: "
+      if dt:
+        logging.debug(p + dt.strftime("%H:%M:%S %z"))
+        updateTime(dt)
     else:
-      t = datetime.datetime.now()
-      if ((datetime.datetime.now() - tlastupdate).total_seconds() >= 1):
+      t = time.monotonic()
+      if ((t - tlastupdate) >= 2):
         tlastupdate = t
-        updateTime(t)
+        updateTime(datetime.datetime.now())
+        
+    time.sleep(0.2) # limit to 5Hz
 
 # Close the window and quit.
-print("quitting")
-ser.close()
-#pygame.quit()
+logging.info("quitting")
