@@ -42,7 +42,7 @@ class GpsHandler():
     if self._worker.is_alive():
       logging.warning("already connected!")
     else:
-      self._worker.run()
+      self._worker.start()
   
   def disconnect(self):
     if self._worker.is_alive():
@@ -150,9 +150,7 @@ class GpsHandler():
             self._tz = tz
         
         self._newdataevent.set() # set event for new data
-        logging.debug("newdataevent status = {0}".format(self._newdataevent.is_set()))
-        
-      time.sleep(0.01)
+        #logging.debug("newdataevent status = {0}".format(self._newdataevent.is_set()))
   
     ser.close() # after quit, close the serial port
     logging.info("quit gpshandler thread success")
