@@ -73,7 +73,7 @@ class GpsHandler():
     while not self._stopevent.is_set(): # repeat until stop
       logging.debug("waiting for serial input...")
       line = ser.readline()# readline from serial - timeouts will return 
-      logging.debug("serial received: " + line)
+      logging.debug("serial received: " + line.decode('ascii'))
       fields = line.decode('ascii').split(",")
       if fields[0] == "$GPRMC": # only parse GPRMC messages
         
