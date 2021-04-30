@@ -13,7 +13,6 @@ import pytz
 import timezonefinder
 from PIL import Image, ImageDraw, ImageFont
 from sys import platform
-import logging
 
 if "linux" in platform:
   from gpiozero import Device, Button
@@ -22,6 +21,10 @@ if "linux" in platform:
   from IT8951 import constants
   import pydbus
   import subprocess
+
+# set up logger
+import logging
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 ## LOCAL MODULES ##
 
@@ -113,7 +116,7 @@ def setWifiMode(newwifimode):
     logging.info("invalid wifi mode, no change")
 
 def savePersistentMode(mode):
-  print("NOT IMPLEMENTED - persist mode as file")
+  logging.info("NOT IMPLEMENTED - persist mode as file")
 
 def loadPersistentMode():
   return "clock_digital" # default for now
