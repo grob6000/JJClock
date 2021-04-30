@@ -150,7 +150,7 @@ class GpsHandler():
             self._tz = tz
         
         self._newdataevent.set() # set event for new data
-        logging.debug("newdataevent status = {0}".format(self._newdataevnet.is_set())
+        logging.debug("newdataevent status = {0}".format(self._newdataevnet.is_set()))
         
       time.sleep(0.01)
   
