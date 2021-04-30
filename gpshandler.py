@@ -81,6 +81,7 @@ class GpsHandler():
   
   # check if data has been updated since last call
   def pollUpdated(self):
+    logging.debug("poll request, event state = {0}".format(self._newdataevent.is_set()))
     isupdated = self._newdataevent.is_set()
     self._newdataevent.clear()
     return isupdated
