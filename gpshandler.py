@@ -102,7 +102,7 @@ class GpsHandler():
       #logging.debug("serial received: " + line.decode('ascii'))
       fields = line.decode('ascii').split(",")
       if fields[0] == "$GPRMC": # only parse GPRMC messages
-        logging.debug("received message: " + str(fields))
+        #logging.debug("received message: " + str(fields))
         # utc time
         dt_utc = None
         if (len(fields[1]) >= 6) and (len(fields[9]) >= 6):

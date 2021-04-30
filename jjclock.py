@@ -221,8 +221,6 @@ changeMode(loadPersistentMode())
 gpshandler = gpshandler.GpsHandler() # create and start gps handler
 gpshandler.connect()
 
-logging.debug("built the gpshandler")
-
 tlastupdate = time.monotonic()
 while not pleasequit:
     
@@ -232,12 +230,8 @@ while not pleasequit:
       onMenuTimeout()
     
     # if NMEA has been received, update the time
-    poll = gpshandler.pollUpdated()
-    logging.debug("poll={0}".format(poll))
-    if poll:
-      logging.debug("handling new data")
+    if gpshandler.pollUpdated()
       stat = gpshandler.getStatus()
-      logging.debug("stat = " + str(stat))
       if stat["hastime"]:
         if stat["hasfix"]:
           dt = gpshandler.getDateTime(local=True)
