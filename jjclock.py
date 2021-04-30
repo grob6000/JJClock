@@ -228,7 +228,7 @@ tlastupdate = time.monotonic()
 while not pleasequit:
     
     t = time.monotonic()
-    if menutimeout_armed and t - t_lastbuttonpress > menutimout:
+    if menutimeout_armed and t - t_lastbuttonpress > menutimeout:
       menutimeout_armed = False
       onMenuTimeout()
     
