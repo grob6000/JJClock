@@ -94,6 +94,7 @@ def onButton():
     logging.debug("selected item = " + str(menuitemselected))
     displayRender(rinstances["menu"], menu=menu, selecteditem=menuitemselected)
   else:
+    menutimeout_armed = True
     changeMode("menu")
 
 def onMenuTimeout():
