@@ -15,28 +15,51 @@ class GpsHandler():
   
   _baud = 9600
   _tzcheckinterval = 300
+  _defaultport = '/dev/serial0'
   
-  def __init__(self, port="/dev/serial0"):
+  def __init__(self):
     logging.debug("initializing gpshandler")
-    self._port = port
-    self._dt_utc = None
-    self._signalok = False
-    self._lat = None
-    self._lng = None
-    self._tz = pytz.UTC
     self._datalock = threading.Lock()
     self._stopevent = threading.Event()
     self._newdataevent = threading.Event()
+    with self._datalock:
+      self._port = GpsHandler._defaultport
+      self._dt_utc = None
+      self._signalok = False
+      self._lat = None
+      self._lng = None
+      self._tz = pytz.UTC
     self._worker = threading.Thread(target=self._run)
     atexit.register(self.__del__) # try to terminate thread nicely on quit (give back serial port)
-    logging.debug("starting gps worker...")
-    self._worker.run() # start the thread listening for NMEA data
-    logging.debug("gps worker started - port=" + self._port)
+    #self._worker.run() # start the thread listening for NMEA data
     
   def __del__(self):
     if self._worker.is_alive():
       self._stopevent.set() # ask the worker thread to exit, which will also release the serial port
       self._worker.join() # wait for this to occur before allowing a quit
+  
+  def connect():
+    if self._worker.is_active():
+      logging.warning("already connected!")
+    else:
+      self._worker.run()
+  
+  def disconnect():
+    if self._worker.is_active():
+      self._stopevent.set()
+      self._worker.join()
+      logging.info("gps listener disconnected")
+    else:
+      logging.warning("already disconnected!")
+  
+  def setPort(port):
+    wasrunning = self._worker.is_active()
+    if wasrunning:
+      self.disconnect()
+    with self._datalock:
+      self._port = port
+    if wasrunning:
+      self.connect()
     
   def getDateTime(self, local=True):
     with self._datalock:

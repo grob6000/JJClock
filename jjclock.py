@@ -216,6 +216,9 @@ changeMode(loadPersistentMode())
 
 # gps serial
 gpshandler = gpshandler.GpsHandler() # create and start gps handler
+gpshandler.connect()
+
+logging.debug("built the gpshandler")
 
 tlastupdate = time.monotonic()
 while not pleasequit:
