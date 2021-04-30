@@ -29,7 +29,7 @@ class GpsHandler():
       self._lat = None
       self._lng = None
       self._tz = pytz.UTC
-    self._worker = threading.Thread(target=self._run)
+    self._worker = threading.Thread(target=self._run, daemon=True)
     atexit.register(self.__del__) # try to terminate thread nicely on quit (give back serial port)
     #self._worker.run() # start the thread listening for NMEA data
     
@@ -64,11 +64,11 @@ class GpsHandler():
   def getDateTime(self, local=True):
     logging.debug("getDateTime")
     with self._datalock:
-      if self._dt:
-        if local and self._dt:
-          dt = self._dt.astimezone(tz)
+      if self._dt_utc:
+        if local and self._dt_utc:
+          dt = self._dt_utc.astimezone(self._tz)
         else:
-          dt = self._dt
+          dt = self._dt_utc
     return dt
     
   def getStatus(self):
