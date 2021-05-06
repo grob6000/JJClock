@@ -310,7 +310,7 @@ def setWifiNeworks(networks):
       lnew.append("    scan_ssid=1\n")
       lnew.append("}\n")
       i = i + 1
-    logger.debug(lnew)
+    logging.debug(lnew)
     with open("/etc/wpa_supplicant/wpa_supplicant.conf", "w") as wsc:
       wsc.writelines(lnew)
     
@@ -336,7 +336,7 @@ if __name__ == "__main__":
   
   
   # wifi setup
-  logger.debug(getWifiNetworks())
+  logging.debug(getWifiNetworks())
 
   # now screen is running, check for update
   checkForUpdate()
