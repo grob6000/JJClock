@@ -231,6 +231,9 @@ def doUpdate(wgeturl, tag):
   logging.info("updating now...")
   if "linux" in sys.platform:
     
+    # display an updating screen
+    displayRender(jjrenderer.renderers["RendererUpdating"], version=tag)
+    
     # make sure temp dir exists
     subprocess.run(["mkdir", "/tmp/jjclock"])
     
@@ -255,11 +258,6 @@ def doUpdate(wgeturl, tag):
 ## SCRIPT ##
 if __name__ == "__main__":
 
-  wgeturl, tag = checkForUpdate()
-  doUpdate(wgeturl, tag)
-  
-  quit()
-
   # init gpio
   if "linux" in sys.platform:
     logging.info("init gpio")
@@ -276,6 +274,9 @@ if __name__ == "__main__":
   else:
     logging.warning("no display on this platform.")
     epddisplay = None
+
+  # now screen is running, check for update
+  checkForUpdate()
   
   # splash
   #changeMode("splash")
