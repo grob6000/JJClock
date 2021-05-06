@@ -230,10 +230,13 @@ def doUpdate(wgeturl, tag):
   updateok = True
   logging.info("updating now...")
   if "linux" in sys.platform:
+    
+    # make sure temp dir exists
+    subprocess.run(["mkdir", "/tmp/jjclock"])
+    
     # copy update script to temp location
     try:
-      subprocess.run(["mkdir", "/tmp/jjclock"])
-      subprocess.run(["cp", os.path.join(scriptpath, "update.sh"), "/tmp/jjclock/update.sh", updatetempdir], check=True)
+      subprocess.run(["cp", os.path.join(scriptpath, "update.sh"), "/tmp/jjclock/update.sh"], check=True)
     except subprocess.CalledProcessError:
       logging.error("could not move update script")
       updateok = False     
