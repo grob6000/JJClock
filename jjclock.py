@@ -222,6 +222,8 @@ def checkForUpdate():
   else:
     logging.info("current version: " + myname + ", available: " + tag)
     doUpdate(wgeturl, tag)
+    
+    return (wgeturl, tag)
 
 def doUpdate(wgeturl, tag):
 
@@ -250,8 +252,8 @@ def doUpdate(wgeturl, tag):
 ## SCRIPT ##
 if __name__ == "__main__":
 
-  #checkForUpdate()
-  doUpdate()
+  (wgeturl, tag) = checkForUpdate()
+  doUpdate(wgeturl, tag)
   
   quit()
 
