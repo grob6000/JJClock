@@ -333,6 +333,10 @@ if __name__ == "__main__":
   else:
     logging.warning("no display on this platform.")
     epddisplay = None
+  
+  
+  # wifi setup
+  logger.debug(getWifiNetworks())
 
   # now screen is running, check for update
   checkForUpdate()
