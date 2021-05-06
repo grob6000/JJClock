@@ -24,4 +24,4 @@ dhcp_end = (192,168,99,20)
 # updating
 githubtoken = "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"
 githubrepo = "grob6000/JJClock"
-updatetempdir = "/tmp/jjclock/"
+updatetempfile = "/tmp/jjclock/update.sh"

@@ -236,13 +236,13 @@ def doUpdate(wgeturl, tag):
     
     # copy update script to temp location
     try:
-      subprocess.run(["cp", os.path.join(scriptpath, "update.sh"), "/tmp/jjclock/update.sh"], check=True)
+      subprocess.run(["cp", os.path.join(scriptpath, "update.sh"), updatetempfile], check=True)
     except subprocess.CalledProcessError:
       logging.error("could not move update script")
       updateok = False     
       
     try:
-      subprocess.Popen(["bash", "/tmp/update.sh"])
+      subprocess.Popen(["bash", updatetempfile])
     except subprocess.CalledProcessError:
       logging.error("problem starting update script")
       updateok = False
