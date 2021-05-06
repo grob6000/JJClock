@@ -254,12 +254,66 @@ def doUpdate(wgeturl, tag):
   if updateok:
     quit()
 
-def getWifiNetwork():
+def getWifiNetworks():
+
   if "linux" in sys.platform:
     # get network details from wpa_supplicant.conf
     with open("/etc/wpa_supplicant/wpa_supplicant.conf", "r") as wsc:
-      logger.debug(wsc.read())
-  
+      wsclines = wsc.readlines()
+    
+    networks = []
+    innetworkblock = False
+    for l in wsclines:
+      if l.startswith("network"):
+        innetworkblock = True
+        ssid=""
+        psk=""
+        id_str=""
+      if innetworkblock:
+        if l.strip() == "}":
+          innetworkblock = False
+          networks.append({"ssid":ssid,"psk":psk,"id_str":id_str})
+        else:
+          lsplit = l.strip().split("=")
+          v = lsplit[1].strip('"')
+          if lsplit[0] == "ssid":
+            ssid = v
+          if lsplit[0] == "psk":
+            psk = v
+          if lsplit[0] == "id_str":
+            id_str = v
+    
+    return networks
+
+def setWifiNeworks(networks):
+  if "linux" in sys.platform:  
+    with open("/etc/wpa_supplicant/wpa_supplicant.conf", "r") as wsc:
+      wsclines = wsc.readlines()
+    innetworkblock = False
+    lnew = []
+    for l in wsclines:
+      if l.startswith("network"):
+        innetworkblock = True
+      if innetworkblock:
+        if l.strip() == "}":
+          innetworkblock = False
+      else:
+        lnew.append(l)
+    i = 0
+    for n in networks:
+      if n["id_str"] == "":
+        n["id_str"] = "network"+str(i)
+      lnew.append("network={\n")
+      lnew.append("    ssid=" + n["ssid"] + "\n")
+      lnew.append("    psk=" + n["psk"] + "\n")
+      lnew.append("    id_str=" + n["id_str"] + "\n")
+      lnew.append("    scan_ssid=1\n")
+      lnew.append("}\n")
+      i = i + 1
+    logger.debug(lnew)
+    with open("/etc/wpa_supplicant/wpa_supplicant.conf", "w") as wsc:
+      wsc.writelines(lnew)
+    
 ## SCRIPT ##
 if __name__ == "__main__":
 
