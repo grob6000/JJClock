@@ -250,8 +250,9 @@ def doUpdate(wgeturl, tag):
 ## SCRIPT ##
 if __name__ == "__main__":
 
-  checkForUpdate()
-   
+  #checkForUpdate()
+  doUpdate()
+  
   quit()
 
   # init gpio
