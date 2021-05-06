@@ -254,6 +254,11 @@ def doUpdate(wgeturl, tag):
   if updateok:
     quit()
 
+def getWifiNetwork():
+  if "linux" in sys.platform:
+    # get network details from wpa_supplicant.conf
+    with open("/etc/wpa_supplicant/wpa_supplicant.conf", "r") as wsc:
+      logger.debug(wsc.read())
   
 ## SCRIPT ##
 if __name__ == "__main__":
