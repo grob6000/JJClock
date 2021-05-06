@@ -205,9 +205,9 @@ def checkForUpdate():
   for r in rels:
     if r.published_at > latestpub:
       latestpub = r.published_at
-      latestrepo = r
-  wgeturl = latestrepo.tarball_url
-  tag = latestrepo.name
+      latestrel = r
+  wgeturl = latestrel.tarball_url
+  tag = latestrel.tag_name
   
   # get the current tag of the repo
   myname = ""
@@ -225,13 +225,13 @@ def checkForUpdate():
 
 def doUpdate(wgeturl, tag):
 
+  updateok = True
   logging.info("updating now...")
   if "linux" in sys.platform:
-    updateok = True
     # copy update script to temp location
     try:
       subprocess.run(["mkdir", "/tmp/jjclock"])
-      subprocess.run(["cp", os.path.join(scriptpath, "update.sh":), "/tmp/jjclock/update.sh", updatetempdir], check=True)
+      subprocess.run(["cp", os.path.join(scriptpath, "update.sh"), "/tmp/jjclock/update.sh", updatetempdir], check=True)
     except subprocess.CalledProcessError:
       logging.error("could not move update script")
       updateok = False     
