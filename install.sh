@@ -3,44 +3,18 @@
 NOW=$( date '+%F_%H%M%S' )
 
 # install required programs
-sudo apt-get update
-sudo apt-get -y install git
-sudo apt-get -y install python3
-sudo apt-get -y install python3-pip
-sudo apt-get -y install python3-pygame
-sudo apt-get -y install hostapd
-sudo apt-get -y install dnsmasq
-sudo apt-get install libjpeg-dev -y
-sudo apt-get install zlib1g-dev -y
-sudo apt-get install libfreetype6-dev -y
-sudo apt-get install liblcms1-dev -y
-sudo apt-get install libopenjp2-7 -y
-sudo apt-get install libtiff5 -y
-#sudo apt-get -y install netfilter-persistent iptables-persistent
+sudo apt-get -y update
+sudo apt-get -y install git python3 python3-pip hostapd dnsmasq libjpeg-dev zlib1g-dev libfreetype6-dev liblcms1-dev libopenjp2-7 libtiff5
 
 # python packages
-python3 -m pip install --upgrade pip
-#sudo pip3 install pygame
-python3 -m pip install --upgrade gpiozero
-python3 -m pip install --upgrade Pillow
-
-sudo pip3 install pyserial
-sudo pip3 install timezonefinder
-sudo pip3 install pytz
-sudo pip3 install pydbus
+sudo pip3 upgrade pip
+sudo pip3 install pyserial timezonefinder pytz pydbus pygithub gpiozero Pillow
 
 # raspberry pi config
 sudo raspi-config nonint do_spi 0 # enable SPI
 sudo raspi-config nonint do_hostname "jjclock" # set hostname
 sudo raspi-config nonint do_serial 1 # disable serial terminal
 sudo timedatectl set-ntp True # enable ntp
-
-# download/update
-cd ~
-git clone https://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@github.com/grob6000/JJClock
-cd ~/JJClock
-git checkout main
-git pull --force
 
 # install epd driver
 cd ./IT8951
@@ -69,4 +43,3 @@ sudo chmod 644 /etc/systemd/system/jjclock.service
 sudo systemctl daemon-reload
 sudo systemctl enable jjclock.service
 sudo systemctl start jjclock.service
-#sudo systemctl disable jjclock.service
