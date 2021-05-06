@@ -20,3 +20,8 @@ ip_addr = (192,168,99,1)
 ip_mask = (255,255,255,0)
 dhcp_start = (192,168,99,10)
 dhcp_end = (192,168,99,20)
+
+# updating
+githubtoken = "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"
+githubrepo = "grob6000/JJClock"
+updatetempdir = "/tmp/jjclock/"

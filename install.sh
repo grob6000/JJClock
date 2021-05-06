@@ -25,6 +25,7 @@ cd ~/JJClock
 mkdir ./oldconfig
 
 # set up hostapd
+echo ***** SETTING UP HOSTAPD *****
 cp /etc/hostapd/hostapd.conf ./oldconfig/hostapd_$NOW.conf
 sudo rm /etc/hostapd/hostapd.conf
 sudo cp ./hostapd.conf /etc/hostapd/hostapd.conf
@@ -32,14 +33,16 @@ sudo sed -i '/DAEMON_CONF=/c\DAEMON_CONF=/etc/hostapd/hostapd.conf' /etc/init.d/
 sudo systemctl disable hostapd.service # disabled by default
 
 # set up dnsmasq
+echo ***** SETTING UP DNSMASQ *****
 cp /etc/dnsmasq.conf ./oldconfig/dnsmasq_$NOW.conf
 sudo rm /etc/dnsmasq.conf
 sudo cp ./dnsmasq.conf /etc/dnsmasq.conf
 sudo systemctl disable dnsmasq.service # disabled by default
 
 # set up script as service, run on boot
+echo ***** SETTING UP BOOT SERVICE *****
 sudo cp ./jjclock.service /etc/systemd/system/
 sudo chmod 644 /etc/systemd/system/jjclock.service
 sudo systemctl daemon-reload
 sudo systemctl enable jjclock.service
-sudo systemctl start jjclock.service
+sudo systemctl restart jjclock.service

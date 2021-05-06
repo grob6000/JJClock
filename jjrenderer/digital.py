@@ -12,7 +12,7 @@ class RendererDigitalClock(Renderer):
     fill(screen)
     if "timestamp" in kwargs:
       t = "{0:02d}:{1:02d}".format(kwargs["timestamp"].hour, kwargs["timestamp"].minute)
-      print(kwargs["timestamp"])
+      #print(kwargs["timestamp"])
       dstring = '{dt:%A} {dt:%B} {dt.day}, {dt.year}'.format(dt=kwargs["timestamp"])
     else:
       t = "--:--"

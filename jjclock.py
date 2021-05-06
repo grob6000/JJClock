@@ -13,6 +13,7 @@ import pytz
 import timezonefinder
 from PIL import Image, ImageDraw, ImageFont
 import sys
+from github import Github
 
 if "linux" in sys.platform:
   from gpiozero import Device, Button
@@ -70,12 +71,16 @@ tz = pytz.UTC
 tf = timezonefinder.TimezoneFinder()
 currentdt = datetime.datetime.now()
 
+scriptpath = os.path.dirname(os.path.realpath(sys.argv[0]))
+print(scriptpath)
+
 ## FUNCTIONS ##
-  
+
 def displayRender(renderer, **kwargs):
   global epddisplay
   global cropbox
   global boxsize
+  logging.info("rendering " + renderer.getName())
   screen = Image.new("L", boxsize)
   screen = renderer.doRender(screen,**kwargs)
   if epddisplay:
@@ -192,14 +197,62 @@ def getSystemTz():
 
 def checkForUpdate():
   logging.warning("not implemented - check for update")
-  return False
+  
+  g = Github(githubtoken)
+  repo = g.get_repo(githubrepo)
+  rels = repo.get_releases()
+  latestpub = datetime.datetime.min
+  for r in rels:
+    if r.published_at > latestpub:
+      latestpub = r.published_at
+      latestrepo = r
+  wgeturl = latestrepo.tarball_url
+  tag = latestrepo.name
+  
+  # get the current tag of the repo
+  myname = ""
+  if "linux" in sys.platform:
+    try:
+      myname = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"])
+    except subprocess.CalledProcessError:
+      logging.warning("unknown version. will update.")
+    
+  if myname == tag:
+    logging.info("currently latest version. no update required.")
+  else:
+    logging.info("current version: " + myname + ", available: " + tag)
+    doUpdate(wgeturl, tag)
 
-def doUpdate():
-  logging.warning("not implemented - do update. application will not restart.")
-  quit() # update will quit the script; we'll expect the updater to restart it
+def doUpdate(wgeturl, tag):
+
+  logging.info("updating now...")
+  if "linux" in sys.platform:
+    updateok = True
+    # copy update script to temp location
+    try:
+      subprocess.run(["mkdir", "/tmp/jjclock"])
+      subprocess.run(["cp", os.path.join(scriptpath, "update.sh":), "/tmp/jjclock/update.sh", updatetempdir], check=True)
+    except subprocess.CalledProcessError:
+      logging.error("could not move update script")
+      updateok = False     
+      
+    try:
+      subprocess.Popen(["bash", "/tmp/update.sh"])
+    except subprocess.CalledProcessError:
+      logging.error("problem starting update script")
+      updateok = False
+  
+  # quit if all went well  
+  if updateok:
+    quit()
+
   
 ## SCRIPT ##
 if __name__ == "__main__":
+
+  checkForUpdate()
+   
+  quit()
 
   # init gpio
   if "linux" in sys.platform:
