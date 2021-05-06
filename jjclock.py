@@ -115,10 +115,18 @@ def setWifiMode(newwifimode):
   if (newwifimode == currentwifimode):
     logging.info("wifi mode unchanged")
   elif newwifimode == "ap":
-    logging.info("NOT IMPLEMENTED - wifi mode AP")
+    logging.info("wifi mode AP")
+    try:
+      subprocess.run(["bash", os.path.join(scriptpath, "apmode.sh")], check=True)
+    except subprocess.CalledProcessError:
+      logging.error("unsuccessful running apmode.sh")
     currentwifimode = newwifimode
   elif newwifimode == "client":
-    logging.info("NOT IMPLEMENTED - wifi mode Client")
+    logging.info("wifi mode Client")
+    try:
+      subprocess.run(["bash", os.path.join(scriptpath, "clientmode.sh")], check=True)
+    except subprocess.CalledProcessError:
+      logging.error("unsuccessful running clientmode.sh")
     currentwifimode = newwifimode
   else:
     logging.info("invalid wifi mode, no change")
