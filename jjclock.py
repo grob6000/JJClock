@@ -213,7 +213,7 @@ def checkForUpdate():
   myname = ""
   if "linux" in sys.platform:
     try:
-      myname = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"])
+      myname = subprocess.run(["git", "describe", "--tags", "--abbrev=0"], text=True, capture_output=True).stdout
     except subprocess.CalledProcessError:
       logging.warning("unknown version. will update.")
     
