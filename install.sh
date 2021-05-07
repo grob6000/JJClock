@@ -4,17 +4,34 @@ NOW=$( date '+%F_%H%M%S' )
 
 # install required programs
 sudo apt-get -y update
-sudo apt-get -y install git python3 python3-pip hostapd dnsmasq libjpeg-dev zlib1g-dev libfreetype6-dev liblcms1-dev libopenjp2-7 libtiff5
+sudo apt-get -y install git python3 python3-pip hostapd dnsmasq libjpeg-dev zlib1g-dev libfreetype6-dev liblcms1-dev libopenjp2-7 libtiff5 libsecret-1-0 libsecret-1-dev libatlas-base-dev
+
+# save git credentials
+#sudo make --directory=/usr/share/doc/git/contrib/credential/libsecret
+#git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
+git config --global credential.helper store
+git config --global user.name "grob6000"
+git config --global user.password "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"
 
 # python packages
 sudo pip3 upgrade pip
-sudo pip3 install pyserial timezonefinder pytz pydbus pygithub gpiozero Pillow
+sudo pip3 install numpy pyserial timezonefinder pytz pydbus pygithub gpiozero Pillow
 
 # raspberry pi config
 sudo raspi-config nonint do_spi 0 # enable SPI
 sudo raspi-config nonint do_hostname "jjclock" # set hostname
 sudo raspi-config nonint do_serial 1 # disable serial terminal
 sudo timedatectl set-ntp True # enable ntp
+
+# disable bt
+sudo systemctl disable bluetooth.service
+if sudo grep -Fxq "dtoverlay=pi3-disable-bt" /boot/config.txt
+then
+    #skip
+else
+    #append
+    echo "dtoverlay=pi3-disable-bt" >> /boot/config.txt
+fi
 
 # install epd driver
 cd ./IT8951
