@@ -129,6 +129,7 @@ class GpsHandler():
         # get timezone - check 1/min if all preconditions met (signal quality indicator we will ignore; as long as we have a fix it's probably fine for TZ)
         tz = None
         if dt_utc and time.monotonic() - lasttzcheck > GpsHandler._tzcheckinterval and lat and lng:
+          tf = timezonefinder.TimezoneFinder()
           tzname = tf.certain_timezone_at(lat=lat,lng=lng)
           tz = pytz.timezone(tzname)
         
