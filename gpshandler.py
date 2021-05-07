@@ -30,6 +30,7 @@ class GpsHandler():
       self._lat = None
       self._lng = None
       self._tz = pytz.UTC
+      self._tzfound = False
     self._worker = threading.Thread(target=self._run, daemon=True)
     atexit.register(self.__del__) # try to terminate thread nicely on quit (give back serial port)
     #self._worker.run() # start the thread listening for NMEA data
@@ -76,7 +77,10 @@ class GpsHandler():
       hastime = bool(self._dt_utc)
       signalok = self._signalok
       hasfix = bool(self._lat) and bool(self._lng)
-    return {"hastime":hastime, "hasfix":hasfix, "signalok":signalok}
+      tz = None
+      if self._tzfound:
+        tz = self._tz
+    return {"hastime":hastime, "hasfix":hasfix, "signalok":signalok, "tz":tz}
   
   # check if data has been updated since last call
   def pollUpdated(self):
@@ -138,15 +142,14 @@ class GpsHandler():
         with self._datalock:
           if dt_utc:
             self._dt_utc = dt_utc
-          if sigok:
-            self._signalok = sigok
           if lat:
             self._lat = lat
           if lng:
             self._lng = lng
           if tz:
             self._tz = tz
-        
+            self._tzfound = True
+            
         self._newdataevent.set() # set event for new data
         #logging.debug("newdataevent status = {0}".format(self._newdataevent.is_set()))
   

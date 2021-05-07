@@ -376,9 +376,15 @@ if __name__ == "__main__":
       if gpshandler.pollUpdated():
         stat = gpshandler.getStatus()
         if stat["hastime"]:
-          if stat["hasfix"]:
+          if stat["tz"]:
             dt = gpshandler.getDateTime(local=True)
             p = "using nmea time + tz: "
+            # update timezone cached
+            if not tz == stat["tz"]:
+              tz = stat["tz"]
+              # update system timezone
+              if not getSystemTz() == tz.zone:
+                setSystemTz(tz.zone)
           else:
             dt = gpshandler.getDateTime(local=False).astimezone(tz)
             p = "using nmea time + cached tz: "
