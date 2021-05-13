@@ -61,6 +61,7 @@ currentmode = -1 # initialise as an invalid mode; any mode change will trigger c
 currentwifimode = "unknown"
 epddisplay = None
 menuitemselected = 0
+lastsoftwareupdatecheck = 0
 
 # timing
 t_lastbuttonpress = 0
@@ -204,6 +205,8 @@ def getSystemTz():
     return systzname
 
 def checkForUpdate():
+  global lastupdate
+  
   logging.warning("not implemented - check for update")
   
   g = Github(githubtoken)
@@ -224,7 +227,9 @@ def checkForUpdate():
       myname = subprocess.run(["git", "describe", "--tags", "--abbrev=0"], text=True, capture_output=True).stdout.strip()
     except subprocess.CalledProcessError:
       logging.warning("unknown version. will update.")
-    
+  
+  lastsoftwareupdatecheck = time.monotonic()
+  
   if myname == tag:
     logging.info("currently latest version. no update required.")
   else:
@@ -394,6 +399,10 @@ if __name__ == "__main__":
         if dt:
           logging.debug(p + dt.strftime("%H:%M:%S %z"))
           updateTime(dt)
+          t = time.monotonic()
+          if t-lastsoftwareupdatecheck > minupdateinterval:
+            if dt.hour == updatehour or t-lastsoftwareupdatecheck > maxupdateinterval:
+              checkForUpdate()
       else:
         t = time.monotonic()
         if ((t - tlastupdate) >= 2):

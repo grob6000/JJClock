@@ -25,3 +25,6 @@ dhcp_end = (192,168,99,20)
 githubtoken = "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"
 githubrepo = "grob6000/JJClock"
 updatetempfile = "/tmp/jjclock/update.sh"
+minupdateinterval = 3600 * 1 # seconds
+maxupdateinterval = 3600 * 48 # seconds
+updatehour = 3 # hour of the day
