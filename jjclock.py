@@ -68,7 +68,6 @@ lastsoftwareupdatecheck = 0
 t_lastbuttonpress = 0
 menutimeout_armed = False
 
-systzname = "UTC"
 tz = pytz.UTC
 tf = timezonefinder.TimezoneFinder()
 currentdt = datetime.datetime.now()
@@ -164,22 +163,24 @@ def updateTime(dt):
     displayRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
 
 def setSystemTz(tzname):
-  if not tzname == systzname:
     if "linux" in sys.platform:
-      logging.info("updating system timezone")
-      r = subprocess.run(["sudo","timedatectl","set-timezone",tzname])
-      if r.returncode == 0:
-        logging.info("success - system timezone changed to " + getSystemTz())
+      systzname = getSystemTz()
+      if not tzname == systzname:
+        logging.info("updating system timezone")
+        r = subprocess.run(["sudo","timedatectl","set-timezone",tzname])
+        if r.returncode == 0:
+          logging.info("success - system timezone changed to " + getSystemTz())
+      else:
+        logging.info("not updating system timezone - already set to " + systzname)
     else:
-      systzname = tzname
-      logging.warning("non-linux os: cannot update system timezone. dummy value set to " + systzname)
+      logging.warning("non-linux os: cannot update system timezone.")
 
 def getSystemTz():
   if "linux" in sys.platform:
     return pydbus.SystemBus().get(".timedate1").Timezone
   else:
     logging.warning("cannot access system timezone. returning dummy.")
-    return systzname
+    return "UTC"
 
 def checkForUpdate():
   global lastupdate
@@ -291,8 +292,7 @@ if __name__ == "__main__":
   #time.sleep(2)
   
   # load system timezone
-  systzname = getSystemTz()
-  tz = pytz.timezone(systzname)
+  tz = pytz.timezone(getSystemTz())
   
   # load last mode
   changeMode(loadPersistentMode())
