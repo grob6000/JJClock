@@ -266,6 +266,7 @@ if __name__ == "__main__":
     
   # admin server
   wa = webadmin.WebAdmin()
+  wa.start()
   
   # wifi testing
   n = wifimanager.getNetworks()

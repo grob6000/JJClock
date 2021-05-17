@@ -27,10 +27,11 @@ class WebAdmin():
       
   def start(self):
     self._worker.start()
+    logger.info("webadmin server started")
 
   def _get_my_tid(self):
     if not self._worker.is_alive():
-      logging.warning("the thread is not active")
+      logging.warning("the webadmin thread is not active")
       return None
     
     # do we have it cached?
