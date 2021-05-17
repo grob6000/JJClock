@@ -329,11 +329,11 @@ def addNetwork(ssid, psk):
       netindex = int(cp.stdout.strip())
       logging.debug("netindex={0}".format(netindex))
       allok = True
-      cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "ssid", "'\""+str(ssid)+"\"'"], capture_output=True, text=True)
+      cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "ssid", "\""+str(ssid)+"\""], capture_output=True, text=True)
       if "FAIL" in cp2.stdout:
         allok = False
         logging.debug("set ssid fail: " + cp2.stdout)
-      cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "psk", "'\""+str(psk)+"\"'"], capture_output=True, text=True)
+      cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "psk", "\""+str(psk)+"\""], capture_output=True, text=True)
       if "FAIL" in cp2.stdout:
         allok = False
         logging.debug("set psk fail: " + cp2.stdout)
