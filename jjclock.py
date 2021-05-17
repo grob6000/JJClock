@@ -73,9 +73,6 @@ tz = pytz.UTC
 tf = timezonefinder.TimezoneFinder()
 currentdt = datetime.datetime.now()
 
-scriptpath = os.path.dirname(os.path.realpath(sys.argv[0]))
-print(scriptpath)
-
 ## FUNCTIONS ##
 
 def displayRender(renderer, **kwargs):

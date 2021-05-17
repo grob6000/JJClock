@@ -28,3 +28,6 @@ updatetempfile = "/tmp/jjclock/update.sh"
 minupdateinterval = 3600 * 1 # seconds
 maxupdateinterval = 3600 * 48 # seconds
 updatehour = 3 # hour of the day
+
+# path for the script
+scriptpath = os.path.dirname(os.path.realpath(sys.argv[0]))
