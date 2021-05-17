@@ -270,11 +270,11 @@ def doUpdate(wgeturl, tag):
 
 examplenetwork = {"index":0,"ssid":"examplessid","psk":"password123","bssid":"00:11:22:33:44:55", "frequency":"2462", "rssi":-71, "flags":["WPA2-PSK-CCMP","ESS"]}
 
-def getWifiNetworks():
+def getNetworks():
   networks = []
   if "linux" in sys.platform:
     runoutofnetworks = False
-    for i in range(0,10); # why would anyone configure more than 10???? yes magic numbers well whoopdeedoo
+    for i in range(0,10): # why would anyone configure more than 10???? yes magic numbers well whoopdeedoo
       cp = subprocess.run(["wpa_cli", "-i", iface, "get_network", str(i), "ssid"])
       if "FAIL" in cp.stdout:
         break
@@ -286,7 +286,7 @@ def getWifiNetworks():
     logging.error("cannot access wifi config")
   return networks
     
-def scanWifi():
+def scanNetworks():
   scannetworks = []
   if "linux" in sys.platform:
     cp = subprocess.run(["wpa_cli", "-i", iface, "scan"])
@@ -344,7 +344,6 @@ def addNetwork(ssid, psk):
       logging.error("error adding wifi network")
   else:
     logging.error("cannot access wifi config")
-  
   return netindex
     
 ## SCRIPT ##
@@ -369,10 +368,10 @@ if __name__ == "__main__":
   
   
   # wifi setup
-  logging.debug(getWifiNetworks())
+  #logging.debug(getNetworks())
 
   # now screen is running, check for update
-  checkForUpdate()
+  #checkForUpdate()
 
   # wifi testing
   n = getNetworks()
