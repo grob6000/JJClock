@@ -1,14 +1,25 @@
+## IMPORTS ##
+
 import sys
 import subprocess
 import logging
-from jjcommon import *
 import threading
+
+## COMMON DATA ##
+
+from jjcommon import *
+
+## MODULE GLOBALS ##
 
 _wifimanagerlock = threading.Lock() # locks the wpa_cli resources so they're only used one at a time - if you call while this is being used by another thread, it will block until the lock is freed
 
+_currentwifimode = "unknown" # global storage of current wifi mode
+
+## MODULE FUNCTIONS ##
+
 def getNetworks():
+  networks = []
   with _wifimanagerlock:
-    networks = []
     if "linux" in sys.platform:
       for i in range(0,10): # why would anyone configure more than 10???? yes magic numbers well whoopdeedoo
         cp = subprocess.run(["wpa_cli", "-i", iface, "get_network", str(i), "ssid"], capture_output=True, text=True)
@@ -20,11 +31,11 @@ def getNetworks():
           networks.append(network)
     else:
       logging.error("cannot access wifi config")
-    return networks
+  return networks
   
-def scanNetworks():
+def scanNetworks(): 
+  scannetworks = []
   with _wifimanagerlock:
-    scannetworks = []
     if "linux" in sys.platform:
       cp = subprocess.run(["wpa_cli", "-i", iface, "scan"], capture_output=True, text=True)
       if "OK" in cp.stdout:
@@ -44,7 +55,7 @@ def scanNetworks():
         logging.error("could not scan wifi networks")
     else:
       logging.error("cannot access wifi config")
-    return scannetworks
+  return scannetworks
 
 def removeNetwork(netindex):
   with _wifimanagerlock:
@@ -60,8 +71,8 @@ def removeNetwork(netindex):
       logging.error("cannot access wifi config")
   
 def addNetwork(ssid, psk):
+  netindex = -1 
   with _wifimanagerlock:
-    netindex = -1
     # add network
     if "linux" in sys.platform:
       cp = subprocess.run(["wpa_cli", "-i", iface, "add_network"], capture_output=True, text=True)
@@ -87,12 +98,12 @@ def addNetwork(ssid, psk):
         logging.error("error adding wifi network")
     else:
       logging.error("cannot access wifi config")
-    return netindex
+  return netindex
   
 def setWifiMode(newwifimode):
   with _wifimanagerlock:
-    global currentwifimode
-    if (newwifimode == currentwifimode):
+    global _currentwifimode
+    if (newwifimode == _currentwifimode):
       logging.info("wifi mode unchanged")
     elif newwifimode == "ap":
       logging.info("wifi mode AP")
@@ -110,3 +121,8 @@ def setWifiMode(newwifimode):
       currentwifimode = newwifimode
     else:
       logging.info("invalid wifi mode, no change")
+
+def getWifiMode():
+  with _wifimanagerlock:
+    thewifimode = _currentwifimode
+  return thewifimode

@@ -14,7 +14,6 @@ git config --global user.name "grob6000"
 git config --global user.password "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"
 
 # python packages
-sudo pip3 upgrade pip
 sudo pip3 install numpy pyserial timezonefinder pytz pydbus pygithub gpiozero Pillow flask
 
 # raspberry pi config
@@ -28,6 +27,7 @@ sudo systemctl disable bluetooth.service
 if sudo grep -Fxq "dtoverlay=pi3-disable-bt" /boot/config.txt
 then
     #skip
+    echo skipping disable bt
 else
     #append
     echo "dtoverlay=pi3-disable-bt" >> /boot/config.txt

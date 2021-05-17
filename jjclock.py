@@ -60,7 +60,6 @@ menutimeout = 10 # seconds
 ## GLOBALS ##
 pleasequit = False
 currentmode = -1 # initialise as an invalid mode; any mode change will trigger change
-currentwifimode = "unknown"
 epddisplay = None
 menuitemselected = 0
 lastsoftwareupdatecheck = 0
