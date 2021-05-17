@@ -273,9 +273,8 @@ examplenetwork = {"index":0,"ssid":"examplessid","psk":"password123","bssid":"00
 def getNetworks():
   networks = []
   if "linux" in sys.platform:
-    runoutofnetworks = False
     for i in range(0,10): # why would anyone configure more than 10???? yes magic numbers well whoopdeedoo
-      cp = subprocess.run(["wpa_cli", "-i", iface, "get_network", str(i), "ssid"])
+      cp = subprocess.run(["wpa_cli", "-i", iface, "get_network", str(i), "ssid"], capture_output=True)
       if "FAIL" in cp.stdout:
         break
       else:
@@ -289,9 +288,9 @@ def getNetworks():
 def scanNetworks():
   scannetworks = []
   if "linux" in sys.platform:
-    cp = subprocess.run(["wpa_cli", "-i", iface, "scan"])
+    cp = subprocess.run(["wpa_cli", "-i", iface, "scan"], capture_output=True)
     if "OK" in cp.stdout:
-      cp2 = subprocess.run(["wpa_cli", "-i", iface, "scan_results"])
+      cp2 = subprocess.run(["wpa_cli", "-i", iface, "scan_results"], capture_output=True)
       if cp2.returncode == 0:
         lines = cp2.stdout.split("\n")
         for l in lines:
@@ -311,10 +310,10 @@ def scanNetworks():
 def removeNetwork(netindex):
   # remove network and save config
   if "linux" in sys.platform:
-    cp = subprocess.run(["wpa_cli", "-i", iface, "remove_network", str(netindex)])
+    cp = subprocess.run(["wpa_cli", "-i", iface, "remove_network", str(netindex)], capture_output=True)
     if not "OK" in cp.stdout:
       logging.error("could not delete network " + str(netindex))
-    cp = subprocess.run(["wpa_cli", "-i", iface, "save_config"])
+    cp = subprocess.run(["wpa_cli", "-i", iface, "save_config"], capture_output=True)
     if not "OK" in cp.stdout:
       logging.error("error saving wifi config")
   else:
@@ -324,18 +323,18 @@ def addNetwork(ssid, psk):
   netindex = -1
   # add network
   if "linux" in sys.platform:
-    cp = subprocess.run(["wpa_cli", "-i", iface, "add_network"])
+    cp = subprocess.run(["wpa_cli", "-i", iface, "add_network"], capture_output=True)
     if cp.returncode == 0:
       netindex = int(cp.stdout.strip())
       allok = True
-      cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "ssid", "'\""+str(ssid)+"\"'"])
+      cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "ssid", "'\""+str(ssid)+"\"'"], capture_output=True)
       if "FAIL" in cp2.stdout:
         allok = False
-      cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "psk", "'\""+str(psk)+"\"'"])
+      cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "psk", "'\""+str(psk)+"\"'"], capture_output=True)
       if "FAIL" in cp2.stdout:
         allok = False
       if allok:
-        cp = subprocess.run(["wpa_cli", "-i", iface, "save_config"])
+        cp = subprocess.run(["wpa_cli", "-i", iface, "save_config"], capture_output=True)
         if not "OK" in cp.stdout:
           logging.error("error saving wifi config")
       else:
