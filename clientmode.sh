@@ -6,8 +6,10 @@ sudo systemctl stop dnsmasq.service
 sudo ip link set dev wlan0 down
 sudo ip addr flush dev wlan0
 #wpa_cli enable -i wlan0 network 0
-wpa_cli -i wlan0 reconnect
+wpa_cli -i wlan0 reconfigure
 sudo systemctl daemon-reload
-sudo systemctl restart dhcpd.service
+sudo systemctl restart dhcpcd.service
 #sudo dhclient -r wlan0
-sudo dhclient wlan0
+sudo dhclient -v wlan0
+ifconfig
+wpa_cli status
