@@ -32,6 +32,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 import jjrenderer
 import gpshandler
 import wifimanager
+import webadmin
 
 ## CONSTANTS ##
 
@@ -266,7 +267,10 @@ if __name__ == "__main__":
   else:
     logging.warning("no display on this platform.")
     epddisplay = None
-
+    
+  # admin server
+  wa = webadmin.WebAdmin()
+  
   # wifi testing
   n = wifimanager.getNetworks()
   print(n)
@@ -283,9 +287,7 @@ if __name__ == "__main__":
   print(n)
   
   # now screen is running, check for update
-  #checkForUpdate()
-  
-  quit()
+  checkForUpdate()
   
   # splash
   #changeMode("splash")
@@ -341,6 +343,12 @@ if __name__ == "__main__":
         if ((t - tlastupdate) >= 2):
           tlastupdate = t
           updateTime(datetime.datetime.now())
+          
+      # if web action is pending
+      adata = wa.getActionData()
+      if adata:
+        # data is available
+        logging.debug(adata)
           
       time.sleep(0.2) # limit to 5Hz
   

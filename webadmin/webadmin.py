@@ -3,6 +3,7 @@ from jjcommon import *
 import threading
 import ctypes
 import logging
+import wifimanager # should be relatively threadsafe...
 
 class WebAdmin():
 
@@ -13,6 +14,7 @@ class WebAdmin():
     self._actionevent = threading.Event()
     self._actiondata = {}
     self._datalock = threading.Lock()
+    self._requestwaiter = threading.Event()
     self._app.add_url_rule("/", view_func=self.index)
     self._app.add_url_rule("/wifi", view_func=self.wifi)
     self._savednetworks = []
@@ -87,6 +89,6 @@ class WebAdmin():
   
   def wifi(self):
     with self._datalock:
-      networks = self._savednetworks
-      scan = self._scannetworks
+      networks = wifimanager.getNetworks()
+      scan = wifimanger.scanNetworks()
     return render_template('wifi.html', networks=networks, scan=scan)
