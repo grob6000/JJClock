@@ -30,4 +30,5 @@ maxupdateinterval = 3600 * 48 # seconds
 updatehour = 3 # hour of the day
 
 # path for the script
+import sys, os
 scriptpath = os.path.dirname(os.path.realpath(sys.argv[0]))
