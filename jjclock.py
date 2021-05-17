@@ -152,14 +152,14 @@ def changeMode(mode):
   else:
     logging.warning("invalid mode " + mode + " - not changing")
   
-def updateTime(dt):
+def updateTime(dt, force=False):
   global currentdt
   #global renderers
   #global currentmode
   currentdt = dt
   #print(dt)
   ui = rinstances[currentmode].getUpdateInterval()
-  if (dt.second == 0) and ("clock" in currentmode) and (currentmode in rinstances) and ((dt.minute + dt.hour*60) % ui == 0):
+  if force or ((dt.second == 0) and ("clock" in currentmode) and (currentmode in rinstances) and ((dt.minute + dt.hour*60) % ui == 0)):
     displayRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
 
 def setSystemTz(tzname):
@@ -311,6 +311,7 @@ if __name__ == "__main__":
       
       # if NMEA has been received, update the time
       if gpshandler.pollUpdated():
+        force = False
         stat = gpshandler.getStatus()
         if stat["hastime"]:
           if stat["tz"]:
@@ -322,6 +323,7 @@ if __name__ == "__main__":
               # update system timezone
               if not getSystemTz() == tz.zone:
                 setSystemTz(tz.zone)
+                force = True # force a render update; e.g. even if this occurs mid-minute...
           else:
             dt = gpshandler.getDateTime(local=False).astimezone(tz)
             p = "using nmea time + cached tz: "
