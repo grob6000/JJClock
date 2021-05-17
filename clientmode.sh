@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 sudo systemctl stop hostapd.service
 #sudo systemctl disable hostapd.service
 sudo systemctl stop dnsmasq.service

@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 #wpa_cli -i wlan0 disable_network 0
 wpa_cli -i wlan0 disconnect
 sudo ip link set dev wlan0 down
