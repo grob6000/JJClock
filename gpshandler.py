@@ -102,7 +102,12 @@ class GpsHandler():
       #logging.debug("waiting for serial input...")
       line = ser.readline()# readline from serial - timeouts will return 
       #logging.debug("serial received: " + line.decode('ascii'))
-      fields = line.decode('ascii').split(",")
+      try:
+        fields = line.decode('ascii').split(",")
+      except UnicodeDecodeError:
+        logging.error("gps serial data garbage line - ignoring")
+        fields = [""]
+        
       if fields[0] == "$GPRMC": # only parse GPRMC messages
         #logging.debug("received message: " + str(fields))
         # utc time
