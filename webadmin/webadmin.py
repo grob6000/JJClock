@@ -27,7 +27,7 @@ class WebAdmin():
       
   def start(self):
     self._worker.start()
-    logger.info("webadmin server started")
+    logging.info("webadmin server started")
 
   def _get_my_tid(self):
     if not self._worker.is_alive():
