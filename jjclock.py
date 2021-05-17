@@ -292,11 +292,10 @@ def scanNetworks():
     if "OK" in cp.stdout:
       cp2 = subprocess.run(["wpa_cli", "-i", iface, "scan_results"], capture_output=True, text=True)
       if cp2.returncode == 0:
-        lines = cp2.stdout.split("\n")
+        lines = cp2.stdout.strip().split("\n")
         for l in lines:
-          if not l.startswith("bssid"):
+          if len(l) > 0 and not l.startswith("bssid"):
             parts = l.split(None,4)
-            print(parts)
             flags = parts[3].strip("[]").split("][")
             network = {"bssid":parts[0],"freq":int(parts[1]),"rssi":int(parts[2]),"flags":flags,"ssid":parts[4]}
             scannetworks.append(network)
