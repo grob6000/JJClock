@@ -298,7 +298,7 @@ def scanNetworks():
             parts = re.split('\s', l, maxsplit=4)
             flags = parts[3].strip("[]").split("][")
             network = {"bssid":parts[0],"freq":int(parts[1]),"rssi":int(parts[2]),"flags":flags,"ssid":parts[4]}
-            networks.append(network)
+            scannetworks.append(network)
       else:
         logging.error("could not retrieve scanned networks")
     else:
