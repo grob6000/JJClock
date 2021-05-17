@@ -1,0 +1,25 @@
+* {
+  font-family: tahoma;
+  background-color: black;
+  color: white;
+}
+
+a {
+  color: white;
+}
+
+button {
+  border: none;
+  color: black;
+  background-color: white;
+  padding: 15px;
+}
+
+table, th, td {
+  border: 1px solid white;
+}
+
+table {
+  border-collapse: collapse;
+  width: 50%
+}

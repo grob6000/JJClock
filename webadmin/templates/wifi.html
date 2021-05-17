@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>JJ Clock</title>
+    <link rel="stylesheet" href="/static/jjclock.css">
+  </head>
+  <body>
+    <h1>Wifi Configuration</h1>
+    <div><a href="/">Back</a></div>
+    <h2>Saved Networks</h2>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>SSID</th>
+        <th>Connected</th>
+        <th>Remove</th>
+      </tr>
+      {% for n in networks %}
+      <tr>
+        <td>{{n["id_str"]}}</td>
+        <td>{{n["ssid"]}}</td>
+        <td>Unknown</td>
+        <td align=center><button type="button" name="remove_{{n['id_str']}}">Remove</button></td>
+      </tr>
+      {% endfor %}
+    </table>
+    <h2>Add Network</h2>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>SSID</th>
+        <th>RSSI</th>
+        <th>Channel</th>
+        <th>Connect</th>
+      </tr>    
+  </body>
+</html>

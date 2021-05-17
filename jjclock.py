@@ -14,6 +14,7 @@ import timezonefinder
 from PIL import Image, ImageDraw, ImageFont
 import sys
 from github import Github
+import re
 
 if "linux" in sys.platform:
   from gpiozero import Device, Button
@@ -267,65 +268,84 @@ def doUpdate(wgeturl, tag):
   if updateok:
     quit()
 
+examplenetwork = {"index":0,"ssid":"examplessid","psk":"password123","bssid":"00:11:22:33:44:55", "frequency":"2462", "rssi":-71, "flags":["WPA2-PSK-CCMP","ESS"]}
+
 def getWifiNetworks():
-
+  networks = []
   if "linux" in sys.platform:
-    # get network details from wpa_supplicant.conf
-    with open("/etc/wpa_supplicant/wpa_supplicant.conf", "r") as wsc:
-      wsclines = wsc.readlines()
-    
-    networks = []
-    innetworkblock = False
-    for l in wsclines:
-      if l.startswith("network"):
-        innetworkblock = True
-        ssid=""
-        psk=""
-        id_str=""
-      if innetworkblock:
-        if l.strip() == "}":
-          innetworkblock = False
-          networks.append({"ssid":ssid,"psk":psk,"id_str":id_str})
-        else:
-          lsplit = l.strip().split("=")
-          v = lsplit[1].strip('"')
-          if lsplit[0] == "ssid":
-            ssid = v
-          if lsplit[0] == "psk":
-            psk = v
-          if lsplit[0] == "id_str":
-            id_str = v
-    
-    return networks
-
-def setWifiNeworks(networks):
-  if "linux" in sys.platform:  
-    with open("/etc/wpa_supplicant/wpa_supplicant.conf", "r") as wsc:
-      wsclines = wsc.readlines()
-    innetworkblock = False
-    lnew = []
-    for l in wsclines:
-      if l.startswith("network"):
-        innetworkblock = True
-      if innetworkblock:
-        if l.strip() == "}":
-          innetworkblock = False
+    runoutofnetworks = False
+    for i in range(0,10); # why would anyone configure more than 10???? yes magic numbers well whoopdeedoo
+      cp = subprocess.run(["wpa_cli", "-i", iface, "get_network", str(i), "ssid"])
+      if "FAIL" in cp.stdout:
+        break
       else:
-        lnew.append(l)
-    i = 0
-    for n in networks:
-      if n["id_str"] == "":
-        n["id_str"] = "network"+str(i)
-      lnew.append("network={\n")
-      lnew.append("    ssid=" + n["ssid"] + "\n")
-      lnew.append("    psk=" + n["psk"] + "\n")
-      lnew.append("    id_str=" + n["id_str"] + "\n")
-      lnew.append("    scan_ssid=1\n")
-      lnew.append("}\n")
-      i = i + 1
-    logging.debug(lnew)
-    with open("/etc/wpa_supplicant/wpa_supplicant.conf", "w") as wsc:
-      wsc.writelines(lnew)
+        network = {"id":i, "ssid":cp.stdout.strip('" \n')}
+        # for now, don't need anything else
+        networks.append(network)
+  else:
+    logging.error("cannot access wifi config")
+  return networks
+    
+def scanWifi():
+  scannetworks = []
+  if "linux" in sys.platform:
+    cp = subprocess.run(["wpa_cli", "-i", iface, "scan"])
+    if "OK" in cp.stdout:
+      cp2 = subprocess.run(["wpa_cli", "-i", iface, "scan_results"])
+      if cp2.returncode == 0:
+        lines = cp2.stdout.split("\n")
+        for l in lines:
+          if not l.startswith("bssid"):
+            parts = re.split('\s', l, maxsplit=4)
+            flags = parts[3].strip("[]").split("][")
+            network = {"bssid":parts[0],"freq":int(parts[1]),"rssi":int(parts[2]),"flags":flags,"ssid":parts[4]}
+            networks.append(network)
+      else:
+        logging.error("could not retrieve scanned networks")
+    else:
+      logging.error("could not scan wifi networks")
+  else:
+    logging.error("cannot access wifi config")
+  return scannetworks
+
+def removeNetwork(netindex):
+  # remove network and save config
+  if "linux" in sys.platform:
+    cp = subprocess.run(["wpa_cli", "-i", iface, "remove_network", str(netindex)])
+    if not "OK" in cp.stdout:
+      logging.error("could not delete network " + str(netindex))
+    cp = subprocess.run(["wpa_cli", "-i", iface, "save_config"])
+    if not "OK" in cp.stdout:
+      logging.error("error saving wifi config")
+  else:
+    logging.error("cannot access wifi config")
+    
+def addNetwork(ssid, psk):
+  netindex = -1
+  # add network
+  if "linux" in sys.platform:
+    cp = subprocess.run(["wpa_cli", "-i", iface, "add_network"])
+    if cp.returncode == 0:
+      netindex = int(cp.stdout.strip())
+      allok = True
+      cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "ssid", "'\""+str(ssid)+"\"'"])
+      if "FAIL" in cp2.stdout:
+        allok = False
+      cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "psk", "'\""+str(psk)+"\"'"])
+      if "FAIL" in cp2.stdout:
+        allok = False
+      if allok:
+        cp = subprocess.run(["wpa_cli", "-i", iface, "save_config"])
+        if not "OK" in cp.stdout:
+          logging.error("error saving wifi config")
+      else:
+        logging.error("error setting ssid/psk for wifi")
+    else:
+      logging.error("error adding wifi network")
+  else:
+    logging.error("cannot access wifi config")
+  
+  return netindex
     
 ## SCRIPT ##
 if __name__ == "__main__":
@@ -353,6 +373,23 @@ if __name__ == "__main__":
 
   # now screen is running, check for update
   checkForUpdate()
+
+  # wifi testing
+  n = getNetworks()
+  print(n)
+  
+  sn = scanNetworks()
+  print(sn)
+  
+  i = addNetwork("test", "nobigdeal")
+  n = getNetworks()
+  print(n)
+  
+  removeNetwork(i)
+  n = getNetworks()
+  print(n)
+  
+  quit()
   
   # splash
   #changeMode("splash")
