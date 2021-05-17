@@ -295,7 +295,7 @@ def scanNetworks():
         lines = cp2.stdout.split("\n")
         for l in lines:
           if not l.startswith("bssid"):
-            parts = re.split('\s', l, maxsplit=4)
+            parts = l.split(None,4)
             flags = parts[3].strip("[]").split("][")
             network = {"bssid":parts[0],"freq":int(parts[1]),"rssi":int(parts[2]),"flags":flags,"ssid":parts[4]}
             scannetworks.append(network)
