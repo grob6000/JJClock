@@ -154,22 +154,47 @@ def addNetwork(ssid, psk=None):
       
   return netindex
 
-def _doModeChange(newwifimode):
-      if newwifimode == "ap" or newwifimode == "client":
-        try:
-          # this takes some time
-          subprocess.run(["bash", os.path.join(scriptpath, newwifimode+"mode.sh")], check=True, timeout=60)
-        except subprocess.CalledProcessError:
-          logging.error("unsuccessful running " + newwifimode + "mode.sh")
-        except subprocess.TimeoutExpired:
-          logging.error(newwifimode + "mode.sh took too long, was killed")
-        with _currentmodelock:
-          global _currentwifimode
-          _currentwifimode = newwifimode  
-      else:
-        logging.error("bad mode: " + str(newwifimode))
+def _doAPMode():
+  logging.debug("ap mode change task start")
+  newmode = "unknown"
+  try:
+    subprocess.run(["wpa_cli", "-i", iface, "disconnect"], check=True)
+    subprocess.run(["sudo", "ip", "link", "set", "dev", iface, "down"], check=True)
+    subprocess.run(["sudo", "ip", "addr", "add", ap_addr+"/25", "dev", iface], check=True)
+    subprocess.run(["sudo", "systemctl", "restart", "dnsmasq.service"], check=True)
+    subprocess.run(["sudo", "systemctl", "restart", "hostapd.service"], check=True)
+  except subprocess.CalledProcessError:
+    logging.error("unsuccessful changing to ap mode")
+  else:
+    newmode = "ap"
+  with _currentmodelock:
+    global _currentwifimode
+    _currentwifimode = newmode
+  logging.debug("ap mode change task end")
   
-  
+def _doClientMode():
+  logging.debug("client mode change task start")
+  newmode = "unknown"
+  try:
+    subprocess.run(["sudo", "systemctl", "stop", "hostapd.service"], check=True)
+    subprocess.run(["sudo", "systemctl", "stop", "dnsmasq.service"], check=True)
+    subprocess.run(["sudo", "ip", "link", "set", "dev", iface, "down"], check=True)
+    subprocess.run(["sudo", "ip", "addr", "flush", "dev", iface], check=True)
+    subprocess.run(["wpa_cli", "-i", iface, "reconfigure"], check=True)
+    subprocess.run(["sudo", "systemctl", "daemon-reload"], check=True)
+    subprocess.run(["sudo", "systemctl", "restart", "dhcpcd.service"], check=True)
+    subprocess.run(["sudo", "dhclient", iface], check=True)
+  except subprocess.CalledProcessError:
+    logging.error("unsuccessful changing to client mode")
+  else:
+    newmode = "client"
+  with _currentmodelock:
+    global _currentwifimode
+    _currentwifimode = newmode  
+  logging.debug("client mode change task end")
+
+_modechangefuncs = {"ap":_doAPMode, "client":_doClientMode}
+
 def setWifiMode(newwifimode):
   with _wifimanagerlock:
     global _currentwifimode
@@ -182,7 +207,7 @@ def setWifiMode(newwifimode):
       _targetwifimode = newwifimode
       with _currentmodelock:
         _currentwifimode = "changing"
-      t = threading.Thread(target=_doModeChange, args=(newwifimode,), daemon=False)
+      t = threading.Thread(target=_modechangefuncs[newwifimode], daemon=False)
       t.start()
     else:
       logging.info("invalid wifi mode, no change")
