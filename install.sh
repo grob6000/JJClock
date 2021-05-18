@@ -19,7 +19,7 @@ sudo pip3 install numpy pyserial timezonefinder pytz pydbus pygithub gpiozero Pi
 # raspberry pi config
 sudo raspi-config nonint do_spi 0 # enable SPI
 sudo raspi-config nonint do_hostname "jjclock" # set hostname
-sudo raspi-config nonint do_serial 1 # disable serial terminal
+sudo raspi-config nonint do_serial 2 # disable serial terminal but enable /dev/serial0
 sudo timedatectl set-ntp True # enable ntp
 
 # disable bt
