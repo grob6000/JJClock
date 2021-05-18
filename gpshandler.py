@@ -17,14 +17,14 @@ class GpsHandler():
   _tzcheckinterval = 300
   _defaultport = '/dev/serial0'
   
-  def __init__(self):
+  def __init__(self, port=GpsHandler._defaultport):
     logging.debug("initializing gpshandler")
     self._datalock = threading.Lock()
     self._stopevent = threading.Event()
     self._newdataevent = threading.Event()
     self._tf = timezonefinder.TimezoneFinder()
     with self._datalock:
-      self._port = GpsHandler._defaultport
+      self._port = port
       self._dt_utc = None
       self._signalok = False
       self._lat = None
@@ -95,8 +95,12 @@ class GpsHandler():
       return
     
     logging.debug("opening port" + self._port)
-    ser = serial.Serial(self._port, GpsHandler._baud, timeout=1)
-    
+    try:
+      ser = serial.Serial(self._port, GpsHandler._baud, timeout=1)
+    except serial.serialutil.SerialException:
+      logging.error("could not open port. GPS will not be initialized. thread quit.")
+      return
+      
     lasttzcheck = time.monotonic() - GpsHandler._tzcheckinterval # keep track of when timezone was last checked; set up to trigger soonish
     while not self._stopevent.is_set(): # repeat until stop
       #logging.debug("waiting for serial input...")
