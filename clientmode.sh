@@ -12,5 +12,3 @@ sudo systemctl daemon-reload
 sudo systemctl restart dhcpcd.service
 #sudo dhclient -r wlan0
 sudo dhclient -v wlan0
-ifconfig
-wpa_cli status
