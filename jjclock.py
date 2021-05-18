@@ -200,8 +200,6 @@ def checkForUpdate():
   tag = latestrel.tag_name
   logging.debug("found tag " + tag)
   
-  tag = "forceupdate"
-  
   # get the current tag of the repo
   myname = ""
   if "linux" in sys.platform:
