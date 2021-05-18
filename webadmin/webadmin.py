@@ -61,7 +61,7 @@ class WebAdmin():
   
   def _run(self):
     try:
-      self._app.run(debug=True, use_reloader=False)
+      self._app.run(debug=True, use_reloader=False, host='0.0.0.0')
     except:
       print("app stopped")
   
