@@ -135,7 +135,7 @@ def changeMode(mode):
       gpsstat = gpshandler.getStatus()
       kwargs["ssid"] = ap_ssid
       kwargs["password"] = ap_pass
-      kwargs["ip"] = formatIP(ip_addr)
+      kwargs["ip"] = ap_addr
       kwargs["gpsstat"] = gpsstat
     elif mode == "menu":
       # do not change mode for menu
