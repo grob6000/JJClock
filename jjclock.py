@@ -188,8 +188,6 @@ def getSystemTz():
 def checkForUpdate():
   global lastupdate
   
-  logging.warning("not implemented - check for update")
-  
   g = Github(githubtoken)
   repo = g.get_repo(githubrepo)
   rels = repo.get_releases()
@@ -200,6 +198,9 @@ def checkForUpdate():
       latestrel = r
   wgeturl = latestrel.tarball_url
   tag = latestrel.tag_name
+  logging.debug("found tag " + tag)
+  
+  tag = "forceupdate"
   
   # get the current tag of the repo
   myname = ""
