@@ -1,12 +1,12 @@
 #!/bin/sh
-echo AP MODE > ./testap.log
-bash ./apmode.sh |& tee -a ./testap.log
+echo AP MODE
+bash ./apmode.sh
 sleep 1
-ifconfig wlan0 |& tee -a ./testap.log
-echo SLEEP >> ./testap.log
+ifconfig wlan0
+echo SLEEP
 sleep 30
-echo CLIENT MODE >> ./testap.log
-bash ./clientmode.sh |& tee -a ./testap.log
+echo CLIENT MODE
+bash ./clientmode.sh
 sleep 1
-ifconfig wlan0 |& tee -a ./testap.log
-echo FINISHED >> ./testap.log
+ifconfig wlan0
+echo FINISHED
