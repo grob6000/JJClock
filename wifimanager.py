@@ -177,7 +177,7 @@ def setWifiMode(newwifimode):
     elif (newwifimode == _currentwifimode):
       logging.info("wifi mode unchanged")
     elif newwifimode == "ap" or newwifimode == "client":
-      logging.info("wifi mode " + mode)
+      logging.info("wifi mode changing to " + newwifimode)
       _targetwifimode = newwifimode
       with _currentmodelock:
         _currentwifimode = "changing"
