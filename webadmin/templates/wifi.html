@@ -17,9 +17,9 @@
       </tr>
       {% for n in networks %}
       <tr>
-        <td>{{n["id_str"]}}</td>
+        <td>{{n["id"]}}</td>
         <td>{{n["ssid"]}}</td>
-        <td>Unknown</td>
+        <td>{{n["connected"]}}</td>
         <td align=center><button type="button" name="remove_{{n['id_str']}}">Remove</button></td>
       </tr>
       {% endfor %}

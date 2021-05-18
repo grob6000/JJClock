@@ -30,6 +30,17 @@ def getNetworks():
           network = {"id":i, "ssid":cp.stdout.strip('" \n')}
           # for now, don't need anything else
           networks.append(network)
+        cp = subprocess.run(["wpa_cli", "-i", iface, "status"], capture_output=True, text=True)
+        if not "FAIL" in cp.stdout:
+          lines = cp.stdout.strip().split("\n")
+          for l in lines:
+            parts = l.strip().split("=")
+            if len(parts)==2 and parts[0]=="id":
+              connectedid = int(parts[1])
+              for n in networks:
+                n["connected"] = bool(n["id"] == connectedid)
+        else:
+          logging.error("could not get wifi status")
     else:
       logging.error("cannot access wifi config")
   return networks
