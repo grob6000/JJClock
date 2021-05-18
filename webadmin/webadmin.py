@@ -1,9 +1,10 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, send_from_directory
 from jjcommon import *
 import threading
 import ctypes
 import logging
 import wifimanager # should be relatively threadsafe...
+import urllib
 
 class WebAdmin():
 
@@ -15,8 +16,12 @@ class WebAdmin():
     self._actiondata = {}
     self._datalock = threading.Lock()
     self._requestwaiter = threading.Event()
-    self._app.add_url_rule("/", view_func=self.index)
-    self._app.add_url_rule("/wifi", view_func=self.wifi)
+    self._app.add_url_rule("/", view_func=self.index, methods=['GET'])
+    self._app.add_url_rule("/wifi", view_func=self.wifi, methods=['GET'])
+    self._app.add_url_rule("/api/getnetworks", view_func=self.getnetworks, methods=['GET'])
+    self._app.add_url_rule("/api/scannetworks", view_func=self.scan, methods=['GET'])
+    self._app.add_url_rule("/api/addnetwork", view_func=self.addnetwork, methods=['POST'])
+    self._app.add_url_rule("/api/removenetwork", view_func=self.removenetwork, methods=['POST'])
     self._savednetworks = []
     self._scannetworks = []
     self._menu = []
@@ -92,4 +97,35 @@ class WebAdmin():
     with self._datalock:
       networks = wifimanager.getNetworks()
       scans = wifimanager.scanNetworks()
-    return render_template('wifi.html', networks=networks, scans=scans)
+    return send_from_directory('templates', 'wifi.html')
+    
+  def getnetworks(self):
+    with self._datalock:
+      networks = wifimanager.getNetworks()
+    return {"networks":networks}
+    
+  def addnetwork(self):
+    network = request.get_json(silent=True)
+    if network and "ssid" in network:
+      ssid = str(network["ssid"])
+      psk = None
+      if "psk" in network:
+        psk = str(network["psk"])
+      i = wifimanager.addNetwork(ssid, psk)
+      return {"id":i, "ssid":ssid}
+    else:
+      logging.warning("bad request to addnetwork")
+      return ""
+      
+  def removenetwork(self):
+    network = request.get_json(silent=True)
+    if network and "id" in network:
+      wifimanager.removeNetwork(network["id"])
+    else:
+      logging.warning("bad request to addnetwork")
+    return ""
+        
+  def scan(self):
+    with self._datalock:
+      scans = wifimanager.scanNetworks()
+    return {"scans":scans}    

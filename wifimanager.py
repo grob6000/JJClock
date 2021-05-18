@@ -16,6 +16,10 @@ _wifimanagerlock = threading.Lock() # locks the wpa_cli resources so they're onl
 
 _currentwifimode = "unknown" # global storage of current wifi mode
 
+_dummynetworks = [{"id":0,"ssid":"dummynetwork_a","connected":True},{"id":1,"ssid":"dummynetwork_b","connected":False}]
+_dummyscanresult = [{"bssid":"00:00:00:00","freq":2412,"channel":1,"rssi":-60,"flags":["WPA"],"ssid":"scannetwork_a","id":0},
+{"bssid":"00:00:00:00","freq":2437,"channel":6,"rssi":-58,"flags":["WPA"],"ssid":"scannetwork_b","id":1}]
+
 def getChannel(freq):
   if 2412 <= freq <= 2472:
     return int((freq - 2412)/5)+1
@@ -55,6 +59,7 @@ def getNetworks():
           logging.error("could not get wifi status")
     else:
       logging.error("cannot access wifi config")
+      networks = _dummynetworks
   return networks
   
 def scanNetworks(): 
@@ -72,16 +77,17 @@ def scanNetworks():
               parts = l.split(None,4)
               flags = parts[3].strip("[]").split("][")
               if len(parts)==5: # has SSID (4-part entries have blank SSID)
-                i = i + 1
                 network = {"bssid":parts[0],"freq":int(parts[1]),"rssi":int(parts[2]),"flags":flags,"ssid":parts[4],"id":i}
                 network["channel"] = getChannel(network["freq"])
                 scannetworks.append(network)
+                i = i + 1
         else:
           logging.error("could not retrieve scanned networks")
       else:
         logging.error("could not scan wifi networks")
     else:
       logging.error("cannot access wifi config")
+      scannetworks = _dummyscanresult
   return scannetworks
 
 def removeNetwork(netindex):
@@ -96,8 +102,12 @@ def removeNetwork(netindex):
         logging.error("error saving wifi config")
     else:
       logging.error("cannot access wifi config")
+      for n in _dummynetworks:
+        if n["id"] == netindex:
+          _dummynetworks.remove(n)
+      
   
-def addNetwork(ssid, psk):
+def addNetwork(ssid, psk=None):
   netindex = -1 
   with _wifimanagerlock:
     # add network
@@ -111,10 +121,13 @@ def addNetwork(ssid, psk):
         if "FAIL" in cp2.stdout:
           allok = False
           logging.debug("set ssid fail: " + cp2.stdout)
-        cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "psk", "\""+str(psk)+"\""], capture_output=True, text=True)
-        if "FAIL" in cp2.stdout:
-          allok = False
-          logging.debug("set psk fail: " + cp2.stdout)
+        if psk:
+          cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "psk", "\""+str(psk)+"\""], capture_output=True, text=True)
+          if "FAIL" in cp2.stdout:
+            allok = False
+            logging.debug("set psk fail: " + cp2.stdout)
+        else:
+          logging.debug("no psk specified; not adding to entry")
         if allok:
           cp = subprocess.run(["wpa_cli", "-i", iface, "save_config"], capture_output=True, text=True)
           if not "OK" in cp.stdout:
@@ -125,6 +138,15 @@ def addNetwork(ssid, psk):
         logging.error("error adding wifi network")
     else:
       logging.error("cannot access wifi config")
+      indexused = []
+      for n in _dummynetworks:
+        indexused.append(n["id"])
+      for i in range(0,20):
+        if not i in indexused:
+          netindex = i
+          _dummynetworks.append({"id":i, "ssid":ssid, "connected":False})
+          break
+      
   return netindex
   
 def setWifiMode(newwifimode):

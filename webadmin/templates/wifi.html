@@ -4,7 +4,76 @@
     <title>JJ Clock</title>
     <link rel="stylesheet" href="/static/jjclock.css">
   </head>
-  <body>
+  <body onload="updateall()">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"></script>
+    
+    <script>
+    
+    function updateall() {
+      updatenetworks()
+      getscan()
+    }
+    
+    function updatenetworks() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("GET", "api/getnetworks", true);
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          jr = JSON.parse(this.responseText)
+          var template = "{{#networks}}<tr><td>{{id}}</td><td>{{ssid}}</td><td>{{connected}}</td><td align=center><button type=\"button\" onclick=\"removenetwork({{id}})\">Remove</button></td></tr>{{/networks}}"
+          document.getElementById("networkrows").innerHTML = Mustache.render(template, jr)
+        }
+      }
+      xhttp.send()      
+    }
+    
+    function getscan() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("GET", "api/scannetworks", true);
+      xhttp.onreadystatechange = function () {    
+        if (this.readyState == 4 && this.status == 200) {
+          jr = JSON.parse(this.responseText)
+          var template = "{{#scans}}<tr><td>{{id}}</td><td><button type=\"button\" onclick=\"prefillssid(&quot;{{ssid}}&quot;)\">{{ssid}}</button><td>{{rssi}}</td><td>{{channel}}</td>{{/scans}}"
+          document.getElementById("scanrows").innerHTML = Mustache.render(template, jr)
+        }
+      }
+      xhttp.send()
+    }
+    
+    function removenetwork(id) {
+      var n = {"id":id}
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("POST", "api/removenetwork", true);
+      xhttp.setRequestHeader("Content-type", "application/json");
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          updatenetworks()
+        }
+      }
+      xhttp.send(JSON.stringify(n))    
+    }
+    
+    function prefillssid(ssid) {
+      document.getElementById("ssid").value = ssid
+    }
+    
+    function addnetwork() {
+      var ssid = document.getElementById("ssid").value
+      var psk = document.getElementById("psk").value
+      var n = {"ssid":ssid, "psk":psk}
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("POST", "api/addnetwork", true);
+      xhttp.setRequestHeader("Content-type", "application/json");
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          updatenetworks()
+        }
+      }
+      xhttp.send(JSON.stringify(n))
+    }
+    
+    </script>
+    
     <h1>Wifi Configuration</h1>
     <div><a href="/">Back</a></div>
     <h2>Saved Networks</h2>
@@ -15,32 +84,22 @@
         <th>Connected</th>
         <th>Remove</th>
       </tr>
-      {% for n in networks %}
-      <tr>
-        <td>{{n["id"]}}</td>
-        <td>{{n["ssid"]}}</td>
-        <td>{{n["connected"]}}</td>
-        <td align=center><button type="button" name="remove_{{n['id_str']}}">Remove</button></td>
-      </tr>
-      {% endfor %}
+      <tbody id="networkrows">
+      </tbody>
     </table>
     <h2>Add Network</h2>
+    <button type="button" onclick="getscan()">Scan</button>
     <table>
       <tr>
         <th>ID</th>
         <th>SSID</th>
         <th>RSSI</th>
         <th>Channel</th>
-        <th>Connect</th>
       </tr>
-      {% for s in scans %}
-      <tr>
-        <td>?</td>
-        <td>{{s["ssid"]}}</td>
-        <td>{{s["rssi"]}}</td>
-        <td>{{s["channel"]}}</td>
-        <td align=center><button type="button" name="connect_{{s['id']}}">Connect</button></td>
-      </tr>      
-      {% endfor %}      
+      <tbody id="scanrows"></tbody>    
+    </table>      
+    <label for="ssid">SSID:</label><input type="text" id="ssid"></input>
+    <label for="ssid">Password:</label><input type="password" id="psk"></input>
+    <button type="button" onclick="addnetwork()">Add</button>
   </body>
 </html>
