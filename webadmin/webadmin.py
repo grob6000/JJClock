@@ -1,10 +1,11 @@
 from flask import Flask, request, render_template, send_from_directory
-from jjcommon import *
 import threading
 import ctypes
 import logging
 import wifimanager # should be relatively threadsafe...
 import urllib
+
+from jjcommon import *
 
 class WebAdmin():
 
@@ -66,7 +67,7 @@ class WebAdmin():
   
   def _run(self):
     try:
-      self._app.run(debug=True, use_reloader=False, host='0.0.0.0', port=5000)
+      self._app.run(debug=True, use_reloader=False, host='0.0.0.0', port=webadmin_port)
     except:
       print("app stopped")
   

@@ -136,6 +136,7 @@ def changeMode(mode):
       kwargs["ssid"] = ap_ssid
       kwargs["password"] = ap_pass
       kwargs["ip"] = ap_addr
+      kwargs["port"] = webadmin_port
       kwargs["gpsstat"] = gpsstat
     elif mode == "menu":
       # do not change mode for menu

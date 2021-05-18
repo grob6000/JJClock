@@ -17,6 +17,7 @@ iface = "wlan0"
 ap_ssid = "JJClockSetup"
 ap_pass = "12071983"
 ap_addr = "192.168.99.1"
+webadmin_port = 5000
 #ip_mask = (255,255,255,0)
 #dhcp_start = (192,168,99,10)
 #dhcp_end = (192,168,99,20)
