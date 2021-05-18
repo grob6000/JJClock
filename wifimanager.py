@@ -164,6 +164,7 @@ def _doModeChange(newwifimode):
         except subprocess.TimeoutExpired:
           logging.error(newwifimode + "mode.sh took too long, was killed")
         with _currentmodelock:
+          global _currentwifimode
           _currentwifimode = newwifimode  
       else:
         logging.error("bad mode: " + str(newwifimode))
