@@ -3,12 +3,12 @@ Description=JJ Clock
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 -u /home/pi/JJClock/jjclock.py
+ExecStart=/usr/bin/authbind --deep /usr/bin/python3 -u /home/pi/JJClock/jjclock.py
 WorkingDirectory=/home/pi/JJClock
 StandardError=inherit
 StandardOutput=inherit
 Restart=always
-User=root
+User=pi
 
 [Install]
 WantedBy=multi-user.target

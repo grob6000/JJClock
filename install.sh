@@ -4,7 +4,7 @@ NOW=$( date '+%F_%H%M%S' )
 
 # install required programs
 sudo apt-get -y update
-sudo apt-get -y install git python3 python3-pip hostapd dnsmasq libjpeg-dev zlib1g-dev libfreetype6-dev liblcms1-dev libopenjp2-7 libtiff5 libsecret-1-0 libsecret-1-dev libatlas-base-dev
+sudo apt-get -y install git python3 python3-pip hostapd dnsmasq libjpeg-dev zlib1g-dev libfreetype6-dev liblcms1-dev libopenjp2-7 libtiff5 libsecret-1-0 libsecret-1-dev libatlas-base-dev authbind
 
 # save git credentials
 #sudo make --directory=/usr/share/doc/git/contrib/credential/libsecret
@@ -55,6 +55,10 @@ cp /etc/dnsmasq.conf ./oldconfig/dnsmasq_$NOW.conf
 sudo rm /etc/dnsmasq.conf
 sudo cp ./dnsmasq.conf /etc/dnsmasq.conf
 sudo systemctl disable dnsmasq.service # disabled by default
+
+# set up access to port 80
+sudo touch /etc/authbind/byport/80
+sudo chmod 777 /etc/authbind/byport/80
 
 # set up script as service, run on boot
 echo ***** SETTING UP BOOT SERVICE *****
