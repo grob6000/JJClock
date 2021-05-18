@@ -160,7 +160,7 @@ def updateTime(dt, force=False):
     #print(dt)
     if ("clock" in currentmode) and (currentmode in rinstances):
       ui = rinstances[currentmode].getUpdateInterval()
-      if ((dt.minute + dt.hour*60) % ui == 0)):
+      if ((dt.minute + dt.hour*60) % ui == 0):
         displayRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
   currentdt = dt
   
