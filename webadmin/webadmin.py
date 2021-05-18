@@ -68,8 +68,8 @@ class WebAdmin():
   def _run(self):
     try:
       self._app.run(debug=True, use_reloader=False, host='0.0.0.0', port=webadmin_port)
-    except:
-      print("app stopped")
+    except Exception as e:
+      print("app stopped: {0}".format(e))
   
   def provideWifiNetworks(self, networks):
     with self._datalock:
