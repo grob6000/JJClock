@@ -32,6 +32,15 @@
         <th>RSSI</th>
         <th>Channel</th>
         <th>Connect</th>
-      </tr>    
+      </tr>
+      {% for s in scans %}
+      <tr>
+        <td>?</td>
+        <td>{{s["ssid"]}}</td>
+        <td>{{s["rssi"]}}</td>
+        <td>{{s["channel"]}}</td>
+        <td align=center><button type="button" name="connect_{{n['id']}}">Connect</button></td>
+      </tr>      
+      {% endfor %}      
   </body>
 </html>

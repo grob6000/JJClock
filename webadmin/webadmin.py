@@ -91,5 +91,5 @@ class WebAdmin():
   def wifi(self):
     with self._datalock:
       networks = wifimanager.getNetworks()
-      scan = wifimanager.scanNetworks()
-    return render_template('wifi.html', networks=networks, scan=scan)
+      scans = wifimanager.scanNetworks()
+    return render_template('wifi.html', networks=networks, scans=scans)

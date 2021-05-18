@@ -16,6 +16,18 @@ _wifimanagerlock = threading.Lock() # locks the wpa_cli resources so they're onl
 
 _currentwifimode = "unknown" # global storage of current wifi mode
 
+def getChannel(freq):
+  if 2412 <= freq <= 2472:
+    return int((freq - 2412)/5)+1
+  elif freq == 2484:
+    return 14
+  elif 4915 <= freq <= 4980:
+    return int((freq-4915)/5)+183
+  elif 5035 <= freq <= 5885:
+    return int((freq - 5035)/5)+7
+  else:
+    return 0
+
 ## MODULE FUNCTIONS ##
 
 def getNetworks():
@@ -54,12 +66,15 @@ def scanNetworks():
         cp2 = subprocess.run(["wpa_cli", "-i", iface, "scan_results"], capture_output=True, text=True)
         if cp2.returncode == 0:
           lines = cp2.stdout.strip().split("\n")
+          i = 0
           for l in lines:
             if len(l) > 0 and not l.startswith("bssid"):
               parts = l.split(None,4)
               flags = parts[3].strip("[]").split("][")
               if len(parts)==5: # has SSID (4-part entries have blank SSID)
-                network = {"bssid":parts[0],"freq":int(parts[1]),"rssi":int(parts[2]),"flags":flags,"ssid":parts[4]}
+                i = i + 1
+                network = {"bssid":parts[0],"freq":int(parts[1]),"rssi":int(parts[2]),"flags":flags,"ssid":parts[4],"id"=i}
+                network["channel"] = getChannel(network["freq"])
                 scannetworks.append(network)
         else:
           logging.error("could not retrieve scanned networks")
