@@ -15,9 +15,8 @@ class GpsHandler():
   
   _baud = 9600
   _tzcheckinterval = 300
-  _defaultport = '/dev/serial0'
   
-  def __init__(self, port=GpsHandler._defaultport):
+  def __init__(self, port='/dev/serial0'):
     logging.debug("initializing gpshandler")
     self._datalock = threading.Lock()
     self._stopevent = threading.Event()
