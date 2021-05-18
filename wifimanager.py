@@ -13,8 +13,10 @@ from jjcommon import *
 ## MODULE GLOBALS ##
 
 _wifimanagerlock = threading.Lock() # locks the wpa_cli resources so they're only used one at a time - if you call while this is being used by another thread, it will block until the lock is freed
-
+_currentmodelock = threading.Lock() # lock for the current wifi mode variable
 _currentwifimode = "unknown" # global storage of current wifi mode
+_targetwifimode = "unknown" # set for when we run the change routine in the background
+
 
 _dummynetworks = [{"id":0,"ssid":"dummynetwork_a","connected":True},{"id":1,"ssid":"dummynetwork_b","connected":False}]
 _dummyscanresult = [{"bssid":"00:00:00:00","freq":2412,"channel":1,"rssi":-60,"flags":["WPA"],"ssid":"scannetwork_a","id":0},
@@ -151,30 +153,41 @@ def addNetwork(ssid, psk=None):
           break
       
   return netindex
+
+def _doModeChange(mode):
+      if mode == "ap" or mode == "client":
+        try:
+          # this takes some time
+          subprocess.run(["bash", os.path.join(scriptpath, mode+"mode.sh")], check=True, timeout=60)
+        except subprocess.CalledProcessError:
+          logging.error("unsuccessful running " + mode + "mode.sh")
+        except subprocess.TimeoutExpired:
+          logging.error(mode + "mode.sh took too long, was killed")
+        with _currentmodelock:
+          _currentwifimode = newwifimode  
+      else:
+        logging.error("bad mode: " + str(mode))
+  
   
 def setWifiMode(newwifimode):
   with _wifimanagerlock:
     global _currentwifimode
-    if (newwifimode == _currentwifimode):
+    if _currentwifimode == "changing":
+      logging.warning("wifi mode currently changing; request ignored")
+    elif (newwifimode == _currentwifimode):
       logging.info("wifi mode unchanged")
-    elif newwifimode == "ap":
-      logging.info("wifi mode AP")
-      try:
-        subprocess.run(["bash", os.path.join(scriptpath, "apmode.sh")], check=True)
-      except subprocess.CalledProcessError:
-        logging.error("unsuccessful running apmode.sh")
-      currentwifimode = newwifimode
-    elif newwifimode == "client":
-      logging.info("wifi mode Client")
-      try:
-        subprocess.run(["bash", os.path.join(scriptpath, "clientmode.sh")], check=True)
-      except subprocess.CalledProcessError:
-        logging.error("unsuccessful running clientmode.sh")
-      currentwifimode = newwifimode
+    elif newwifimode == "ap" or newwifimode == "client":
+      logging.info("wifi mode " + mode)
+      _targetwifimode = newwifimode
+      with _currentmodelock:
+        _currentwifimode = "changing"
+      t = threading.Thread(target=_doModeChange, args=(newwifimode), daemon=False)
+      t.start()
     else:
       logging.info("invalid wifi mode, no change")
 
 def getWifiMode():
   with _wifimanagerlock:
+    global _currentwifimode
     thewifimode = _currentwifimode
   return thewifimode

@@ -137,11 +137,12 @@ def changeMode(mode):
       kwargs["password"] = ap_pass
       kwargs["ip"] = formatIP(ip_addr)
       kwargs["gpsstat"] = gpsstat
+    elif mode == "menu":
+      # do not change mode for menu
+      kwargs["selecteditem"] = menuitemselected
+      kwargs["menu"] = menu
     else:
       wifimanager.setWifiMode("client") # all other modes should be in client state (if no wifi configured, will be disconnected...)
-    if mode == "menu":
-        kwargs["selecteditem"] = menuitemselected
-        kwargs["menu"] = menu
     if mode in rinstances:
       r = rinstances[mode]
       kwargs["timestamp"] = currentdt
