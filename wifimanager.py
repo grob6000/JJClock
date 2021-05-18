@@ -108,7 +108,10 @@ def removeNetwork(netindex):
       
   
 def addNetwork(ssid, psk=None):
-  netindex = -1 
+  netindex = -1
+  if not ssid or ssid=="":
+    return netindex
+    
   with _wifimanagerlock:
     # add network
     if "linux" in sys.platform:
