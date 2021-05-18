@@ -154,19 +154,19 @@ def addNetwork(ssid, psk=None):
       
   return netindex
 
-def _doModeChange(mode):
-      if mode == "ap" or mode == "client":
+def _doModeChange(newwifimode):
+      if newwifimode == "ap" or newwifimode == "client":
         try:
           # this takes some time
-          subprocess.run(["bash", os.path.join(scriptpath, mode+"mode.sh")], check=True, timeout=60)
+          subprocess.run(["bash", os.path.join(scriptpath, newwifimode+"mode.sh")], check=True, timeout=60)
         except subprocess.CalledProcessError:
-          logging.error("unsuccessful running " + mode + "mode.sh")
+          logging.error("unsuccessful running " + newwifimode + "mode.sh")
         except subprocess.TimeoutExpired:
-          logging.error(mode + "mode.sh took too long, was killed")
+          logging.error(newwifimode + "mode.sh took too long, was killed")
         with _currentmodelock:
           _currentwifimode = newwifimode  
       else:
-        logging.error("bad mode: " + str(mode))
+        logging.error("bad mode: " + str(newwifimode))
   
   
 def setWifiMode(newwifimode):
@@ -181,7 +181,7 @@ def setWifiMode(newwifimode):
       _targetwifimode = newwifimode
       with _currentmodelock:
         _currentwifimode = "changing"
-      t = threading.Thread(target=_doModeChange, args=(newwifimode), daemon=False)
+      t = threading.Thread(target=_doModeChange, args=(newwifimode,), daemon=False)
       t.start()
     else:
       logging.info("invalid wifi mode, no change")
