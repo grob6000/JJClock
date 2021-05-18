@@ -73,7 +73,7 @@ def scanNetworks():
               flags = parts[3].strip("[]").split("][")
               if len(parts)==5: # has SSID (4-part entries have blank SSID)
                 i = i + 1
-                network = {"bssid":parts[0],"freq":int(parts[1]),"rssi":int(parts[2]),"flags":flags,"ssid":parts[4],"id"=i}
+                network = {"bssid":parts[0],"freq":int(parts[1]),"rssi":int(parts[2]),"flags":flags,"ssid":parts[4],"id":i}
                 network["channel"] = getChannel(network["freq"])
                 scannetworks.append(network)
         else:
