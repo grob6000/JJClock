@@ -3,7 +3,7 @@
 import sys
 import datetime
 from PIL import Image, ImageDraw, ImageFont
-import loggging
+import logging
 
 import jjrenderer
 from jjcommon import *
@@ -19,10 +19,10 @@ if __name__ == "__main__":
   else:
     rlist = jjrenderer.renderers.keys()
   
-  kwargs = {"timestamp":datetime.datetime.now()}
+  kwargs = {"timestamp":datetime.datetime.now(), "ip":ap_addr, "port":webadmin_port, "ssid":ap_ssid, "password":ap_pass}
   for r in rlist:
     if r in jjrenderer.renderers:
-      logger.info("Rendering " + r)
+      logging.info("Rendering " + r)
       screen = Image.new("L", boxsize)
       rinst = jjrenderer.renderers[r]()
       screen = rinst.doRender(screen,**kwargs)
