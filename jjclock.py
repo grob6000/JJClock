@@ -156,12 +156,14 @@ def updateTime(dt, force=False):
   global currentdt
   #global renderers
   #global currentmode
+  if force or not currentdt.minute == dt.minute:
+    #print(dt)
+    if ("clock" in currentmode) and (currentmode in rinstances):
+      ui = rinstances[currentmode].getUpdateInterval()
+      if ((dt.minute + dt.hour*60) % ui == 0)):
+        displayRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
   currentdt = dt
-  #print(dt)
-  ui = rinstances[currentmode].getUpdateInterval()
-  if force or ((dt.second == 0) and ("clock" in currentmode) and (currentmode in rinstances) and ((dt.minute + dt.hour*60) % ui == 0)):
-    displayRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
-
+  
 def setSystemTz(tzname):
     if "linux" in sys.platform:
       systzname = getSystemTz()
