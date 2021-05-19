@@ -352,7 +352,7 @@ if __name__ == "__main__":
         # data is available
         logging.debug(adata)
           
-      #time.sleep(0.2) # limit to 5Hz - for debugging sometimes handy
+      time.sleep(0.01) # limit frequency / provide a thread opportunity
   
   # Close the window and quit.
   logging.info("quitting")
