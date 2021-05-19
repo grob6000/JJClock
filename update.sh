@@ -1,6 +1,8 @@
 #!/bin/sh
+set -x # print stuff
+
 # this should work from outside the install directory!
-cd ~/JJClock
+cd /home/pi/JJClock
 
 # stop service
 sudo systemctl stop jjclock.service
