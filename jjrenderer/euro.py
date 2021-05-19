@@ -373,7 +373,6 @@ class _StyleFrench(RendererEuroClock):
     dsz = datefont.getsize(d)
     draw.text((100,y),d,font=datefont,fill=0x00)
     
-    
     # headline
     headlinemaxwidth = screen.size[0] - 200
     headlinefont = getFont("arialnarrow", 150)
