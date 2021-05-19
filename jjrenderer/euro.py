@@ -10,6 +10,7 @@ import datetime
 numberstrings_en = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"]
 decadestrings_en = ["Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"]
 monthstrings_en = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+daystrings_en = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 numberstrings_de = ["null", "ein", "zwei", "drei", "vier", "funf", "sechs", "sieben", "acht", "neun", "zehn", "elf", "zwölf", "dreizehn", "vierzehn", "funfzehn", "sechzehn", "siebzehn", "achtzehn", "neunzehn"]
 decadestrings_de = ["zwanzig", "dreizig", "vierzig", "funfzig", "sechzig", "siebzig", "achtzig", "neunzig"]
@@ -19,6 +20,8 @@ decadestrings_es = ["viente", "treinta", "cuarenta", "cincuenta", "sesenta", "se
 
 numberstrings_fr = ["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"]
 decadestrings_fr = ["vingt", "trente", "quarante", "cinguante"]
+monthstrings_fr = ["janvier", "février", "mars", "avril", "mai", "juin", "juilliet", "août", "septembre", "octobre", "novembre", "décembre"]
+daystrings_fr = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
 
 numberstrings_it = ["?", "uno", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove", "dieci", "undici", "dodici", "tredici", "quattordici", "quindici", "sedici", "diciassette", "diciotto", "diciannove"]
 decadestrings_it = ["venti", "trenta", "quaranta", "cinquanta", "sesanta", "settanta", "ottanta", "novanta"]
@@ -81,8 +84,16 @@ def GetNumberString(n, lang="en"):
 	return s
     
 def GetDateString(dt, lang="en"):
-	monthstrings = monthstrings_en
-	return str(dt.day) + " " + monthstrings[dt.month - 1] + " " + str(dt.year)
+    if lang == "fr":
+      monthstrings = monthstrings_fr
+      daystrings = daystrings_fr
+    else:
+      monthstrings = monthstrings_en
+      daystrings = daystrings_en
+    if lang == "fr":
+      return "{0}, {1} {2} {3}".format(daystrings[dt.weekday()], dt.day, monthstrings[dt.month - 1], dt.year)
+    else: # en
+      return str(dt.day) + " " + monthstrings[dt.month - 1] + " " + str(dt.year)
 
 def GetHourString(h, lang="en", format="12h"):
 	# if it's midday or middnight, 50% chance of using these terms
@@ -341,17 +352,17 @@ class _StyleFrench(RendererEuroClock):
     d = "Aujourd'hui"
     if "timestamp" in kwargs and kwargs["timestamp"]:
       t = GetTimeString(kwargs["timestamp"], lang="fr")
-      d = GetDateString(kwargs["timestamp"], lang="fr")
+      d = GetDateString(kwargs["timestamp"], lang="fr").upper()
     logging.info("time: {0}, date: {1}".format(t,d))
     
     fill(screen)
     
     draw = ImageDraw.Draw(screen)
     pad = 50
-    y = 100
+    y = 200
     
     # logo
-    logomaxheight = 150
+    logomaxheight = 200
     logomaxwidth = 800
     logo = getImage("logo_lemonde")
     s = 1.0
@@ -364,14 +375,41 @@ class _StyleFrench(RendererEuroClock):
     y = y + logo.size[1] + pad
     
     # intermediate bar
-    barheight = 100
+    barheight = 120
     screen.paste(0x80, box=(100, y, screen.size[0]-100, y+barheight))
-    y = y + barheight + pad
+    dividers = 2
+    ifont1 = getFont("arialnarrow",42)
+    ifont2 = getFont("arialnarrowbold",42)
+    itext1 = ["DERNIÈRES", "AFFAIRES", "LE MONDE"]
+    itext2 = ["NOUVELLES", "EN COURS", "DES LIVRES"]
+    itextheight = ifont1.getsize("X")[1]
+    iy1 = int(y + (barheight-itextheight*2)/3)
+    iy2 = int(y + itextheight + (barheight-itextheight*2)/3*2)
+    for i in range(dividers+1):
+      x = int(((screen.size[0]-200) / (dividers+1)) * (i)) + 100
+      draw.text((x+20,iy1),itext1[i],font=ifont1,fill=0xFF)
+      draw.text((x+20,iy2),itext2[i],font=ifont2,fill=0xFF)
+      if i > 0:
+        screen.paste(0xFF, box=(x-2,y+int(barheight*0.2),x+2,y+int(barheight*0.8)))
+        
+    y = y + barheight
+    
+    
     
     # date bar
-    datefont = getFont("arialnarrow", 24)
+    datefont = getFont("arialnarrowbold", 36)
     dsz = datefont.getsize(d)
     draw.text((100,y),d,font=datefont,fill=0x00)
+    
+    pricefont = getFont("arialnarrow", 36)
+    p = "2,50€"
+    draw.text((100+dsz[0]+50,y),p,font=pricefont,fill=0x00)
+    
+    w = "WWW.LEMONDE.FR"
+    wsz = pricefont.getsize(w)
+    draw.text((screen.size[0]-100-wsz[0],y),w,font=pricefont,fill=0x00)
+    
+    y = y + dsz[1] # + pad # seems to not need this
     
     # headline
     headlinemaxwidth = screen.size[0] - 200
@@ -383,7 +421,7 @@ class _StyleFrench(RendererEuroClock):
     d2.text((0,0),t,font=headlinefont,fill=0x00)
     if tsz[0] > headlinemaxwidth:
       headlineimg = headlineimg.resize((headlinemaxwidth, headlineimg.size[1]))
-    screen.paste(headlineimg, (int(screen.size[0]/2 - headlineimg.size[0]/2),int(100+logo.size[1]+pad*1.5+barheight)))
+    screen.paste(headlineimg, (int(screen.size[0]/2 - headlineimg.size[0]/2),y))
     return screen
 
 # automated luxury space communist style collection
