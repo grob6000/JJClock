@@ -29,13 +29,13 @@ def getImage(imagename):
 
 def testRenderer(rendererclass):
   logging.info("Test render " + rendererclass.__name__)
-  
   screensize = (1448, 1072) # Set the width and height of the screen [width, height]
   cropbox = (10,10,1410,1060) # area we should work within / x1, y1, x2, y2
   boxsize = (cropbox[2]-cropbox[0],cropbox[3]-cropbox[1]) # x,y
   kwargs = {"timestamp":datetime.datetime.now()}
   overlaycolor = 0xD0
-
+  logging.info(kwargs)
+  
   rinst = rendererclass()
   screen = Image.new("L", boxsize)
   screen = rinst.doRender(screen, **kwargs)

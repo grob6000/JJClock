@@ -19,10 +19,14 @@ if __name__ == "__main__":
   else:
     rlist = jjrenderer.renderers.keys()
   
-  kwargs = {"timestamp":datetime.datetime.now(), "ip":ap_addr, "port":webadmin_port, "ssid":ap_ssid, "password":ap_pass}
+  kwargs = {"timestamp":datetime.datetime.now().astimezone(), "ip":ap_addr, 
+  "port":webadmin_port, "ssid":ap_ssid, "password":ap_pass}
+  
+  print(kwargs)
+  
   for r in rlist:
     if r in jjrenderer.renderers:
-      logging.info("Rendering " + r)
+      print("Rendering " + r)
       screen = Image.new("L", boxsize)
       rinst = jjrenderer.renderers[r]()
       screen = rinst.doRender(screen,**kwargs)
