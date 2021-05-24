@@ -92,7 +92,7 @@ def GetNumberString(n, lang="en"):
                     s += "-" + numberstrings[i]
     return s
     
-def GetDateString(dt, lang="en"):
+def GetDateString(dt, lang="en", includeday=False):
     if lang == "fr":
       monthstrings = monthstrings_fr
       daystrings = daystrings_fr
@@ -102,7 +102,10 @@ def GetDateString(dt, lang="en"):
     if lang == "fr":
       return "{0}, {1} {2} {3}".format(daystrings[dt.weekday()], dt.day, monthstrings[dt.month - 1], dt.year)
     else: # en
-      return str(dt.day) + " " + monthstrings[dt.month - 1] + " " + str(dt.year)
+      s = str(dt.day) + " " + monthstrings[dt.month - 1] + " " + str(dt.year)
+      if (includeday):
+        s = daystrings[dt.weekday()] + ", " + s
+      return s
 
 def GetHourString(h, lang="en", format="12h"):
     # if it's midday or middnight, 50% chance of using these terms

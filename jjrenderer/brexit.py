@@ -12,7 +12,7 @@ class RendererBrexitClock(Renderer):
   def doRender(self, screen, **kwargs):
     if "timestamp" in kwargs and kwargs["timestamp"]:
       kwargs["tstring"] = ts.GetTimeString(kwargs["timestamp"], lang="en_idiomatic")
-      kwargs["dstring"] = ts.GetDateString(kwargs["timestamp"], lang="en")
+      #kwargs["dstring"] = ts.GetDateString(kwargs["timestamp"], lang="en", includeday=True)
     else:
       kwargs["tstring"] = "No bloody idea mate"
       kwargs["dstring"] = "Today"
@@ -27,12 +27,13 @@ class _StyleSun(RendererBrexitClock):
     bg = getImage("bg_thesun")
     screen.paste(bg)
     draw = ImageDraw.Draw(screen)
-    datefont = getFont("arial", 48)
+    datefont = getFont("arial", 32)
     # dateline
     x = 84
     y = 320
-    #dsz = datefont.getsize(kwargs["dstring"])
-    draw.text((x,y), kwargs["dstring"], font=datefont, fill=0xFF)
+    d = ts.GetDateString(kwargs["timestamp"], lang="en", includeday=True)
+    #dsz = datefont.getsize(d)
+    draw.text((x,y), d, font=datefont, fill=0xFF)
     # web address (matching date)
     w = "thesun.co.uk"
     wsz = datefont.getsize(w)
@@ -49,9 +50,9 @@ class _StyleSun(RendererBrexitClock):
     if len(T)>10 and " " in T:
       lines = ts.HalfAndHalf(T)
       hmax = int((bbox[3]-bbox[1]-pad)/2)
+    logging.debug(lines)
     headlinefont = getFont("arialblack", 200)
     y = bbox[1]
-    print(lines)
     for l in lines:
       if len(l)>0:
         tsz = headlinefont.getsize(l)
@@ -63,9 +64,9 @@ class _StyleSun(RendererBrexitClock):
         s = min((bbox[2]-bbox[0])/img.size[0], hmax/img.size[1])
         print(s)
         img = img.resize((int(img.size[0]*s), hmax), Image.ANTIALIAS)
-        img.show()
         screen.paste(img, (int((bbox[0]+bbox[2]-img.size[0])/2), y))
         y = y + hmax + pad
+        
     return screen    
     
 # automated luxury space communist style collection
