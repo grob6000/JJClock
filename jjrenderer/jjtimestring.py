@@ -26,6 +26,9 @@ decadestrings_it = ["venti", "trenta", "quaranta", "cinquanta", "sesanta", "sett
 numberstrings_et = ["null", "üks", "kaks", "kolm", "neli", "viis", "kuus", "seitse", "kaheksa", "üheksa", "kümme", "üksteist", "kaksteist", "kolmteist", "neliteist", "viisteist", "kussteist", "seitseteist", "kaheksateist", "üheksateist"]
 decadestrings_et = ["kakskümmend", "kolmkümmend", "nelikümmend", "viiskümmend", "kuuskümmend", "seitsekümmend", "kaheksakümmend" "üheksakümmend"]
 
+daystrings_ru = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"]
+monthstrings_ru = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "сентябрь", "октябрь", "ноябрь", "декабрь"]
+
 def HalfAndHalf(sentence):
   sentence = str(sentence)
   imin = len(sentence)
@@ -99,10 +102,22 @@ def GetDateString(dt, lang="en"):
     else:
       monthstrings = monthstrings_en
       daystrings = daystrings_en
+    s = ""
     if lang == "fr":
-      return "{0}, {1} {2} {3}".format(daystrings[dt.weekday()], dt.day, monthstrings[dt.month - 1], dt.year)
+      s = "{0}, {1} {2} {3}".format(daystrings[dt.weekday()], dt.day, monthstrings[dt.month - 1], dt.year)
+    elif lang == "ru":
+      s = "{0} {1} {2} года".format(dt.day, monthstrings_ru[dt.month], dt.year)
+      if includeday:
+        s = daystrings_ru[dt.weekday()] + ", " + s
     else: # en
+<<<<<<< Updated upstream
       return str(dt.day) + " " + monthstrings[dt.month - 1] + " " + str(dt.year)
+=======
+      s = str(dt.day) + " " + monthstrings[dt.month - 1] + " " + str(dt.year)
+      if (includeday):
+        s = daystrings[dt.weekday()] + ", " + s
+    return s
+>>>>>>> Stashed changes
 
 def GetHourString(h, lang="en", format="12h"):
     # if it's midday or middnight, 50% chance of using these terms
