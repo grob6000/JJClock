@@ -18,8 +18,8 @@ class RendererBrexitClock(Renderer):
       kwargs["tstring"] = "No bloody idea mate"
       kwargs["dstring"] = "Today"
     if len(styles) > 0:
-      #r = random.randint(0,len(styles)-1) # select a random style
-      r = 4
+      r = random.randint(0,len(styles)-1) # select a random style
+      #r = 4
       return styles[r].doRender(self, screen, **kwargs) # pass the render down to the selected style
     else:
       return super().doRender(screen, **kwargs) # use default...
@@ -64,7 +64,7 @@ class _StyleSun(RendererBrexitClock):
         hd.text((0,0),l,font=headlinefont,fill=textcolor)
         img = img.crop((0,headlinefont.getoffset(l)[1],img.size[0],img.size[1]))
         s = min((bbox[2]-bbox[0])/img.size[0], hmax/img.size[1])
-        print(s)
+        #print(s)
         img = img.resize((int(img.size[0]*s), hmax), Image.ANTIALIAS)
         screen.paste(img, (int((bbox[0]+bbox[2]-img.size[0])/2), y))
         y = y + hmax + pad
@@ -210,7 +210,7 @@ class _StyleDailyExpress(RendererBrexitClock):
         hd.text((0,0),l,font=headlinefont,fill=textcolor)
         img = img.crop((0,headlinefont.getoffset(l)[1],img.size[0],img.size[1]))
         s = min((bbox[2]-bbox[0])/img.size[0], hmax/img.size[1])
-        print(s)
+        #print(s)
         img = img.resize((int(img.size[0]*s), hmax), Image.ANTIALIAS)
         screen.paste(img, (int((bbox[0]+bbox[2]-img.size[0])/2), y))
         y = y + hmax + pad
@@ -245,7 +245,7 @@ class _StyleTheTimes(RendererBrexitClock):
       lines = ts.HalfAndHalf(T)
     lines = ["The time is", lines[0], lines[1]]
     hmax = int((bbox[3]-bbox[1]-pad*(len(lines)-1))/len(lines))
-    print("hmax={0}".format(hmax))
+    #print("hmax={0}".format(hmax))
     logging.debug(lines)
     headlinefont = getFont("times", 200)
     y = bbox[1]
@@ -259,9 +259,9 @@ class _StyleTheTimes(RendererBrexitClock):
         hd.text((0,0),l,font=headlinefont,fill=textcolor)
         img = img.crop((0,headlinefont.getoffset(l)[1],img.size[0],img.size[1]))
         s = min((bbox[2]-bbox[0])/img.size[0], sv)
-        print(s)
+        #print(s)
         img = img.resize((int(img.size[0]*s), int(img.size[1]*sv)), Image.ANTIALIAS)
-        print("img.size={0}".format(img.size))
+        #print("img.size={0}".format(img.size))
         screen.paste(img, (bbox[0], y))
         y = y + hmax + pad
 
