@@ -110,21 +110,10 @@ def GetDateString(dt, lang="en", includeday=False):
       if includeday:
         s = daystrings_ru[dt.weekday()] + ", " + s
     else: # en
-<<<<<<< HEAD
-      s = str(dt.day) + " " + monthstrings[dt.month - 1] + " " + str(dt.year)
-      if (includeday):
-        s = daystrings[dt.weekday()] + ", " + s
-      return s
-=======
-<<<<<<< Updated upstream
-      return str(dt.day) + " " + monthstrings[dt.month - 1] + " " + str(dt.year)
-=======
       s = str(dt.day) + " " + monthstrings[dt.month - 1] + " " + str(dt.year)
       if (includeday):
         s = daystrings[dt.weekday()] + ", " + s
     return s
->>>>>>> Stashed changes
->>>>>>> main
 
 def GetHourString(h, lang="en", format="12h"):
     # if it's midday or middnight, 50% chance of using these terms
