@@ -153,39 +153,21 @@ def GetTimeString(dt=datetime.datetime.now(), lang="en"):
             r = random.randint(0,5)
             if r == 0 and dt.minute > 0:
                 # type 0: "mmm past hhh"
-                timestring = GetNumberString(dt.minute) + " Past " + GetHourString(dt.hour)
+                timestring = GetNumberString(dt.minute) + " Past " + GetHourString(h)
             elif r == 1 and dt.minute % 15 == 0:
                 # type 1: o'clock, quarter past, half past, quarter to
                 if dt.minute == 0:
                     timestring = GetNumberString(h, lang) + " O'Clock"
                 elif dt.minute == 15:
-                    timestring = "Quarter Past " + GetHourString(dt.hour, "en")
+                    timestring = "Quarter Past " + GetHourString(h, "en")
                 elif dt.minute == 30:
-                    timestring = "Half Past " + GetHourString(dt.hour)
+                    timestring = "Half Past " + GetHourString(h)
                 elif dt.minute == 45:
-                    timestring = "Quarter To " + GetHourString(dt.hour + 1)
+                    timestring = "Quarter To " + GetHourString(h + 1)
             elif r == 2 and dt.minute > 9:
                 # type 2: "hhh mmm"
-                h = dt.hour
-                if h == 0:
-                    h += 12
                 timestring = GetNumberString(h) + " " + GetNumberString(dt.minute)
-            elif r == 3:
-                # type 3: military
-                if dt.hour < 10:
-                    timestring = "Zero "
-                timestring += GetNumberString(dt.hour)
-                if dt.minute == 0:
-                    timestring += " Hundred"
-                else:
-                    if dt.minute < 10:
-                        timestring += " Zero"
-                    timestring += " " + GetNumberString(dt.minute)
-                # randomly determine if we're in the army or navy
-                r2 = random.randint(0,1)
-                if r2 == 1:
-                    timestring += " Hours"
-            elif r == 4 and dt.minute >= 35:
+            elif r == 3 and dt.minute >= 35:
                 # type 4: "mmm [Minutes ]To hhh"
                 r2 = random.randint(0,1)
                 if r2 == 1:
@@ -193,7 +175,7 @@ def GetTimeString(dt=datetime.datetime.now(), lang="en"):
                 else:
                     midtext = " To "
                 timestring = GetNumberString(60-dt.minute) + midtext + GetHourString(dt.hour + 1)
-            elif r == 5:
+            elif r == 4:
                 # type 5 special cases
                 if dt.hour == 0 and dt.minute == 0:
                     timestring = "Midnight"
@@ -209,6 +191,21 @@ def GetTimeString(dt=datetime.datetime.now(), lang="en"):
                     if h == 0:
                         h += 12
                     timestring = "Half " + GetHourString(h)
+    elif lang=="en_mil":
+      # type 3: military
+      if dt.hour < 10:
+          timestring = "Zero "
+      timestring += GetNumberString(dt.hour)
+      if dt.minute == 0:
+          timestring += " Hundred"
+      else:
+          if dt.minute < 10:
+              timestring += " Zero"
+          timestring += " " + GetNumberString(dt.minute)
+      # randomly determine if we're in the army or navy
+      r2 = random.randint(0,1)
+      if r2 == 1:
+          timestring += " Hours"
     elif lang=="en_idiomatic":
       if dt.minute <= 5:
         timestring = "It's " + GetHourString(h) + "-ish"

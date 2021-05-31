@@ -19,7 +19,7 @@ class RendererBrexitClock(Renderer):
       kwargs["dstring"] = "Today"
     if len(styles) > 0:
       #r = random.randint(0,len(styles)-1) # select a random style
-      r = 3
+      r = 4
       return styles[r].doRender(self, screen, **kwargs) # pass the render down to the selected style
     else:
       return super().doRender(screen, **kwargs) # use default...
@@ -168,6 +168,8 @@ class _StyleDailyMail(RendererBrexitClock):
     
     return screen
 
+
+
 class _StyleDailyExpress(RendererBrexitClock):
 
   def doRender(self, screen, **kwargs):
@@ -211,6 +213,56 @@ class _StyleDailyExpress(RendererBrexitClock):
         print(s)
         img = img.resize((int(img.size[0]*s), hmax), Image.ANTIALIAS)
         screen.paste(img, (int((bbox[0]+bbox[2]-img.size[0])/2), y))
+        y = y + hmax + pad
+
+    return screen
+
+class _StyleTheTimes(RendererBrexitClock):
+
+  def doRender(self, screen, **kwargs):
+  
+    bg = getImage("bg_times")
+    screen.paste(bg)
+    draw = ImageDraw.Draw(screen)
+    
+    # dateline
+    datefont = getFont("arial", 16)
+    x = 625
+    y = 202
+    d = ts.GetDateString(kwargs["timestamp"], lang="en", includeday=True)
+    tsz = datefont.getsize(d)
+    #dsz = datefont.getsize(d)
+    draw.text((x-tsz[0],y), d, font=datefont, fill=0x00)
+
+    # time headline
+    bgcolor = 0xFF
+    textcolor = 0x00
+    pad = 20
+    bbox = (49, 418, 49+515, 418+392)
+    T = ts.GetTimeString(kwargs["timestamp"], lang="en")
+    hmax = bbox[3]-bbox[1]    
+    if len(T)>10 and " " in T:
+      lines = ts.HalfAndHalf(T)
+    lines = ["The time is", lines[0], lines[1]]
+    hmax = int((bbox[3]-bbox[1]-pad*(len(lines)-1))/len(lines))
+    print("hmax={0}".format(hmax))
+    logging.debug(lines)
+    headlinefont = getFont("times", 200)
+    y = bbox[1]
+    sv = hmax / headlinefont.getsize("X")[1]
+    for l in lines:
+      if len(l)>0:
+        tsz = headlinefont.getsize(l)
+        img = Image.new("L", tsz)
+        fill(img, color=bgcolor)
+        hd = ImageDraw.Draw(img)
+        hd.text((0,0),l,font=headlinefont,fill=textcolor)
+        img = img.crop((0,headlinefont.getoffset(l)[1],img.size[0],img.size[1]))
+        s = min((bbox[2]-bbox[0])/img.size[0], sv)
+        print(s)
+        img = img.resize((int(img.size[0]*s), int(img.size[1]*sv)), Image.ANTIALIAS)
+        print("img.size={0}".format(img.size))
+        screen.paste(img, (bbox[0], y))
         y = y + hmax + pad
 
     return screen
