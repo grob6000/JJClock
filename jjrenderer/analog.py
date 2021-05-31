@@ -6,7 +6,7 @@ class RendererAnalog(Renderer):
   def getName(self):
     return "analog"
   def getMenuItem(self):
-    return {"icon":"analog.png","text":"Analog"}
+    return {"icon":"icon_analog.png","text":"Analog"}
   def doRender(self, screen, **kwargs):
     fill(screen, color=0xFF)
     draw = ImageDraw.Draw(screen)
