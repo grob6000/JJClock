@@ -15,8 +15,19 @@ def fill(img, color=0xFF):
 
 def getFont(fontname="ebgaramondmedium", fontsize=24):
   #print(_fontpath)
-  return ImageFont.truetype(os.path.join(_fontpath, fontname + ".ttf"), fontsize)
-
+  fnt = None
+  try:
+    fnt = ImageFont.truetype(os.path.join(_fontpath, fontname + ".ttf"), fontsize)
+  except OSError:
+    logging.debug("did not find ttf font, trying otf")
+  if not fnt:
+    try:
+      fnt = ImageFont.truetype(os.path.join(_fontpath, fontname + ".otf"), fontsize)
+    except OSError:
+      logging.debug("did not find otf font")
+      fnt = getFont() # return default
+  return fnt
+  
 def getImage(imagename):
   p = Path(_imgpath).joinpath(imagename).absolute()
   if os.path.isfile(p):
