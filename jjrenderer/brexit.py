@@ -19,7 +19,7 @@ class RendererBrexitClock(Renderer):
       kwargs["dstring"] = "Today"
     if len(styles) > 0:
       #r = random.randint(0,len(styles)-1) # select a random style
-      r = 2
+      r = 3
       return styles[r].doRender(self, screen, **kwargs) # pass the render down to the selected style
     else:
       return super().doRender(screen, **kwargs) # use default...
@@ -168,7 +168,53 @@ class _StyleDailyMail(RendererBrexitClock):
     
     return screen
 
-        
+class _StyleDailyExpress(RendererBrexitClock):
+
+  def doRender(self, screen, **kwargs):
+  
+    bg = getImage("bg_dailyexpress")
+    screen.paste(bg)
+    draw = ImageDraw.Draw(screen)
+    
+    # dateline
+    datefont = getFont("arialbold", 18)
+    x = 1310
+    y = 251
+    d = ts.GetDateString(kwargs["timestamp"], lang="en", includeday=True).upper() + "  45p"
+    tsz = datefont.getsize(d)
+    #dsz = datefont.getsize(d)
+    draw.text((x-tsz[0],y), d, font=datefont, fill=0x00)
+
+    # time headline
+    bgcolor = 0xFF
+    textcolor = 0x00
+    pad = 20
+    bbox = (38, 543, 38+940, 543+477)
+    T = kwargs["tstring"].upper()
+    lines = [T, ""]
+    hmax = bbox[3]-bbox[1]    
+    if len(T)>10 and " " in T:
+      lines = ts.HalfAndHalf(T)
+      hmax = int((bbox[3]-bbox[1]-pad)/2)
+    logging.debug(lines)
+    headlinefont = getFont("georgiabold", 200)
+    y = bbox[1]
+    for l in lines:
+      if len(l)>0:
+        tsz = headlinefont.getsize(l)
+        img = Image.new("L", tsz)
+        fill(img, color=bgcolor)
+        hd = ImageDraw.Draw(img)
+        hd.text((0,0),l,font=headlinefont,fill=textcolor)
+        img = img.crop((0,headlinefont.getoffset(l)[1],img.size[0],img.size[1]))
+        s = min((bbox[2]-bbox[0])/img.size[0], hmax/img.size[1])
+        print(s)
+        img = img.resize((int(img.size[0]*s), hmax), Image.ANTIALIAS)
+        screen.paste(img, (int((bbox[0]+bbox[2]-img.size[0])/2), y))
+        y = y + hmax + pad
+
+    return screen
+    
 # automated luxury space communist style collection
 styles = []
 l = locals().copy()
