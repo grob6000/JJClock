@@ -16,8 +16,8 @@ class RendererEuroClock(Renderer):
     return {"icon":"eu.png","text":"Euro"}
   def doRender(self, screen, **kwargs):
     if len(styles) > 0:
-      #r = random.randint(0,len(styles)-1) # select a random style
-      r = len(styles)-1
+      r = random.randint(0,len(styles)-1) # select a random style
+      #r = len(styles)-1
       return styles[r].doRender(self, screen, **kwargs) # pass the render down to the selected style
     else:
       return super().doRender(screen, **kwargs) # use default...
@@ -33,7 +33,7 @@ class RendererEuroClock(Renderer):
     #Estonia / Postimees
 #Finland / Helsingin Sanomat
     #France / Le Monde
-#Germany / Bild
+    #Germany / Bild
 #Greece / Estia
 #Hungary
 #Ireland	
