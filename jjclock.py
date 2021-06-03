@@ -33,6 +33,7 @@ import jjrenderer
 import gpshandler
 import wifimanager
 import webadmin
+import settings
 
 ## CONSTANTS ##
 
@@ -109,13 +110,6 @@ def onMenuTimeout():
   logging.info("menu timeout")
   changeMode(menu[menuitemselected].getName())
 
-def savePersistentMode(mode):
-  logging.info("NOT IMPLEMENTED - persist mode as file")
-
-def loadPersistentMode():
-  return "clock_digital" # default for now
-  logging.info("NOT IMPLEMENTED - load persistent mode from file")
-
 def formatIP(ip):
   return "{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}".format(ip=ip)
   
@@ -130,6 +124,7 @@ def changeMode(mode):
   if mode in modelist and not mode == currentmode:
     logging.info("changing mode to " + mode)
     currentmode = mode
+    settings.setSetting("mode", mode)
     if mode == "config":
       # set wifi to AP mode
       wifimanager.setWifiMode("ap")
@@ -150,7 +145,6 @@ def changeMode(mode):
       kwargs["timestamp"] = currentdt
     else:
       r = jjrenderer.Renderer()
-    savePersistentMode(mode)
     displayRender(r,**kwargs)
   else:
     logging.warning("invalid mode " + mode + " - not changing")
@@ -257,7 +251,10 @@ def doUpdate(wgeturl, tag):
 
 ## SCRIPT ##
 if __name__ == "__main__":
-
+  
+  # load settings
+  settings.loadSettings()
+  
   # init gpio
   if "linux" in sys.platform:
     logging.info("init gpio")
@@ -305,7 +302,7 @@ if __name__ == "__main__":
   tz = pytz.timezone(getSystemTz())
   
   # load last mode
-  changeMode(loadPersistentMode())
+  changeMode(settings.getSetting("mode"))
   
   # gps serial
   gpshandler = gpshandler.GpsHandler() # create and start gps handler
@@ -342,7 +339,6 @@ if __name__ == "__main__":
           p = "using system time: "
         if dt:
           logging.debug(p + dt.strftime("%H:%M:%S %z"))
-          updateTime(dt)
           t = time.monotonic()
           tlastupdate = t          
           updateTime(dt)
