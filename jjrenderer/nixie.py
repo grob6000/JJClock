@@ -1,7 +1,7 @@
 from jjrenderer.renderer import *
 import jjrenderer.jjtimestring as ts
 
-class RendererNixie(Renderer):
+class RendererNixieClock(Renderer):
   
   def __init__(self):
     # load this once

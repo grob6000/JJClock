@@ -1,7 +1,7 @@
 from jjrenderer.renderer import *
 import math
 
-class RendererAnalog(Renderer):
+class RendererAnalogClock(Renderer):
   romannumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
   def getName(self):
     return "analog"
