@@ -30,6 +30,9 @@ minupdateinterval = 3600 * 1 # seconds
 maxupdateinterval = 3600 * 48 # seconds
 updatehour = 3 # hour of the day
 
+# open weather maps
+owm_key = "1d91b18d8bf32d84ff5fa74c18f887c8"
+
 # path for the script
 import sys, os
 scriptpath = os.path.dirname(os.path.realpath(sys.argv[0]))

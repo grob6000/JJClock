@@ -4,10 +4,42 @@ import os.path
 import datetime
 from pathlib import Path
 import logging
+from pyowm import OWM # weather api
+import urllib.request # for downloading images/data
+
+from jjcommon import owm_key
 
 _localdir = os.path.dirname(os.path.realpath(__file__))
 _fontpath = Path(_localdir).parent.joinpath("font").absolute()
 _imgpath = Path(_localdir).parent.joinpath("img").absolute()
+
+_owm = OWM(owm_key)
+
+def getWeatherByCity(city, country):
+  reg = _owm.city_id_registry()
+  locs = reg.locations_for(city, country=country)
+  if len(locs)>0:
+    return getWeatherByLoc(locs[0].lat, locs[0].lon)
+  else:
+    logging.debug("No weather results for city={0}, country={1}".format(city,country))
+    return None
+
+def getWeatherByLoc(lat=0,lon=0):
+  mgr = _owm.weather_manager()
+  try:
+    one_call = mgr.one_call(lat=lat, lon=lon, units="metric")
+  except:
+    logging.warning("Error obtaining weather for lat={0} lon={1}".format(lat, lon))
+    one_call = None
+  return one_call
+
+def getWeatherIcon(wicon):
+  p = os.path.join(_imgpath, "owmico_{0}.png".format(wicon))
+  if not os.path.isfile(p):
+    logging.debug("icon {0} not present, downloading from open weather maps".format(wicon))
+    urllib.request.urlretrieve("http://openweathermap.org/img/wn/{0}.png".format(wicon), os.path.join(_imgpath, "owmico_{0}.png".format(wicon)))
+  img = getImage("owmico_{0}".format(wicon)) # cached icon
+  return img
 
 def fill(img, color=0xFF):
   img.paste(color, box=(0,0,img.size[0],img.size[1]))
@@ -37,26 +69,6 @@ def getImage(imagename):
     return Image.open(p)
   else:
     raise FileNotFoundError("Image file could not be found: " + imagename)
-
-def testRenderer(rendererclass):
-  logging.info("Test render " + rendererclass.__name__)
-  screensize = (1448, 1072) # Set the width and height of the screen [width, height]
-  cropbox = (10,10,1410,1060) # area we should work within / x1, y1, x2, y2
-  boxsize = (cropbox[2]-cropbox[0],cropbox[3]-cropbox[1]) # x,y
-  kwargs = {"timestamp":datetime.datetime.now()}
-  overlaycolor = 0xD0
-  logging.info(kwargs)
-  
-  rinst = rendererclass()
-  screen = Image.new("L", boxsize)
-  screen = rinst.doRender(screen, **kwargs)
-  draw = ImageDraw.Draw(screen)
-  draw.rectangle((0,0,boxsize[0]-1,boxsize[1]-1),fill=None, outline=overlaycolor)
-  clx = int(screen.size[0]/2)
-  cly = int(screen.size[1]/2)
-  draw.line((0,cly,screen.size[0],cly),fill=overlaycolor)
-  draw.line((clx,0,clx,screen.size[1]),fill=overlaycolor)
-  screen.show()
 
 #renderer base class
 class Renderer:

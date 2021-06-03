@@ -14,7 +14,7 @@ git config --global user.name "grob6000"
 git config --global user.password "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"
 
 # python packages
-sudo pip3 install numpy pyserial timezonefinder pytz pydbus pygithub gpiozero Pillow flask
+sudo pip3 install numpy pyserial timezonefinder pytz pydbus pygithub gpiozero Pillow flask pyowm
 
 # raspberry pi config
 sudo raspi-config nonint do_spi 0 # enable SPI

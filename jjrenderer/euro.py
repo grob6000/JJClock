@@ -114,7 +114,7 @@ class _StyleEstonian(RendererEuroClock):
     d = ts.daystrings_et[kwargs["timestamp"].weekday()].upper()[0] + ", " + kwargs["timestamp"].strftime("%d.%m.%Y")
     datefont = getFont("arial", 15)
     dsz = datefont.getsize(d)
-    draw.text((70,143),d,font=datefont,fill=0xFF)
+    draw.text((70,142),d,font=datefont,fill=0xFF)
     
     t = ts.GetTimeString(kwargs["timestamp"], lang="ee")
     print(t)
@@ -131,11 +131,17 @@ class _StyleEstonian(RendererEuroClock):
     y = 480
     for l in lines:
       draw.text((72,y), l, font=hl2font, fill=0x00)
-      y += 80
-    return screen
+      y += 60
 
     # weather
-    
+    weatherfont = getFont("arialbold",15)
+    weatherdata = getWeatherByCity("Tallinn", None)
+    logging.debug(weatherdata.current)
+    icon = getWeatherIcon(weatherdata.current.weather_icon_name).resize((30,30), Image.ANTIALIAS)
+    screen.paste(icon, (194,136), icon)
+    tt = "{0:.0f}° C".format(weatherdata.current.temperature()["temp"])
+    draw.text((228, 142),tt,font=weatherfont,fill=0xFF)
+    return screen
 
 # automated luxury space communist style collection
 styles = []

@@ -4,6 +4,7 @@ import sys
 import datetime
 from PIL import Image, ImageDraw, ImageFont
 import logging
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 import jjrenderer
 from jjcommon import *
