@@ -25,6 +25,7 @@ decadestrings_it = ["venti", "trenta", "quaranta", "cinquanta", "sesanta", "sett
 
 numberstrings_et = ["null", "üks", "kaks", "kolm", "neli", "viis", "kuus", "seitse", "kaheksa", "üheksa", "kümme", "üksteist", "kaksteist", "kolmteist", "neliteist", "viisteist", "kussteist", "seitseteist", "kaheksateist", "üheksateist"]
 decadestrings_et = ["kakskümmend", "kolmkümmend", "nelikümmend", "viiskümmend", "kuuskümmend", "seitsekümmend", "kaheksakümmend" "üheksakümmend"]
+daystrings_et = ["esmaspäev", "teisipäev", "kolmapäev", "neljapäev", "reede", "laupäev", "pühapäev"]
 
 daystrings_ru = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"]
 monthstrings_ru = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "сентябрь", "октябрь", "ноябрь", "декабрь"]

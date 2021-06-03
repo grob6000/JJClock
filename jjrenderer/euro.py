@@ -5,7 +5,9 @@ import importlib
 import logging
 import datetime
 import jjrenderer.jjtimestring as ts
-    
+
+import pyowm # python open weather map - for local weather in EURRRROPE
+
 class RendererEuroClock(Renderer):
   
   def getName(self):
@@ -14,7 +16,8 @@ class RendererEuroClock(Renderer):
     return {"icon":"eu.png","text":"Euro"}
   def doRender(self, screen, **kwargs):
     if len(styles) > 0:
-      r = random.randint(0,len(styles)-1) # select a random style
+      #r = random.randint(0,len(styles)-1) # select a random style
+      r = 1
       return styles[r].doRender(self, screen, **kwargs) # pass the render down to the selected style
     else:
       return super().doRender(screen, **kwargs) # use default...
@@ -98,6 +101,41 @@ class _StyleFrench(RendererEuroClock):
       headlineimg = headlineimg.resize((headlinemaxwidth, headlineimg.size[1]))
     screen.paste(headlineimg, (int(screen.size[0]/2 - headlineimg.size[0]/2),y))
     return screen
+
+class _StyleEstonian(RendererEuroClock):
+
+  def doRender(self, screen, **kwargs):
+
+    bg = getImage("bg_postimees")
+    screen.paste(bg)
+    draw = ImageDraw.Draw(screen)
+    
+    # date bar
+    d = ts.daystrings_et[kwargs["timestamp"].weekday()].upper()[0] + ", " + kwargs["timestamp"].strftime("%d.%m.%Y")
+    datefont = getFont("arial", 15)
+    dsz = datefont.getsize(d)
+    draw.text((70,143),d,font=datefont,fill=0xFF)
+    
+    t = ts.GetTimeString(kwargs["timestamp"], lang="ee")
+    print(t)
+    
+    # headline
+    hl1font = getFont("arial", 18)
+    # 255,368
+    draw.text((255,365),t,font=hl1font,fill=0x00)
+    hl2font = getFont("arial", 50)
+    if len(t)>30 and " " in t:
+      lines = ts.HalfAndHalf(t)
+    else:
+      lines = [t,]
+    y = 480
+    for l in lines:
+      draw.text((72,y), l, font=hl2font, fill=0x00)
+      y += 80
+    return screen
+
+    # weather
+    
 
 # automated luxury space communist style collection
 styles = []
