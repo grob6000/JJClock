@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from threading import Lock
 
-_settingspath = "/etc/jjclock/settings.json"
+_settingspath = "~/.jjclocksettings/settings.json"
 _settingsdict = {}
 _settingsfilelock = Lock()
 _settingsdictlock = Lock()
