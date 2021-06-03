@@ -11,7 +11,7 @@ class RendererNixieClock(Renderer):
     digit = int(digit) % 10
     x = int(digit % 5) * 150
     y = int(digit // 5) * 300
-    print("x={0},y={1}".format(x,y))
+    #logging.debug("x={0},y={1}".format(x,y))
     return self.mapimg.crop((x,y,x+150,y+300))
   
   def getName(self):
