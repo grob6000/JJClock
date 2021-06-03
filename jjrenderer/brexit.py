@@ -23,6 +23,8 @@ class RendererBrexitClock(Renderer):
       return styles[r].doRender(self, screen, **kwargs) # pass the render down to the selected style
     else:
       return super().doRender(screen, **kwargs) # use default...
+  def getUpdateInterval(self):
+    return 5 # 5 MINUTE UPDATES
 
 class _StyleSun(RendererBrexitClock):
   def doRender(self, screen, **kwargs):
