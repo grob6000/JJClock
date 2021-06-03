@@ -11,6 +11,8 @@ daystrings_en = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturd
 
 numberstrings_de = ["null", "ein", "zwei", "drei", "vier", "funf", "sechs", "sieben", "acht", "neun", "zehn", "elf", "zwölf", "dreizehn", "vierzehn", "funfzehn", "sechzehn", "siebzehn", "achtzehn", "neunzehn"]
 decadestrings_de = ["zwanzig", "dreizig", "vierzig", "funfzig", "sechzig", "siebzig", "achtzig", "neunzig"]
+monthstrings_de = ["januar", "februar", "märz", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "dezember"]
+daystrings_de = ["montag", "dienstag", "mittwoch", "donnerstag", "freitag", "samstag", "sonntag"]
 
 numberstrings_es = ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce", "trece", "catorce", "quince", "dieceséis", "diecisiete", "dieciocho", "diecinueve", "viente", "vientiuno", "vientidós", "vientitrés", "vienticuatro", "vienticinco", "vientiséis", "vientisiete", "vientiocho", "vientinueve"]
 decadestrings_es = ["viente", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"]

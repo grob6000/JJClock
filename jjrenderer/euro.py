@@ -21,7 +21,36 @@ class RendererEuroClock(Renderer):
       return styles[r].doRender(self, screen, **kwargs) # pass the render down to the selected style
     else:
       return super().doRender(screen, **kwargs) # use default...
-    
+
+# proposed style list:
+    #Austria / Kleine Zeitung
+#Belgium / Gazet Van Antwerpen
+#Bulgaria / Trud
+#Croatia / Novi List
+#Cyprus / Alithia
+#Czechia / Lidove Noviny
+#Denmark / Politiken
+    #Estonia / Postimees
+#Finland / Helsingin Sanomat
+    #France / Le Monde
+#Germany / Bild
+#Greece / Estia
+#Hungary
+#Ireland	
+#Italy / Corriere Della Sera
+#Latvia
+#Lithuania
+#Luxembourg
+#Malta
+#Netherlands
+#Poland
+#Portugal
+#Romania
+#Slovakia
+#Slovenia
+#Spain / El Pais
+#Sweden
+
 class _StyleFrench(RendererEuroClock):
   def doRender(self, screen, **kwargs):
   
@@ -173,10 +202,66 @@ class _StyleAustrian(RendererEuroClock):
       d = ImageDraw.Draw(img)
       d.text((0,0),l,font=fonts[i],fill=0xFF)
       img = img.crop((0, yoff, img.size[0], img.size[1]))
-      img = img.resize((tw, th))
+      img = img.resize((tw, th), Image.ANTIALIAS)
       screen.paste(img, (tx0,ty0+i*(th+tpad)), mask=img)
 
     return screen
+
+class _StyleGerman(RendererEuroClock):
+  def doRender(self, screen, **kwargs):
+
+    img = Image.new("L", (1000,1100)) # do this at a fixed res then resize at the end
+    fill(img, 0x53)
+    ns = [kwargs["timestamp"].hour//10, kwargs["timestamp"].hour%10, kwargs["timestamp"].minute//10, kwargs["timestamp"].minute%10]
+    mapimg = getImage("map_bildfont")
+    x = 115
+    y0 = 115
+    for n in ns:
+      cimg = mapimg.crop((n*170,0,(n+1)*170,mapimg.size[1]))
+      img.paste(cimg, (x,y0))
+      x += 200
+    s = "unabhängig - überparteilich".upper()
+    font = getFont("arialblack", 80)
+    tsz = font.getsize(s)
+    ti = Image.new("L", tsz)
+    d = ImageDraw.Draw(ti)
+    d.text((0,0),s,font=font,fill=0xFF)
+    ti = ti.resize((1000-230, 60), Image.ANTIALIAS)
+    img.paste(ti, (115, 950), mask=ti)
+    
+    # blit this onto the screen
+    fill(screen)
+    h = int(screen.size[1]*0.5)
+    w = int(h/img.size[1]*img.size[0])
+    x0 = int((screen.size[0]-w)/2)
+    y0 = int((screen.size[1]-h)/2)
+    screen.paste(img.resize((w,h), Image.ANTIALIAS), (x0,y0))
+    
+    # date
+    s = "{0},{1}.{2} {3}".format(ts.daystrings_de[kwargs["timestamp"].weekday()], kwargs["timestamp"].day, ts.monthstrings_de[kwargs["timestamp"].month-1], kwargs["timestamp"].year).upper()
+    datefont = getFont("arialbold",100)
+    dsz = datefont.getsize(s)
+    di = Image.new("L", dsz)
+    fill(di)
+    d = ImageDraw.Draw(di)
+    d.text((0,0),s,font=datefont,fill=0x53)
+    di = di.resize((w, int(w/10)))
+    screen.paste(di, (x0, y0 - int(di.size[1]*1.3)))
+
+    # barcode
+    y1 = y0 + h + int(h*0.05)
+    barcode = getImage("barcode")
+    screen.paste(barcode, (x0+w-barcode.size[0], y1))
+
+    # price
+    draw = ImageDraw.Draw(screen)
+    pricefont = getFont("arialbold", 20)
+    draw.text((x0, y1), "1.00 EURO 44/8", font=pricefont, fill=0x00)
+    draw.text((x0, y1 + int(h/10)), "www.bild.de", font=pricefont, fill=0x00)
+
+    return screen
+
+       
 
 # automated luxury space communist style collection
 styles = []
