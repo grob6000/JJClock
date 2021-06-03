@@ -17,7 +17,7 @@ class RendererEuroClock(Renderer):
   def doRender(self, screen, **kwargs):
     if len(styles) > 0:
       #r = random.randint(0,len(styles)-1) # select a random style
-      r = 1
+      r = len(styles)-1
       return styles[r].doRender(self, screen, **kwargs) # pass the render down to the selected style
     else:
       return super().doRender(screen, **kwargs) # use default...
@@ -142,6 +142,40 @@ class _StyleEstonian(RendererEuroClock):
       screen.paste(icon, (194,136), icon)
     tt = "{0:.0f}° C".format(weatherdata.current.temperature()["temp"])
     draw.text((228, 142),tt,font=weatherfont,fill=0xFF)
+    return screen
+
+class _StyleAustrian(RendererEuroClock):
+  def doRender(self, screen, **kwargs):
+    
+    fill(screen)
+
+    # box for logo
+    w = int(screen.size[0] * 0.80)
+    h = int(647 / 1280 * w)
+    x0 = int((screen.size[0]-w)/2)
+    y0 = int((screen.size[1]-h)/2)
+    screen.paste(0x44, box=(x0,y0,x0+w,y0+h))
+
+    # text
+    th = int(208/647*h)
+    tw = int(1123/1280*w)
+    tpad = int(57/647*h)
+    tx0 = int((screen.size[0]-tw)/2)
+    ty0 = y0 + int((h-(2*th)-tpad)/2)
+    t = ts.GetTimeString(kwargs["timestamp"], lang="de")
+    lines = ts.HalfAndHalf(t)
+    fonts = (getFont("arialblack", 200), getFont("arialnarrow", 200))
+    for i in [0,1]:
+      l = lines[i].upper()
+      tsz = fonts[i].getsize(l)
+      yoff = fonts[i].getoffset(l)[1]
+      img = Image.new("L", tsz)
+      d = ImageDraw.Draw(img)
+      d.text((0,0),l,font=fonts[i],fill=0xFF)
+      img = img.crop((0, yoff, img.size[0], img.size[1]))
+      img = img.resize((tw, th))
+      screen.paste(img, (tx0,ty0+i*(th+tpad)), mask=img)
+
     return screen
 
 # automated luxury space communist style collection
