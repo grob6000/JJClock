@@ -36,12 +36,12 @@ class RendererAnalogClock(Renderer):
     inset = 80
     romanfont = getFont("times",60)
     for i in range(0,12):
-      tsz = romanfont.getsize(RendererAnalog.romannumerals[i])
-      hy = tsz[1] + romanfont.getoffset(RendererAnalog.romannumerals[i])[1]
+      tsz = romanfont.getsize(RendererAnalogClock.romannumerals[i])
+      hy = tsz[1] + romanfont.getoffset(RendererAnalogClock.romannumerals[i])[1]
       a = math.radians(360/12*(i+1))
       x = c[0] + math.sin(a)*(r-inset) - int(tsz[0]/2)
       y = c[1] - math.cos(a)*(r-inset) - int(hy/2)
-      draw.text((x,y), RendererAnalog.romannumerals[i], fill=0x00, font=romanfont)
+      draw.text((x,y), RendererAnalogClock.romannumerals[i], fill=0x00, font=romanfont)
     
     # hands
     t_min = 7
