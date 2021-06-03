@@ -15,7 +15,7 @@ class RendererNixieClock(Renderer):
     return self.mapimg.crop((x,y,x+150,y+300))
   
   def getName(self):
-    return "nixie"
+    return "clock_nixie"
   def getMenuItem(self):
     return {"icon":"icon_nixie.png","text":"Nixie"}
   def doRender(self, screen, **kwargs):
