@@ -4,7 +4,7 @@ import math
 class RendererAnalogClock(Renderer):
   romannumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
   def getName(self):
-    return "analog"
+    return "clock_analog"
   def getMenuItem(self):
     return {"icon":"icon_analog.png","text":"Analog"}
   def doRender(self, screen, **kwargs):
