@@ -36,3 +36,6 @@ owm_key = "1d91b18d8bf32d84ff5fa74c18f887c8"
 # path for the script
 import sys, os
 scriptpath = os.path.dirname(os.path.realpath(sys.argv[0]))
+
+# birthday
+birthday = {"day":12,"month":7,"year":1983}

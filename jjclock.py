@@ -52,8 +52,9 @@ logging.debug(str(modelist))
 # populate menu
 menu = [rinstances["config"]]
 for k, r in rinstances.items():
-  if "clock" in k:
+  if "clock" in k and not k == "clock_birthday": # hide birthday mode!
     menu.append(r)
+logging.debug(menu)
 
 menutimeout = 10 # seconds
 
@@ -157,13 +158,16 @@ def changeMode(mode):
 def updateTime(dt, force=False):
   global currentdt
   #global renderers
-  #global currentmode
+  global currentmode
   if force or not currentdt.minute == dt.minute:
     #print(dt)
-    if ("clock" in currentmode) and (currentmode in rinstances):
-      ui = rinstances[currentmode].getUpdateInterval()
-      if ((dt.minute + dt.hour*60) % ui == 0):
-        displayRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
+    if ("clock" in currentmode):
+      if dt.day==birthday["day"] and dt.month==birthday["month"] and not currentmode=="clock_birthday":
+        changeMode("clock_birthday")
+      elif (currentmode in rinstances):
+        ui = rinstances[currentmode].getUpdateInterval()
+        if ((dt.minute + dt.hour*60) % ui == 0):
+          displayRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
   currentdt = dt
   
 def setSystemTz(tzname):
@@ -214,8 +218,11 @@ def checkForUpdate():
   if myname == tag:
     logging.info("currently latest version. no update required.")
   else:
-    logging.info("current version: " + myname + ", available: " + tag)
-    doUpdate(wgeturl, tag)
+    if "linux" in sys.platform:
+      logging.info("current version: " + myname + ", available: " + tag)
+      doUpdate(wgeturl, tag)
+    else:
+      logging.warning("will not update on windows")
     
   return wgeturl, tag
 
@@ -337,6 +344,8 @@ if __name__ == "__main__":
           logging.debug(p + dt.strftime("%H:%M:%S %z"))
           updateTime(dt)
           t = time.monotonic()
+          tlastupdate = t          
+          updateTime(dt)
           if t-lastsoftwareupdatecheck > minupdateinterval:
             if dt.hour == updatehour or t-lastsoftwareupdatecheck > maxupdateinterval:
               checkForUpdate()
@@ -344,7 +353,7 @@ if __name__ == "__main__":
         t = time.monotonic()
         if ((t - tlastupdate) >= 2):
           tlastupdate = t
-          updateTime(datetime.datetime.now())
+          updateTime(datetime.datetime.now().astimezone())
           
       # if web action is pending
       adata = wa.getActionData()
@@ -352,7 +361,7 @@ if __name__ == "__main__":
         # data is available
         logging.debug(adata)
           
-      time.sleep(0.01) # limit frequency / provide a thread opportunity
+      time.sleep(0.1) # limit frequency / provide a thread opportunity
   
   # Close the window and quit.
   logging.info("quitting")
