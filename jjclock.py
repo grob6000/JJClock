@@ -34,6 +34,7 @@ import gpshandler
 import wifimanager
 import webadmin
 import settings
+import display
 
 ## CONSTANTS ##
 
@@ -62,7 +63,7 @@ menutimeout = 10 # seconds
 ## GLOBALS ##
 pleasequit = False
 currentmode = -1 # initialise as an invalid mode; any mode change will trigger change
-epddisplay = None
+displaymanger = None # set up
 menuitemselected = 0
 lastsoftwareupdatecheck = 0
 
@@ -75,19 +76,6 @@ tf = timezonefinder.TimezoneFinder()
 currentdt = datetime.datetime.now()
 
 ## FUNCTIONS ##
-
-def displayRender(renderer, **kwargs):
-  global epddisplay
-  global cropbox
-  global boxsize
-  logging.info("rendering " + renderer.getName())
-  screen = Image.new("L", boxsize)
-  screen = renderer.doRender(screen,**kwargs)
-  if epddisplay:
-    epddisplay.frame_buf.paste(screen, (cropbox[0],cropbox[1])) # paste to buffer
-    epddisplay.draw_full(constants.DisplayModes.GC16) # display
-  else:
-    screen.show()
   
 def onButton():
   global menuitemselected
@@ -95,12 +83,13 @@ def onButton():
   global menutimeout_armed
   global t_lastbuttonpress
   global currentmode
+  global displaymanager
   t_lastbuttonpress = time.monotonic()
   logging.info("button pressed, t={0}".format(t_lastbuttonpress))
   if currentmode == "menu":
     menuitemselected = (menuitemselected+1)%len(menu) 
     logging.debug("selected item = " + str(menuitemselected))
-    displayRender(rinstances["menu"], menu=menu, selecteditem=menuitemselected)
+    displaymanager.doRender(rinstances["menu"], menu=menu, selecteditem=menuitemselected)
   else:
     menutimeout_armed = True
     changeMode("menu")
@@ -145,7 +134,7 @@ def changeMode(mode):
       kwargs["timestamp"] = currentdt
     else:
       r = jjrenderer.Renderer()
-    displayRender(r,**kwargs)
+    displaymanager.doRender(r,**kwargs)
   else:
     logging.warning("invalid mode " + mode + " - not changing")
   
@@ -161,7 +150,7 @@ def updateTime(dt, force=False):
       elif (currentmode in rinstances):
         ui = rinstances[currentmode].getUpdateInterval()
         if ((dt.minute + dt.hour*60) % ui == 0):
-          displayRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
+          displaymanager.doRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
   currentdt = dt
   
 def setSystemTz(tzname):
@@ -227,7 +216,7 @@ def doUpdate(wgeturl, tag):
   if "linux" in sys.platform:
     
     # display an updating screen
-    displayRender(jjrenderer.renderers["RendererUpdating"](), version=tag)
+    displaymanager.doRender(jjrenderer.renderers["RendererUpdating"](), version=tag)
     
     # make sure temp dir exists
     subprocess.run(["mkdir", "/tmp/jjclock"])
@@ -264,14 +253,18 @@ if __name__ == "__main__":
   else:
     logging.warning("GPIO not available on this platform, no button enabled.")
   
-  # init epd display
+  # init display(s)
+  displaymanager = display.DisplayManager(size=(cropbox[2]-cropbox[0], cropbox[3]-cropbox[1])) # display manager primary surface will be the size of the target surface of the display
   if "linux" in sys.platform:
-    logging.info("init display")
-    epddisplay = AutoEPDDisplay(vcom=display_vcom)
+    logging.info("init epd display")
+    epddisplay = display.EPDDisplay(vcom=display_vcom) # init epd display
+    epddisplay.cropbox = cropbox # set cropbox to match frame
+    displaymanager.displaylist.append(epddisplay) # register display
   else:
-    logging.warning("no display on this platform.")
-    epddisplay = None
-    
+    logging.warning("no display on this platform. using pygame.")
+    pygamedisplay = display.PygameDisplay()
+    displaymanager.displaylist.append(pygamedisplay)
+  
   # admin server
   wa = webadmin.WebAdmin()
   wa.start()
@@ -293,10 +286,6 @@ if __name__ == "__main__":
   
   # now screen is running, check for update
   checkForUpdate()
-  
-  # splash
-  #changeMode("splash")
-  #time.sleep(2)
   
   # load system timezone
   tz = pytz.timezone(getSystemTz())
