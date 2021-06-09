@@ -12,12 +12,12 @@ import datetime
 
 class DisplayManager:
   
-  _fillcolor = (255, 255, 255)
+  _fillcolor = 255
   
   def __init__(self, size=(1400,1050)):
     self._screenlock = Lock()
     with self._screenlock:
-      self._screen = Image.new("RGB", size)
+      self._screen = Image.new("L", size)
     self.displaylist = []
   
   def doRender(self, renderer=None, **kwargs):
@@ -126,7 +126,7 @@ class PygameDisplay(Display):
         surf.fill(PygameDisplay.displayfillcolor)
         with self._imglock:
           i = self._rebox(self._img)
-        raw_str = i.tobytes("raw", 'RGB')
+        raw_str = i.convert('RGB').tobytes("raw", 'RGB')
         s = pygame.image.fromstring(raw_str, i.size, 'RGB')
         surf.blit(s, self._getorigin())
         pygame.display.flip()
