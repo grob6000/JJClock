@@ -263,6 +263,7 @@ if __name__ == "__main__":
   else:
     logging.warning("no display on this platform. using pygame.")
     pygamedisplay = display.PygameDisplay()
+    pygamedisplay.resize = True
     displaymanager.displaylist.append(pygamedisplay)
   
   # admin server
