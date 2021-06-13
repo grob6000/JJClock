@@ -1,18 +1,31 @@
 # JJ Clock
 # Lots of love from George 2021
 
-## INCLUDES ##
+## INCLUDES (required for package checking)
+import subprocess
+import sys
+import pkg_resources
+
+# set up logger
+import logging
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
+## INSTALL ANY MISSING PACKAGES ##
+required = {"numpy", "pyserial", "timezonefinder", "pytz", "pydbus", "pygithub", "gpiozero", "pillow", "flask", "pyowm", "pygame"}
+installed = {pkg.key for pkg in pkg_resources.working_set}
+missing = required - installed
+if missing:
+    # implement pip as a subprocess:
+    logging.info("installing packages: " + str(missing))
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install',*missing])
+
+## INCLUDES (remaining) ##
 import datetime
 import os
-import random
-import math
-import os
-import serial
 import time
 import pytz
 import timezonefinder
 from PIL import Image, ImageDraw, ImageFont
-import sys
 from github import Github
 
 if "linux" in sys.platform:
@@ -22,10 +35,6 @@ if "linux" in sys.platform:
   from IT8951 import constants
   import pydbus
   import subprocess
-
-# set up logger
-import logging
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 ## LOCAL MODULES ##
 
