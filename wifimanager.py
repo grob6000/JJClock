@@ -198,8 +198,21 @@ def _doClientMode():
     global _currentwifimode
     _currentwifimode = newmode  
   logging.debug("client mode change task end")
-  
 
+def reconfigureWifi():
+  logging.debug("reconfigure wifi")
+  if "linux" in sys.platform:
+    with _currentmodelock:
+      global _currentwifimode
+      cwm = _currentwifimode
+    if cwm == "client":
+      try:
+        subprocess.run(["wpa_cli", "-i", iface, "reconfigure"], check=True)
+      except subprocess.CalledProcessError:
+        logging.error("unsuccessful reconfiguring wifi")
+  else:
+    logging.error("cannot reconfigure wifi")
+    
 _modechangefuncs = {"ap":_doAPMode, "client":_doClientMode}
 
 def setWifiMode(newwifimode):

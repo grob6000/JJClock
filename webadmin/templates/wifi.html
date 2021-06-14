@@ -70,12 +70,19 @@
       }
       xhttp.send(JSON.stringify(n))
     }
+
+    function reconfigure() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("GET", "api/reconfigurewifi", true);
+      xhttp.send()
+    }
     
     </script>
     
     <h1>Wifi Configuration</h1>
     <div><a href="/">Back</a></div>
     <h2>Saved Networks</h2>
+    <button type="button" onclick="reconfigure()">Reconfigure/Connect</button>
     <table>
       <tr>
         <th>ID</th>

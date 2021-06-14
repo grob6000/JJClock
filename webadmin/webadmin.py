@@ -28,11 +28,13 @@ class WebAdmin():
     self._app.add_url_rule("/api/addnetwork", view_func=self.addnetwork, methods=['POST'])
     self._app.add_url_rule("/api/removenetwork", view_func=self.removenetwork, methods=['POST'])
     self._app.add_url_rule("/api/screen.png", view_func=self.getscreen, methods=['GET'])
+    self._app.add_url_rule("/api/reconfigurewifi", view_func=self.reconfigurewifi, methods=['GET'])
     self._savednetworks = []
     self._scannetworks = []
     self._menu = []
     self.display = MemoryDisplay()
     self.display.resize = True
+
   def __del__(self):
     if self._worker.is_alive():
       self.stop()
@@ -135,7 +137,11 @@ class WebAdmin():
   def scan(self):
     with self._datalock:
       scans = wifimanager.scanNetworks()
-    return {"scans":scans}    
+    return {"scans":scans}   
+
+  def reconfigurewifi(self):
+    wifimanager.reconfigureWifi()
+    return {"result":"ok"}
   
   def getscreen(self):
     logging.debug("getscreen")
