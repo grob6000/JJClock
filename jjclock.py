@@ -278,7 +278,7 @@ if __name__ == "__main__":
   # admin server
   wa = webadmin.WebAdmin()
   wa.start()
-  
+  displaymanager.displaylist.append(wa.display)
   # wifi testing
   n = wifimanager.getNetworks()
   print(n)

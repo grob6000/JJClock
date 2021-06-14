@@ -1,11 +1,15 @@
-from flask import Flask, request, render_template, send_from_directory
+from flask import Flask, request, render_template, send_from_directory, Response
+from werkzeug.wsgi import FileWrapper
+from io import BytesIO
 import threading
 import ctypes
 import logging
 import wifimanager # should be relatively threadsafe...
 import urllib
-
+from PIL import Image
 from jjcommon import *
+
+from display import MemoryDisplay
 
 class WebAdmin():
 
@@ -23,10 +27,12 @@ class WebAdmin():
     self._app.add_url_rule("/api/scannetworks", view_func=self.scan, methods=['GET'])
     self._app.add_url_rule("/api/addnetwork", view_func=self.addnetwork, methods=['POST'])
     self._app.add_url_rule("/api/removenetwork", view_func=self.removenetwork, methods=['POST'])
+    self._app.add_url_rule("/api/screen.png", view_func=self.getscreen, methods=['GET'])
     self._savednetworks = []
     self._scannetworks = []
     self._menu = []
-    
+    self.display = MemoryDisplay()
+    self.display.resize = True
   def __del__(self):
     if self._worker.is_alive():
       self.stop()
@@ -130,3 +136,14 @@ class WebAdmin():
     with self._datalock:
       scans = wifimanager.scanNetworks()
     return {"scans":scans}    
+  
+  def getscreen(self):
+    logging.debug("getscreen")
+    img = self.display.getImage()
+    b = BytesIO()
+    img.save(b, format="PNG")
+    b.seek(0)
+    w = FileWrapper(b)
+    r = Response(w, mimetype="image/png", direct_passthrough=True)
+    logging.debug(r)
+    return r

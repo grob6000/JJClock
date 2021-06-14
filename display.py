@@ -15,9 +15,7 @@ class DisplayManager:
   _fillcolor = 255
   
   def __init__(self, size=(1400,1050)):
-    self._screenlock = Lock()
-    with self._screenlock:
-      self._screen = Image.new("L", size)
+    self._screen = Image.new("L", size)
     self.displaylist = []
   
   def doRender(self, renderer=None, **kwargs):
@@ -26,11 +24,6 @@ class DisplayManager:
     for d in self.displaylist:
       if isinstance(d, Display):
         d.displayImage(img=self._screen)
-  
-  def getScreen(self):
-    with self._screenlock:
-      img = self._screen.copy()
-    return img
 
   def getSize(self):
     with self._screenlock:
@@ -51,6 +44,7 @@ class Display():
     pass # a virtual display will do nothing with the image
 
   def _rebox(self, img):
+    logging.debug("rebox")
     sz = self.getSize()
     box = (0,0,sz[0],sz[1])
     if self.cropbox:
@@ -138,6 +132,39 @@ class PygameDisplay(Display):
           self._stopevent.set()
     logging.info("pygame thread quit")
 
+# display 
+class MemoryDisplay(Display):
+
+  def __init__(self, size=(800,600)):
+    super().__init__()
+    self._screenlock = Lock()
+    self._screen = None
+    with self._screenlock:
+      self._screen = Image.new("RGB", size)
+
+  def getSize(self):
+    sz = None
+    with self._screenlock:
+      if self._screen:
+        sz = self._screen.size
+    return sz
+  
+  def displayImage(self, img=None):
+    if img:
+      img2 = self._rebox(img.convert("RGB"))
+      with self._screenlock:
+        self._screen.paste(img2,box=self.cropbox)
+      pass
+    pass
+  
+  def getImage(self):
+    img = None
+    with self._screenlock:
+      if self._screen:
+        img = self._screen.copy()
+    logging.debug(img)
+    return img
+
 ## TEST SCRIPT ##
 if __name__ == "__main__":
   print("DISPLAY TEST")
@@ -150,3 +177,4 @@ if __name__ == "__main__":
     dm.doRender(r, timestamp=datetime.datetime.now())
     time.sleep(5)
         
+      
