@@ -29,6 +29,7 @@ class WebAdmin():
     self._app.add_url_rule("/api/removenetwork", view_func=self.removenetwork, methods=['POST'])
     self._app.add_url_rule("/api/screen.png", view_func=self.getscreen, methods=['GET'])
     self._app.add_url_rule("/api/reconfigurewifi", view_func=self.reconfigurewifi, methods=['GET'])
+    self._app.add_url_rule("/api/setwifimode", view_func=self.setmode, methods=['POST'])
     self._savednetworks = []
     self._scannetworks = []
     self._menu = []
@@ -111,7 +112,8 @@ class WebAdmin():
   def getnetworks(self):
     with self._datalock:
       networks = wifimanager.getNetworks()
-    return {"networks":networks}
+      wifimode = wifimanager.getWifiMode()
+    return {"networks":networks, "wifimode":wifimode}
     
   def addnetwork(self):
     network = request.get_json(silent=True)
@@ -153,3 +155,14 @@ class WebAdmin():
     r = Response(w, mimetype="image/png", direct_passthrough=True)
     logging.debug(r)
     return r
+
+  def setmode(self):
+    r = request.get_json(silent=True)
+    if "mode" in r:
+      if r["mode"] == "ap":
+        wifimanager.setWifiMode("ap")
+      if r["mode"] == "client":
+        wifimanager.setWifiMode("client")
+    else:
+      logging.warning("bad request to setmode")
+    return {"mode":wifimanager.getWifiMode()}

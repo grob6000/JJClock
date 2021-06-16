@@ -21,6 +21,13 @@
           jr = JSON.parse(this.responseText)
           var template = "{{#networks}}<tr><td>{{id}}</td><td>{{ssid}}</td><td>{{connected}}</td><td align=center><button type=\"button\" onclick=\"removenetwork({{id}})\">Remove</button></td></tr>{{/networks}}"
           document.getElementById("networkrows").innerHTML = Mustache.render(template, jr)
+          for (var i = 0; i < jr["networks"].length; i++) {
+            if (jr["networks"][i]["connected"]) {
+              document.getElementById("ssidcell").innerHTML = jr["networks"][i]["ssid"]
+            }
+          }
+          document.getElementById("modecell").innerHTML = jr["wifimode"]
+          
         }
       }
       xhttp.send()      
@@ -76,11 +83,32 @@
       xhttp.open("GET", "api/reconfigurewifi", true);
       xhttp.send()
     }
+
+    function setmode(mode) {
+      var r = {"mode":mode}
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("POST", "api/setwifimode", true);
+      xhttp.setRequestHeader("Content-type", "application/json");
+      xhttp.send(JSON.stringify(r))   
+    }
     
     </script>
     
     <h1>Wifi Configuration</h1>
     <div><a href="/">Back</a></div>
+    <h2>Wifi Status:</h2>
+    <table>
+      <tr>
+        <th>Mode:</th>
+        <td id="modecell">unknown</td>
+      </tr>
+      <tr>
+        <th>SSID:</th>
+        <td id="ssidcell"></td>
+      </tr>
+    </table>
+    <button type="button" onclick='setmode("ap")'>AP Mode</button>
+    <button type="button" onclick='setmode("client")'>Client Mode</button>
     <h2>Saved Networks</h2>
     <button type="button" onclick="reconfigure()">Reconfigure/Connect</button>
     <table>
