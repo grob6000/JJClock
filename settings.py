@@ -3,11 +3,15 @@ import os
 import logging
 from pathlib import Path
 from threading import Lock
+import copy
+import jjcommon
+import copy
 
 _settingspath = "~/.jjclocksettings/settings.json"
 _settingsdict = {}
 _settingsfilelock = Lock()
 _settingsdictlock = Lock()
+_settingsdictdefault = {"mode":"clock_digital", "apssid":jjcommon.ap_ssid, "appass":jjcommon.ap_pass}
 
 def loadSettings():
   global _settingsdict
@@ -16,14 +20,24 @@ def loadSettings():
     with _settingsfilelock:
       with open(_settingspath) as f:
         s = json.load(f)
+    # populate defaults (if not present)
+    addedsomething = False
+    for ds in _settingsdictdefault:
+      if not ds in s:
+        s[ds] = _settingsdictdefault[ds]
+        addedsomething = True
+    # update the settings dict
     with _settingsdictlock:
       _settingsdict = s
     logging.debug("settings loaded from file")
+    # re-save if any defaults were added
+    if addedsomething:
+      saveSettings()
   else:
     # generate and save default settings
     logging.debug("settings file not found, generating default")
     with _settingsdictlock:
-      _settingsdict = {"mode":"clock_digital"}
+      _settingsdict = copy.deepcopy(_settingsdictdefault)
     saveSettings()
 
 def saveSettings():
@@ -43,6 +57,12 @@ def getSetting(name):
     if name in _settingsdict:
       v = _settingsdict[name]
   return v
+
+def getAllSettings():
+  d = {}
+  with _settingsdictlock:
+    d = copy.deepcopy(_settingsdict) # make a copy of the dict (deep, in case objects are referenced)
+  return d
 
 def setSetting(name, value):
     name = str(name)

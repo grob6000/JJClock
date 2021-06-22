@@ -355,6 +355,8 @@ if __name__ == "__main__":
       if adata:
         # data is available
         logging.debug(adata)
+
+      wa.provideStatus({"tz":tz, "timestamp":currentdt, "mode":currentmode, "gps":gpshandler.getStatus()})
           
       time.sleep(0.1) # limit frequency / provide a thread opportunity
   

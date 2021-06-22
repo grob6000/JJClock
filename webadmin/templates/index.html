@@ -1,14 +1,7 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>JJ Clock</title>
-    <link rel="stylesheet" href="/static/jjclock.css">
-  </head>
-  <body>
-    <h1>JJ Clock Configuration</h1>
-    <div><a href="/wifi">Wifi Configuration</a></div>
-    <div><a href="/menu">Clock Menu</a></div>
-    <div><a href="/time">Time Configuration</a></div>
-    <div style="padding-top:30px"><img src="/api/screen.png"></div>
-  </body>
-</html>
+{% extends "base.html" %}
+{% block title %}JJ Clock - Home{% endblock %}
+{% block content %}
+<div class="row">
+  <img src="/api/screen.png" class="col-12 img-fluid border border">
+</div>
+{% endblock %}

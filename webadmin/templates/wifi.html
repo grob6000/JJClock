@@ -1,16 +1,11 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>JJ Clock</title>
-    <link rel="stylesheet" href="/static/jjclock.css">
-  </head>
-  <body onload="updateall()">
-    <script src="static/mustache.min.js"></script>
-    
+{% extends "base.html" %}
+{% block js %}
+    {% raw %}
     <script>
     
     function updateall() {
       updatenetworks()
+      getapsettings()
     }
     
     function updatenetworks() {
@@ -19,15 +14,17 @@
       xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
           jr = JSON.parse(this.responseText)
-          var template = "{{#networks}}<tr><td>{{id}}</td><td>{{ssid}}</td><td>{{connected}}</td><td align=center><button type=\"button\" onclick=\"removenetwork({{id}})\">Remove</button></td></tr>{{/networks}}"
+          var template = "{{#networks}}<tr id=\"rownetwork{{id}}\"><td>{{id}}</td><td>{{ssid}}</td><td>{{connected}}</td><td><button type=\"button\" class=\"btn btn-danger\"onclick=\"removenetwork({{id}})\" id=\"buttonnetworkremove{{id}}\">Remove</button></td></tr>{{/networks}}"
           document.getElementById("networkrows").innerHTML = Mustache.render(template, jr)
           for (var i = 0; i < jr["networks"].length; i++) {
-            if (jr["networks"][i]["connected"]) {
-              document.getElementById("ssidcell").innerHTML = jr["networks"][i]["ssid"]
+            var n = jr["networks"][i]
+            if (n["connected"]) {
+              document.getElementById("ssidcell").innerHTML = n["ssid"]
+              document.getElementById("rownetwork"+n["id"]).classList.add("table-success")
+              document.getElementById("buttonnetworkremove"+n["id"]).disabled = true
             }
           }
-          document.getElementById("modecell").innerHTML = jr["wifimode"]
-          
+          document.getElementById("wifimode").innerHTML = jr["wifimode"]
         }
       }
       xhttp.send()      
@@ -39,11 +36,11 @@
       xhttp.onreadystatechange = function () {    
         if (this.readyState == 4 && this.status == 200) {
           jr = JSON.parse(this.responseText)
-          var template = "{{#scans}}<tr><td>{{id}}</td><td><button type=\"button\" onclick=\"prefillssid(&quot;{{ssid}}&quot;)\">{{ssid}}</button><td>{{rssi}}</td><td>{{channel}}</td>{{/scans}}"
+          var template = "{{#scans}}<tr><th scope=\"row\">{{id}}</th><td><button type=\"button\" class=\"btn btn-primary\" onclick=\"prefillssid(&quot;{{ssid}}&quot;)\">{{ssid}}</button><td>{{rssi}}</td><td>{{channel}}</td>{{/scans}}"
           document.getElementById("scanrows").innerHTML = Mustache.render(template, jr)
         }
       }
-      xhttp.send()
+      xhttp.send() 
     }
     
     function removenetwork(id) {
@@ -91,49 +88,143 @@
       xhttp.setRequestHeader("Content-type", "application/json");
       xhttp.send(JSON.stringify(r))   
     }
+
+    function getapsettings() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("GET", "api/settings", true);
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          jr = JSON.parse(this.responseText);
+          if ("apssid" in jr) {
+            document.getElementById("apssid").value = jr["apssid"];
+          }
+          if ("appass" in jr) {
+            document.getElementById("appass").value = jr["appass"];
+          }    
+        }      
+      }
+      xhttp.send()
+    }
+
+    function setapsettings() {
+
+    }
+
+    function togglepassword(id) {
+      pinput = document.getElementById(id)
+      pcheck = document.getElementById(id + "_show")
+      if (pinput.type === "password") {
+        pinput.type = "text";
+        pcheck.classList.add("active")
+      } else if (pinput.type === "text") {
+        pinput.type = "password"
+        pcheck.classList.remove("active")
+      }
+    }
     
     </script>
-    
-    <h1>Wifi Configuration</h1>
-    <div><a href="/">Back</a></div>
-    <h2>Wifi Status:</h2>
-    <table>
-      <tr>
-        <th>Mode:</th>
-        <td id="modecell">unknown</td>
-      </tr>
-      <tr>
-        <th>SSID:</th>
-        <td id="ssidcell"></td>
-      </tr>
-    </table>
-    <button type="button" onclick='setmode("ap")'>AP Mode</button>
-    <button type="button" onclick='setmode("client")'>Client Mode</button>
+    {% endraw %}
+{% endblock %}
+
+{% block content %}
+  <div class="row g-3 mt-3 border">
+    <div class="col-12">
+      <h2>Wifi Status:</h2>
+    </div>
+    <div class="col-12 mt-0 mb-0">
+      <table class="table">
+        <colgroup>
+          <col class="col-1">
+          <col class="col">
+        </colgroup>
+        <tr>
+          <th scope="row">Mode:</th>
+          <td id="wifimode">unknown</td>
+        </tr>
+        <tr>
+          <th scope="row">SSID:</th>
+          <td id="ssidcell"></td>
+        </tr>
+      </table>
+    </div>
+    <div class="col-12 mt-0 mb-3">
+      <button type="button" class="btn btn-primary" onclick='setmode("ap")'>AP Mode</button>
+      <button type="button" class="btn btn-primary" onclick='setmode("client")'>Client Mode</button>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-3 border">
+    <h2>AP Settings:</h2> 
+    <form class="row row-col-12 g-3 mt-0 mb-3">
+      <div class="col-md-5">
+        <label for="apssid" class="form-label">AP SSID:</label>
+        <input type="text" class="form-control" id="apssid" placeholder="AP SSID"></input>
+      </div>
+      <div class="col-md-5">
+        <label for="appass" class="form-label">AP Password:</label>
+        <div class="input-group">
+          <input type="password" class="form-control" id="appass" placeholder="AP Password"></input>
+          <button class="btn btn-outline-secondary" type="button" id="appass_show" onclick="togglepassword('appass')">Show</button>
+        </div>
+      </div>
+      <div class="col-md-2 align-self-end">
+        <button type="button" class="btn btn-primary" onclick="setapsettings()">Update</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="row g-3 mt-3 border">
     <h2>Saved Networks</h2>
-    <button type="button" onclick="reconfigure()">Reconfigure/Connect</button>
-    <table>
-      <tr>
-        <th>ID</th>
-        <th>SSID</th>
-        <th>Connected</th>
-        <th>Remove</th>
-      </tr>
-      <tbody id="networkrows">
-      </tbody>
-    </table>
-    <h2>Add Network</h2>
-    <button type="button" onclick="getscan()">Scan</button>
-    <table>
-      <tr>
-        <th>ID</th>
-        <th>SSID</th>
-        <th>RSSI</th>
-        <th>Channel</th>
-      </tr>
-      <tbody id="scanrows"></tbody>    
-    </table>      
-    <label for="ssid">SSID:</label><input type="text" id="ssid"></input>
-    <label for="ssid">Password:</label><input type="password" id="psk"></input>
-    <button type="button" onclick="addnetwork()">Add</button>
-  </body>
-</html>
+    <div class="col-12">
+      <button type="button" class="btn btn-primary" onclick="reconfigure()">Reconfigure/Connect</button>
+    </div>
+    <div class="col-12">
+      <table class="table">
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">SSID</th>
+          <th scope="col">Connected</th>
+          <th scope="col">Remove</th>
+        </tr>
+        <tbody id="networkrows">
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <div class="row g-3 mt-3 border">
+    <div class="col-12">
+      <h2>Add Network</h2>
+    </div>
+    <div class="col-12">
+      <button type="button" class="btn btn-primary" onclick="getscan()">Scan</button>
+    </div>
+    <div class="col-12">
+      <table class="table">
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">SSID</th>
+          <th scope="col">RSSI</th>
+          <th scope="col">Channel</th>
+        </tr>
+        <tbody id="scanrows"></tbody>    
+      </table>
+    </div>
+    <form class="row row-col-12 g-3 mt-0 mb-3">
+      <div class="col-md-5">
+        <label for="ssid" class="form-label">SSID:</label>
+        <input type="text" class="form-control" id="ssid" placeholder="SSID"></input>
+      </div>
+      <div class="col-md-5">
+        <label for="password" class="form-label">Password:</label>
+        <input type="password" class="form-control" id="psk" placeholder="Password"></input>
+      </div>
+      <div class="col-md-2 align-self-end">
+        <button type="button" class="btn btn-primary" onclick="addnetwork()">Add</button>
+      </div>
+    </form>
+  </div>
+
+
+
+{% endblock %}
