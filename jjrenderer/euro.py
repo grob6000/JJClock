@@ -165,11 +165,15 @@ class _StyleEstonian(RendererEuroClock):
     # weather
     weatherfont = getFont("arialbold",15)
     weatherdata = getWeatherByCity("Tallinn", None)
-    logging.debug(weatherdata.current)
-    icon = getWeatherIcon(weatherdata.current.weather_icon_name).resize((30,30), Image.ANTIALIAS)
-    if icon: # only paste icon if we got one (if there's a problem will return None)
+    icon = None
+    if weatherdata:
+      logging.debug(weatherdata.current)
+      icon = getWeatherIcon(weatherdata.current.weather_icon_name).resize((30,30), Image.ANTIALIAS)
+      tt = "{0:.0f}° C".format(weatherdata.current.temperature()["temp"])
+    else:
+      tt = "15° C" # dummy value if no connection
+    if icon: # only paste icon if we got one
       screen.paste(icon, (194,136), icon)
-    tt = "{0:.0f}° C".format(weatherdata.current.temperature()["temp"])
     draw.text((228, 142),tt,font=weatherfont,fill=0xFF)
     return screen
 
