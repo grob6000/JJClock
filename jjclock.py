@@ -183,38 +183,50 @@ def getSystemTz():
     return "UTC"
 
 def checkForUpdate():
-  global lastupdate
+  global lastsoftwareupdatecheck
   
-  g = Github(githubtoken)
-  repo = g.get_repo(githubrepo)
-  rels = repo.get_releases()
+  try:
+    g = Github(githubtoken)
+    repo = g.get_repo(githubrepo)
+    rels = repo.get_releases()
+  except:
+    logging.warning("could not connect to github - abandoning update check")
+    return None, None
+
   latestpub = datetime.datetime.min
+  latestrel = None
+  wgeturl = None
+  tag = None
   for r in rels:
     if r.published_at > latestpub:
       latestpub = r.published_at
       latestrel = r
-  wgeturl = latestrel.tarball_url
-  tag = latestrel.tag_name
-  logging.debug("found tag " + tag)
+  if latestrel:
+    wgeturl = latestrel.tarball_url
+    tag = latestrel.tag_name
+    logging.debug("found tag " + tag)
   
   # get the current tag of the repo
-  myname = ""
+  myname = None
   if "linux" in sys.platform:
     try:
       myname = subprocess.run(["git", "describe", "--tags", "--abbrev=0"], text=True, capture_output=True).stdout.strip()
     except subprocess.CalledProcessError:
       logging.warning("unknown version. will update.")
-  
+  logging.debug("current version: " + str(myname))
   lastsoftwareupdatecheck = time.monotonic()
   
-  if myname == tag:
-    logging.info("currently latest version. no update required.")
-  else:
-    if "linux" in sys.platform:
-      logging.info("current version: " + myname + ", available: " + tag)
-      doUpdate(wgeturl, tag)
+  if tag and myname:
+    if myname == tag:
+      logging.info("currently latest version. no update required.")
     else:
-      logging.warning("will not update on windows")
+      if "linux" in sys.platform:
+        logging.info("current version: " + myname + ", available: " + tag)
+        doUpdate(wgeturl, tag)
+      else:
+        logging.warning("will not update on windows")
+  else:
+    logging.warning("will not update, unknown version information.")
     
   return wgeturl, tag
 
@@ -276,25 +288,13 @@ if __name__ == "__main__":
     displaymanager.displaylist.append(pygamedisplay)
   
   # admin server
+  logging.info("starting webserver")
   wa = webadmin.WebAdmin()
   wa.start()
   displaymanager.displaylist.append(wa.display)
-  # wifi testing
-  n = wifimanager.getNetworks()
-  print(n)
-  
-  sn = wifimanager.scanNetworks()
-  print(sn)
-  
-  i = wifimanager.addNetwork("test", "nobigdeal")
-  n = wifimanager.getNetworks()
-  print(n)
-  
-  wifimanager.removeNetwork(i)
-  n = wifimanager.getNetworks()
-  print(n)
   
   # now screen is running, check for update
+  logging.info("checking for update...")
   checkForUpdate()
   
   # load system timezone
