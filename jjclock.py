@@ -81,6 +81,7 @@ t_lastbuttonpress = 0
 menutimeout_armed = False
 
 tz = pytz.UTC
+pytz.all_timezones
 tf = timezonefinder.TimezoneFinder()
 currentdt = datetime.datetime.now()
 
@@ -110,11 +111,13 @@ def onMenuTimeout():
 
 def formatIP(ip):
   return "{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}".format(ip=ip)
-  
+
+def changeModeEvent(s):
+  changeMode(s["mode"].getValue())
+
 def changeMode(mode):
   global modelist
   global currentmode
-  global renderers
   global menuitemselected
   global menu
   r = None
@@ -122,13 +125,13 @@ def changeMode(mode):
   if mode in modelist and not mode == currentmode:
     logging.info("changing mode to " + mode)
     currentmode = mode
-    settings.setSetting("mode", mode)
+    settings.setSetting("mode", mode, quiet=True) # update quietly; don't trigger registered events (they might have come here!)
     if mode == "config":
       # set wifi to AP mode
       wifimanager.setWifiMode("ap")
       gpsstat = gpshandler.getStatus()
-      kwargs["ssid"] = ap_ssid
-      kwargs["password"] = ap_pass
+      kwargs["ssid"] = settings.getSetting("apssid").getValue()
+      kwargs["password"] = settings.getSetting("appass").getValue()
       kwargs["ip"] = ap_addr
       kwargs["port"] = webadmin_port
       kwargs["gpsstat"] = gpsstat
@@ -265,6 +268,7 @@ if __name__ == "__main__":
   # load settings
   settings.loadSettings()
   settings._settings["mode"].validationlist = modelist # use mode list to select from
+  settings.register(["mode"], changeModeEvent) # change mode when mode setting is updated from web interface (or elsewhere, unquietly)
 
   # init gpio
   if "linux" in sys.platform:
