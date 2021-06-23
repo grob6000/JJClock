@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}JJ Clock - Wifi{% endblock %}
 {% block js %}
     {% raw %}
     <script>
@@ -95,19 +96,42 @@
       xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
           jr = JSON.parse(this.responseText);
-          if ("apssid" in jr) {
-            document.getElementById("apssid").value = jr["apssid"];
+          if ("settings" in jr) {
+            var s = jr["settings"]
+            if ("apssid" in s) {
+              document.getElementById("apssid").value = s["apssid"]["value"];
+            }
+            if ("appass" in s) {
+              document.getElementById("appass").value = s["appass"]["value"];
+            }    
           }
-          if ("appass" in jr) {
-            document.getElementById("appass").value = jr["appass"];
-          }    
         }      
       }
       xhttp.send()
     }
 
     function setapsettings() {
-
+      var apssid = document.getElementById("apssid").value
+      var appsk = document.getElementById("appass").value
+      var n = {"settings":{"apssid":apssid, "appass":appsk}}
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("POST", "api/settings", true);
+      xhttp.setRequestHeader("Content-type", "application/json");
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          jr = JSON.parse(this.responseText);
+          if ("settings" in jr) {
+            var s = jr["settings"]
+            if ("apssid" in s) {
+              document.getElementById("apssid").value = s["apssid"]["value"];
+            }
+            if ("appass" in s) {
+              document.getElementById("appass").value = s["appass"]["value"];
+            }    
+          }
+        }
+      }
+      xhttp.send(JSON.stringify(n))
     }
 
     function togglepassword(id) {

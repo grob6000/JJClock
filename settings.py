@@ -6,67 +6,182 @@ from threading import Lock
 import copy
 import jjcommon
 import copy
+from pytz import all_timezones
+
+logging.debug("importing settings.py")
+
+class Setting():
+  def __init__(self, name="", value=None, validation=None, validationlist=[]):
+    self.name = str(name) # name of the setting
+    self._value = value # value of the setting
+    self.validation = validation # for a web interface; "string", "password", "int", "list" - otherwise will allow anything
+    self.validationlist = validationlist # list of allowed objects as values (==)
+  def asDict(self):
+    return {"name":str(self.name), "value":self.getValue(), "validation":self.validation, "validationlist":self.validationlist}
+  def setValue(self, value):
+    if self.validation == "string" or self.validation == "password":
+      self._value = str(value)
+    elif self.validation == "bool":
+      if isinstance(value, str):
+        self._value = bool(value.lower()=="true")
+      else:
+        self._value = bool(value)
+    elif self.validation == "int":
+      try:
+        self._value = int(value)
+      except:
+        logging.warning(str(value) + " is not a nice integer, did not update value")
+    elif self.validation == "list":
+      if value in self.validationlist:
+        self._value = value
+      else:
+        logging.warning("attempted to set " + self.name + " to unlisted value " + str(value))
+  def getValue(self):
+    return self._value
 
 _settingspath = "~/.jjclocksettings/settings.json"
-_settingsdict = {}
+_settings = {}
 _settingsfilelock = Lock()
-_settingsdictlock = Lock()
-_settingsdictdefault = {"mode":"clock_digital", "apssid":jjcommon.ap_ssid, "appass":jjcommon.ap_pass}
+_settingslock = Lock()
+_settingsdefaults =  {
+                          "mode":Setting(name="Mode",value="clock_digital",validation="list",validationlist=[]),
+                          "apssid":Setting(name="AP SSID", value=jjcommon.ap_ssid, validation="string"),
+                          "appass":Setting(name="AP Password",value=jjcommon.ap_pass,validation="password"),
+                          "gpson":Setting(name="Enable GPS",value=True,validation="bool"),
+                          "autotz":Setting(name="Auto Timezone",value=True,validation="bool"),
+                          "manualtz":Setting(name="Timezone (Manual)",value="ETC/UTC",validation="list",validationlist=all_timezones),
+                          "ntpon":Setting(name="Enable NTP",value=True,validation="bool"),
+                     }  
+_registry = {}
+_registrylock = Lock()
+
+def fixRegistry():
+  global _registry
+  global _registrylock
+  global _settings
+  global _settingslock
+  with _settingslock, _registrylock:
+    for k in _settings.keys():
+      if not k in _registry:
+        _registry[k] = []
+
+def register(settinglist=None, func=None):
+  global _registry
+  global _registrylock
+  global _settings
+  global _settingslock
+  if not func:
+    logging.debug("no function specified - not registering")
+    return
+  if not settinglist:
+    with _settingslock:
+      settinglist = _settings.keys()
+  with _registrylock:
+    for s in settinglist:
+      if s in _registry:
+        _registry[s].append(func)
+      else:
+        logging.debug("no such setting, will not register: " + str(s))
+
+def unregister(func):
+  global _registry
+  global _registrylock
+  with _registrylock:
+    for v in _registry.values():
+      if func in v:
+        v.remove(func)
+
+def callUpdate(settinglist=[]):
+  funcs = set()
+  with _registrylock:
+    for k in settinglist:
+      if k in _registry:
+        funcs = funcs.union(set(_registry[k]))
+  with _settingslock:
+    settingscopy = copy.deepcopy(_settings)
+  for func in funcs:
+    logging.debug("settings change has triggered function: " + str(func))
+    func(settingscopy)
 
 def loadSettings():
-  global _settingsdict
+  global _settings, _settingspath, _settingslock
+  # load from file
+  sdict = {}
   if os.path.isfile(_settingspath):
-    s = {}
     with _settingsfilelock:
       with open(_settingspath) as f:
-        s = json.load(f)
-    # populate defaults (if not present)
+        sdict = json.load(f)
+
+  with _settingslock:
+    # populate defaults
     addedsomething = False
-    for ds in _settingsdictdefault:
-      if not ds in s:
-        s[ds] = _settingsdictdefault[ds]
-        addedsomething = True
-    # update the settings dict
-    with _settingsdictlock:
-      _settingsdict = s
-    logging.debug("settings loaded from file")
-    # re-save if any defaults were added
-    if addedsomething:
-      saveSettings()
-  else:
-    # generate and save default settings
-    logging.debug("settings file not found, generating default")
-    with _settingsdictlock:
-      _settingsdict = copy.deepcopy(_settingsdictdefault)
+    for k,v in _settingsdefaults.items():
+      if not k in _settings.keys():
+        _settings[k] = copy.deepcopy(v)
+      addedsomething = True
+    # update values based on file
+    for k, v in sdict.items():
+      if k in _settings.keys():
+        _settings[k].setValue(v) # include validation
+      else:
+        _settings[k] = Setting(name=k,value=v) # create new setting object
+  fixRegistry() # make sure all settings are in here
+  logging.debug("settings loaded from file")
+  # re-save if any defaults were added
+  if addedsomething:
     saveSettings()
 
 def saveSettings():
   # save dict to file
+  global _settingspath, _settingsfilelock
   sdir = Path(_settingspath).parent
-  with _settingsfilelock:
-    if not os.path.isdir(sdir):
-      os.makedirs(sdir)
-      logging.debug("making settings dir " + str(sdir))
-      with open(_settingspath, 'w') as f:
-        json.dump(_settingsdict, f)
+  if not os.path.isdir(sdir):
+    os.makedirs(sdir)
+    logging.debug("making settings dir " + str(sdir))
+  with open(_settingspath, 'w') as f:
+    with _settingsfilelock:
+      global _settings
+      sdict={}
+      for k,v in _settings.items():
+        sdict[k] = v.getValue() # only saving key and value - the rest is internal
+      logging.debug("settings dict to be saved: " + str(sdict))
+      json.dump(sdict, f)
   logging.debug("settings saved")
 
 def getSetting(name):
-  v = None
-  with _settingsdictlock:
-    if name in _settingsdict:
-      v = _settingsdict[name]
-  return v
+  return getSettings([name])[name]
+
+def getSettings(names=None):
+  if names:
+    logging.debug("names = " + str(names))
+    s = {}
+    with _settingslock:
+      for n in names:
+        n = str(n)
+        s[n] = copy.deepcopy(_settings[n])
+    return s
+  else:
+    return getAllSettings()
 
 def getAllSettings():
   d = {}
-  with _settingsdictlock:
-    d = copy.deepcopy(_settingsdict) # make a copy of the dict (deep, in case objects are referenced)
+  with _settingslock:
+    d = copy.deepcopy(_settings) # make a copy of the dict (deep, in case objects are referenced)
   return d
 
-def setSetting(name, value):
-    name = str(name)
-    if not _settingsdict[name] == value:
-      with _settingsdictlock:
-        _settingsdict[name] = value
-      saveSettings()
+def setSetting(name, value, quiet=False):
+  setSettings({name:value}, quiet)
+
+def setSettings(dict, quiet=False):
+  global _settings, _settingslock
+  modified = False
+  with _settingslock:
+    for k, v in dict.items():
+      name = str(k)
+      if not _settings[name].getValue() == v:
+        _settings[name].setValue(v)
+        modified = True
+  if modified:
+    saveSettings()
+    if not quiet: # suppress if quiet
+      callUpdate(dict.keys())

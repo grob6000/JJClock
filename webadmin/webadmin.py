@@ -126,7 +126,7 @@ class WebAdmin():
     return render_template('wifi.html', pages=self._pages)
   
   def getpagesettings(self):
-    return "not implemented"
+    return render_template('settings.html', pages=self._pages, settings=settings.getAllSettings())
   
   def getpagemenu(self):
     return "not implemented"
@@ -192,22 +192,25 @@ class WebAdmin():
   def setsetting(self):
     r = request.get_json(silent=True)
     out = {}
-    for k, v in r.items():
-      settings.setSetting(str(k), v)
-      out[str(k)] = settings.getSetting(str(k))
-    return out
+    if "settings" in r:
+      settings.setSettings(r["settings"])
+      sdict = settings.getSettings(r["settings"].keys())
+      for k,v in sdict.items():
+        out[k] = v.asDict()
+    return {"settings":out}
   
   def getsetting(self):
     r = request.get_json(silent=True)
     s = None
     if r and "settings" in r:
       s = r["settings"]
-      out = {}
-      for k in s:
-        out[str(k)] = settings.getSetting(str(k))
+      sdict = settings.getSettings(s)
     else:
-      out = settings.getAllSettings() # get all if nothing specified
-    return out
+      sdict = settings.getAllSettings()
+    out = {}
+    for k,v in sdict.items():
+      out[k] = v.asDict()
+    return {"settings":out}
 
   def getstatus(self):
     with self._datalock:

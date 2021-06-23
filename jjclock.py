@@ -264,7 +264,8 @@ if __name__ == "__main__":
   
   # load settings
   settings.loadSettings()
-  
+  settings._settings["mode"].validationlist = modelist # use mode list to select from
+
   # init gpio
   if "linux" in sys.platform:
     logging.info("init gpio")
@@ -292,7 +293,12 @@ if __name__ == "__main__":
   wa = webadmin.WebAdmin()
   wa.start()
   displaymanager.displaylist.append(wa.display)
-  
+
+  # wifi manager init
+  wifimanager.readHostapd() # read the official hostapd from system
+  wifimanager.updateHostapd(settings.getSettings(["apssid", "appass"])) # update hostapd with settings
+  settings.register(["apssid", "appass"], wifimanager.updateHostapd) # register wifimanager to respond to future changes to hostapd settings
+
   # now screen is running, check for update
   logging.info("checking for update...")
   checkForUpdate()
@@ -301,7 +307,7 @@ if __name__ == "__main__":
   tz = pytz.timezone(getSystemTz())
   
   # load last mode
-  changeMode(settings.getSetting("mode"))
+  changeMode(settings.getSetting("mode").getValue())
   
   # gps serial
   gpshandler = gpshandler.GpsHandler() # create and start gps handler

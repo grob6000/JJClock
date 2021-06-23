@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}JJ Clock - Settings{% endblock %}
+
+{% block js %}
+  {% raw %}
+    <script>
+
+      function updateall() {
+        updatesettings()
+      }
+
+      function dict2view(dict) {
+        v = []
+        for (let name in dict) {
+          var s = {"key":name, "value":jr["settings"][name]}
+          v.push(s)
+        }
+        return v
+      }
+
+      function updatesettings() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "api/settings", true);
+        xhttp.onreadystatechange = function () {
+          if (this.readyState == 4 && this.status == 200) {
+            jr = JSON.parse(this.responseText)
+            let tablehtml = "";
+            if ("settings" in jr) {
+              for (let key in jr["settings"]) {
+                let v = jr["settings"][key];
+                v["key"]=key;
+                let input = "";
+                if (v["validation"] == "password") {
+                  input = '<div class="input-group"><input type="password" class="form-control" id="setting_{{key}}" placeholder="{{name}}"></input><button class="btn btn-outline-secondary" type="button" id="show_{{key}}" onclick="togglepassword(\'{{key}}\')">Show</button></div>';
+                } else if (v["validation"] == "bool") {
+                  input = '<input class="form-check-input" type="checkbox" id="setting_{{key}}">'
+                } else if (v["validation"] == "list") {
+                  input ='<select class="custom-select" id="setting_{{key}}">';
+                  for (option of v["validationlist"]) {
+                    input += '<option value=' + option + '>' + option + '</option>';
+                  }
+                  input = input + '</select>';
+                } else {
+                  input = '<input type="text" class="form-control" id="setting_{{key}}" placeholder="{{name}}"></input>';
+                }
+                template = '<tr id="rowsetting_{{key}}"><td>{{name}}</td><td>' + input + '</td></tr>'
+                tablehtml = tablehtml + Mustache.render(template, v)
+              }
+            }
+            let sr = document.getElementById("settingrows")
+            document.getElementById("settingrows").innerHTML = tablehtml
+
+            for (let key in jr["settings"]) {
+              let element = document.getElementById("setting_" + key)
+              if (element.type == "checkbox") {
+                element.checked = Boolean(jr["settings"][key]["value"])
+              } else {
+                element.value = jr["settings"][key]["value"]
+              }
+            }
+
+          }
+        }
+        xhttp.send()     
+      }
+
+      function togglepassword(id) {
+        pinput = document.getElementById("setting_" + id)
+        pcheck = document.getElementById("show_" + id)
+        if (pinput.type === "password") {
+          pinput.type = "text";
+          pcheck.classList.add("active")
+        } else if (pinput.type === "text") {
+          pinput.type = "password"
+          pcheck.classList.remove("active")
+        }
+      }
+    
+      function savesettings() {
+        let sdict = {}
+        for (let i of document.querySelectorAll('*[id^="setting_"]')) {
+          if (i.type == "checkbox") {
+            sdict[i.id.slice(8)] = i.checked
+          } else {
+            sdict[i.id.slice(8)] = i.value
+          }
+        }
+        let out = {"settings":sdict}
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "api/settings", true);
+        xhttp.setRequestHeader("Content-type", "application/json");
+        xhttp.onreadystatechange = function () {
+          if (this.readyState == 4 && this.status == 200) {
+            let jr = JSON.parse(this.responseText)
+            if ("settings" in jr) {
+              for (let key in jr["settings"]) {
+                document.getElementById("setting_"+key).value = jr["settings"][key]["value"]
+              }            
+            }
+          }
+        }
+        xhttp.send(JSON.stringify(out))
+      }
+
+
+    </script>
+  {% endraw %}
+{% endblock %}
+
+{% block content %}
+  <div class="row g-3 mt-3 border">
+    <h2>Settings</h2>
+    <div class="col-12">
+      <button type="button" class="btn btn-primary" onclick="savesettings()">Save</button>
+    </div>
+    <div class="col-12">
+      <table class="table">
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Value</th>
+        </tr>
+        <tbody id="settingrows">
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
