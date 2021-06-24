@@ -15,12 +15,12 @@
           if ("gps" in jr) {
             document.getElementById("fixspan").classList.remove("bg-warning", "bg-danger", "bg-success")
             document.getElementById("timespan").classList.remove("bg-warning", "bg-danger", "bg-success")
-            if (jr["gps"]["hasfix"] == "true") {
+            if (jr["gps"]["hasfix"] == true) {
               document.getElementById("fixspan").classList.add("bg-success")
             } else {
               document.getElementById("fixspan").classList.add("bg-danger")
             }
-            if (jr.gps.hastime == "false") {
+            if (jr["gps"]["hastime"] == true) {
               document.getElementById("timespan").classList.add("bg-success")
             } else {
               document.getElementById("timespan").classList.add("bg-danger")
