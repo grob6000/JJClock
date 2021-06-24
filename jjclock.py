@@ -23,9 +23,10 @@ if missing:
 import datetime
 import os
 import time
+from threading import Event
 import pytz
 import timezonefinder
-from PIL import Image, ImageDraw, ImageFont
+#from PIL import Image, ImageDraw, ImageFont
 from github import Github
 
 if "linux" in sys.platform:
@@ -112,9 +113,6 @@ def onMenuTimeout():
 def formatIP(ip):
   return "{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}".format(ip=ip)
 
-def changeModeEvent(s):
-  changeMode(s["mode"].getValue())
-
 def changeMode(mode):
   global modelist
   global currentmode
@@ -130,8 +128,8 @@ def changeMode(mode):
       # set wifi to AP mode
       wifimanager.setWifiMode("ap")
       gpsstat = gpshandler.getStatus()
-      kwargs["ssid"] = settings.getSetting("apssid").getValue()
-      kwargs["password"] = settings.getSetting("appass").getValue()
+      kwargs["ssid"] = settings.getSettingValue("apssid")
+      kwargs["password"] = settings.getSettingValue("appass")
       kwargs["ip"] = ap_addr
       kwargs["port"] = webadmin_port
       kwargs["gpsstat"] = gpsstat
@@ -148,33 +146,32 @@ def changeMode(mode):
       r = jjrenderer.Renderer()
     displaymanager.doRender(r,**kwargs)
   else:
-    logging.warning("invalid mode " + mode + " - not changing")
+    logging.warning("same or invalid mode " + mode + " - not changing")
   
 def updateTime(dt, force=False):
+  if force:
+    logging.debug("forcing display update!")
   global currentdt
   #global renderers
   global currentmode
   if force or not currentdt.minute == dt.minute:
     #print(dt)
     if ("clock" in currentmode):
+      # BIRTHDAY EASTER EGG HAHA CAN'T FIX THIS
       if dt.day==birthday["day"] and dt.month==birthday["month"] and not currentmode=="clock_birthday":
         changeMode("clock_birthday")
       elif (currentmode in rinstances):
         ui = rinstances[currentmode].getUpdateInterval()
-        if ((dt.minute + dt.hour*60) % ui == 0):
+        if force or ((dt.minute + dt.hour*60) % ui == 0):
           displaymanager.doRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
   currentdt = dt
-  
+
 def setSystemTz(tzname):
     if "linux" in sys.platform:
-      systzname = getSystemTz()
-      if not tzname == systzname:
         logging.info("updating system timezone")
         r = subprocess.run(["sudo","timedatectl","set-timezone",tzname])
         if r.returncode == 0:
           logging.info("success - system timezone changed to " + getSystemTz())
-      else:
-        logging.info("not updating system timezone - already set to " + systzname)
     else:
       logging.warning("non-linux os: cannot update system timezone.")
 
@@ -262,13 +259,16 @@ def doUpdate(wgeturl, tag):
   if updateok:
     quit()
 
+event_changemode = Event()
+event_apupdate = Event()
+event_manualtzupdate = Event()
+
 ## SCRIPT ##
 if __name__ == "__main__":
   
   # load settings
   settings.loadSettings()
   settings._settings["mode"].validationlist = modelist # use mode list to select from
-  settings.register(["mode"], changeModeEvent) # change mode when mode setting is updated from web interface (or elsewhere, unquietly)
 
   # init gpio
   if "linux" in sys.platform:
@@ -300,23 +300,27 @@ if __name__ == "__main__":
 
   # wifi manager init
   wifimanager.readHostapd() # read the official hostapd from system
-  wifimanager.updateHostapd(settings.getSettings(["apssid", "appass"])) # update hostapd with settings
-  settings.register(["apssid", "appass"], wifimanager.updateHostapd) # register wifimanager to respond to future changes to hostapd settings
-
+  wifimanager.updateHostapd(settings.getSettingValue("apssid"), settings.getSettingValue("appass")) # update hostapd with settings
+  
   # now screen is running, check for update
   logging.info("checking for update...")
   checkForUpdate()
   
   # load system timezone
-  tz = pytz.timezone(getSystemTz())
+  tz = pytz.timezone(settings.getSettingValue("manualtz"))
   
   # load last mode
-  changeMode(settings.getSetting("mode").getValue())
+  changeMode(settings.getSettingValue("mode"))
   
   # gps serial
   gpshandler = gpshandler.GpsHandler() # create and start gps handler
   gpshandler.connect()
   
+  # setting change event registration - other threads might change settings, but reaction to changes should always be routed through the main loop
+  settings.register(["mode"], event_changemode) # change mode when mode setting is updated from web interface (or elsewhere, unquietly)
+  settings.register(["manualtz"], event_manualtzupdate) # update the timezone when manual timezone is changed
+  settings.register(["apssid", "appass"], event_apupdate) # register wifimanager to respond to future changes to hostapd settings
+
   tlastupdate = time.monotonic()
   while not pleasequit:
       
@@ -325,48 +329,87 @@ if __name__ == "__main__":
         menutimeout_armed = False
         onMenuTimeout()
       
+      if event_apupdate.is_set():
+        event_apupdate.clear()
+        # update ap as per settings
+        apssid = settings.getSettingValue("apssid")
+        appass = settings.getSettingValue("appass")
+        wifimanager.updateHostapd(apssid,appass)
+
+      if event_changemode.is_set():
+        event_changemode.clear()
+        # change mode as per settings
+        newmode = settings.getSettingValue("mode")
+        changeMode(newmode)
+
+      autotz = settings.getSettingValue("autotz")
+
+      tzchanged = False
+      if event_manualtzupdate.is_set():
+        event_manualtzupdate.clear()
+        manualtz = settings.getSettingValue("manualtz")
+        try:
+          tztemp = pytz.timezone(manualtz)
+        except pytz.UnknownTimeZoneError:
+          logging.warning("bad manual timezone: " + manualtz)
+        else:
+          tzchanged = bool(not (tz.zone == tztemp.zone))
+          if tzchanged:
+            logging.debug("tzchanged")
+          tz = tztemp
+      
+      if tzchanged and not getSystemTz() == tz.zone:
+        setSystemTz(tz.zone)
+      
       # if NMEA has been received, update the time
-      if gpshandler.pollUpdated():
-        force = False
+      dt = None
+      p = ""
+      gpson = settings.getSettingValue("gpson")
+      autotz = settings.getSettingValue("autotz")
+      if gpson and gpshandler.pollUpdated():
+        # have some gps data I can use
         stat = gpshandler.getStatus()
         if stat["hastime"]:
-          if stat["tz"]:
+          if autotz and stat["tz"]:
             dt = gpshandler.getDateTime(local=True)
-            p = "using nmea time + tz: "
+            p = "using gps time + auto tz: "
             # update timezone cached
             if not tz == stat["tz"]:
+              tzchanged = True
               tz = stat["tz"]
-              # update system timezone
-              if not getSystemTz() == tz.zone:
-                setSystemTz(tz.zone)
-                force = True # force a render update; e.g. even if this occurs mid-minute...
+              # update timezone setting --> this will trigger setting system tz also
+              settings.setSetting("manualtz", tz.zone, quiet=True)
           else:
             dt = gpshandler.getDateTime(local=False).astimezone(tz)
-            p = "using nmea time + cached tz: "
-        else:
-          dt = datetime.datetime.now()
-          p = "using system time: "
-        if dt:
-          logging.debug(p + dt.strftime("%H:%M:%S %z"))
-          t = time.monotonic()
-          tlastupdate = t          
-          updateTime(dt)
-          if t-lastsoftwareupdatecheck > minupdateinterval:
-            if dt.hour == updatehour or t-lastsoftwareupdatecheck > maxupdateinterval:
-              checkForUpdate()
+            p = "using gps time + manual tz: "
       else:
         t = time.monotonic()
-        if ((t - tlastupdate) >= 2):
-          tlastupdate = t
-          updateTime(datetime.datetime.now().astimezone())
-          
+        if ((t - tlastupdate) > 2):
+          # it's been more than a couple of seconds (gps should do 1/s) - probably not working, should use system time
+          dt = datetime.datetime.now().astimezone(tz)
+          p = "using system time + manual tz: "
+
+      if dt:
+        logging.debug(p + dt.strftime("%H:%M:%S %z") + " (" + tz.zone + ")")
+        tlastupdate = t
+        updateTime(dt)
+      elif tzchanged:
+        # don't have a new time but tzchanged so need to force an update - & use cached time
+        updateTime(currentdt, True)
+
+      # update check
+      t = time.monotonic()
+      if t-lastsoftwareupdatecheck > minupdateinterval:
+        if dt.hour == updatehour or t-lastsoftwareupdatecheck > maxupdateinterval:
+          checkForUpdate()
+
       # if web action is pending
       adata = wa.getActionData()
       if adata:
         # data is available
         logging.debug(adata)
 
-      wa.provideStatus({"tz":tz, "timestamp":currentdt, "mode":currentmode, "gps":gpshandler.getStatus()})
+      wa.provideStatus({"tz":tz.zone, "timestamp":str(currentdt.astimezone(tz)), "mode":currentmode, "gps":gpshandler.getStatus()})
           
       time.sleep(0.1) # limit frequency / provide a thread opportunity
   

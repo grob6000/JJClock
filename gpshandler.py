@@ -11,6 +11,20 @@ from sys import platform
 import datetime
 import logging
 
+def formatlatlon(lat, lng):
+  if lat and lng:
+    lat = float(lat)
+    lng = float(lng)
+    latdir = "N"
+    if lat < 0:
+      latdir = "S"
+    lngdir = "E"
+    if lng < 0:
+      lngdir = "W"
+    return "{0:0.5f}°{1}, {2:0.5f}°{3}".format(lat,latdir,lng,lngdir)
+  else:
+    return None
+
 class GpsHandler():
   
   _baud = 9600
@@ -76,10 +90,14 @@ class GpsHandler():
       hastime = bool(self._dt_utc)
       signalok = self._signalok
       hasfix = bool(self._lat) and bool(self._lng)
-      tz = None
+      tzname = None
       if self._tzfound:
-        tz = self._tz
-    return {"hastime":hastime, "hasfix":hasfix, "signalok":signalok, "tz":tz}
+        tzname = self._tz.zone
+      lat = self._lat
+      lng = self._lng
+      dt_utc = self._dt_utc
+    locstring = formatlatlon(lat,lng)
+    return {"hastime":hastime, "hasfix":hasfix, "signalok":signalok, "tz":tzname, "lat":lat, "lng":lng, "loc":locstring, "dtutc":str(dt_utc)}
   
   # check if data has been updated since last call
   def pollUpdated(self):
@@ -157,6 +175,8 @@ class GpsHandler():
           if tz:
             self._tz = tz
             self._tzfound = True
+          if sigok:
+            self._signalok = sigok
             
         self._newdataevent.set() # set event for new data
         #logging.debug("newdataevent status = {0}".format(self._newdataevent.is_set()))

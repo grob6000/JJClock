@@ -2,7 +2,7 @@ import json
 import os
 import logging
 from pathlib import Path
-from threading import Lock
+from threading import Lock, Event
 import copy
 import jjcommon
 import copy
@@ -49,8 +49,8 @@ _settingsdefaults =  {
                           "appass":Setting(name="AP Password",value=jjcommon.ap_pass,validation="password"),
                           "gpson":Setting(name="Enable GPS",value=True,validation="bool"),
                           "autotz":Setting(name="Auto Timezone",value=True,validation="bool"),
-                          "manualtz":Setting(name="Timezone (Manual)",value="ETC/UTC",validation="list",validationlist=all_timezones),
-                          "ntpon":Setting(name="Enable NTP",value=True,validation="bool"),
+                          "manualtz":Setting(name="Timezone (Manual)",value="UTC",validation="list",validationlist=all_timezones),
+                          #"ntpon":Setting(name="Enable NTP",value=True,validation="bool"),
                      }  
 _registry = {}
 _registrylock = Lock()
@@ -65,43 +65,43 @@ def fixRegistry():
       if not k in _registry:
         _registry[k] = []
 
-def register(settinglist=None, func=None):
+def register(settinglist=None, event=Event()):
   global _registry
   global _registrylock
   global _settings
   global _settingslock
-  if not func:
-    logging.debug("no function specified - not registering")
-    return
+  if not event:
+    logging.debug("no event specified - not registering")
+    return None
   if not settinglist:
     with _settingslock:
       settinglist = _settings.keys()
   with _registrylock:
     for s in settinglist:
       if s in _registry:
-        _registry[s].append(func)
+        _registry[s].append(event)
       else:
         logging.debug("no such setting, will not register: " + str(s))
+        event = None
+  return event
 
-def unregister(func):
+def unregister(event):
   global _registry
   global _registrylock
   with _registrylock:
     for v in _registry.values():
-      if func in v:
-        v.remove(func)
+      if event in v:
+        v.remove(event)
 
 def callUpdate(settinglist=[]):
-  funcs = set()
+  events = set()
   with _registrylock:
     for k in settinglist:
       if k in _registry:
-        funcs = funcs.union(set(_registry[k]))
-  with _settingslock:
-    settingscopy = copy.deepcopy(_settings)
-  for func in funcs:
-    logging.debug("settings change has triggered function: " + str(func))
-    func(settingscopy)
+        events = events.union(set(_registry[k]))
+  for ev in events:
+    logging.debug("settings change has triggered event: " + str(ev))
+    ev.set()
 
 def loadSettings():
   global _settings, _settingspath, _settingslock
@@ -148,12 +148,18 @@ def saveSettings():
       json.dump(sdict, f)
   logging.debug("settings saved")
 
+def getSettingValue(name):
+  with _settingslock:
+    v = copy.deepcopy(_settings[name].getValue())
+  return v
+
 def getSetting(name):
-  return getSettings([name])[name]
+  with _settingslock:
+    s = copy.deepcopy(_settings[name])
+  return s
 
 def getSettings(names=None):
   if names:
-    logging.debug("names = " + str(names))
     s = {}
     with _settingslock:
       for n in names:

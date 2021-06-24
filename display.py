@@ -106,7 +106,8 @@ class PygameDisplay(Display):
     return self._windowsize
   
   def __del__(self):
-    logging.debug("pygamedisplay __del__")
+    if logging:
+      logging.debug("pygamedisplay __del__")
     self._stopevent.set()
     self._pygamethread.join() # wait for close of thread
 

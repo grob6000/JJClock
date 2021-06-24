@@ -9,6 +9,7 @@ import copy
 ## COMMON DATA ##
 
 import jjcommon
+import settings
 
 ## MODULE GLOBALS ##
 
@@ -95,23 +96,23 @@ def writeHostapd():
   if needtochange:
     _doAPMode()
 
-def updateHostapd(settings):
+def updateHostapd(apssid, appass):
   modified = False
+  apssid = str(apssid)
+  appass = str(appass)
   global _wifimanagerlock
   with _wifimanagerlock:
     global _hostapdconf
-    if "apssid" in settings:
-      v = settings["apssid"].getValue()
-      if not v == _hostapdconf["ssid"]:
-        _hostapdconf["ssid"] = v
-        modified = True
-    if "appass" in settings:
-      v = settings["appass"].getValue()
-      if not v == _hostapdconf["wpa_passphrase"]:
-        _hostapdconf["wpa_passphrase"] = v
-        modified = True
+    if not apssid == _hostapdconf["ssid"]:
+      _hostapdconf["ssid"] = apssid
+      modified = True
+    if not appass == _hostapdconf["wpa_passphrase"]:
+      _hostapdconf["wpa_passphrase"] = appass
+      modified = True
   if modified:
     writeHostapd()
+  else:
+    logging.debug("no need to update hostapd; details not changed")
 
 
 def getChannel(freq):
