@@ -164,9 +164,9 @@ def scanNetworks():
   global _wifimanagerlock
   with _wifimanagerlock:
     if "linux" in sys.platform:
-      cp = subprocess.run(["wpa_cli", "-i", iface, "scan"], capture_output=True, text=True)
+      cp = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "scan"], capture_output=True, text=True)
       if "OK" in cp.stdout:
-        cp2 = subprocess.run(["wpa_cli", "-i", iface, "scan_results"], capture_output=True, text=True)
+        cp2 = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "scan_results"], capture_output=True, text=True)
         if cp2.returncode == 0:
           lines = cp2.stdout.strip().split("\n")
           i = 0
@@ -194,10 +194,10 @@ def removeNetwork(netindex):
   with _wifimanagerlock:
     # remove network and save config
     if "linux" in sys.platform:
-      cp = subprocess.run(["wpa_cli", "-i", iface, "remove_network", str(netindex)], capture_output=True, text=True)
+      cp = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "remove_network", str(netindex)], capture_output=True, text=True)
       if not "OK" in cp.stdout:
         logging.error("could not delete network " + str(netindex))
-      cp = subprocess.run(["wpa_cli", "-i", iface, "save_config"], capture_output=True, text=True)
+      cp = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "save_config"], capture_output=True, text=True)
       if not "OK" in cp.stdout:
         logging.error("error saving wifi config")
     else:
