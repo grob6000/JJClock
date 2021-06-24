@@ -152,6 +152,8 @@ def getNetworks():
               for n in networks:
                 n["connected"] = bool(n["id"] == connectedid)
         else:
+          for n in networks:
+            n["connected"] = False
           logging.error("could not get wifi status")
     else:
       logging.error("cannot access wifi config")
