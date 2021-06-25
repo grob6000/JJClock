@@ -14,7 +14,6 @@ import settings
 ## MODULE GLOBALS ##
 
 _wifimanagerlock = threading.Lock() # locks the wpa_cli resources so they're only used one at a time - if you call while this is being used by another thread, it will block until the lock is freed
-_currentmodelock = threading.Lock() # lock for the current wifi mode variable
 _currentwifimode = "unknown" # global storage of current wifi mode
 _targetwifimode = "unknown" # set for when we run the change routine in the background
 
@@ -22,10 +21,6 @@ _targetwifimode = "unknown" # set for when we run the change routine in the back
 _dummynetworks = [{"id":0,"ssid":"dummynetwork_a","connected":True},{"id":1,"ssid":"dummynetwork_b","connected":False}]
 _dummyscanresult = [{"bssid":"00:00:00:00","freq":2412,"channel":1,"rssi":-60,"flags":["WPA"],"ssid":"scannetwork_a","id":0},
 {"bssid":"00:00:00:00","freq":2437,"channel":6,"rssi":-58,"flags":["WPA"],"ssid":"scannetwork_b","id":1}]
-
-# ap ssid and password to use
-#_apssid = jjcommon.ap_ssid
-#_appass = jjcommon.ap_pass
 
 _hostapdconf = {  "interface":jjcommon.iface,
                   "ssid":jjcommon.ap_ssid,

@@ -9,11 +9,12 @@ import pygame
 import time
 import jjrenderer
 import datetime
+from hashlib import md5
 
 class DisplayManager:
   
   _fillcolor = 255
-  
+
   def __init__(self, size=(1400,1050)):
     self._screen = Image.new("L", size)
     self.displaylist = []
@@ -132,15 +133,27 @@ class PygameDisplay(Display):
           self._stopevent.set()
     logging.info("pygame thread quit")
 
-# display 
+# display stored in memory only - ideal for web
+# threadsafe access to image (locked & copies buffer)
+# handles conversion & resizing for a particular target
+# provides a hash of the display content for polling purposes
 class MemoryDisplay(Display):
 
   def __init__(self, size=(800,600)):
     super().__init__()
     self._screenlock = Lock()
+    self._hashlock = Lock()
     self._screen = None
     with self._screenlock:
       self._screen = Image.new("RGB", size)
+    self._hash = ""
+    self._updateHash()
+  
+  def _updateHash(self):
+    self._hash = md5(self._screen.tobytes()).hexdigest() # string is immutable, need not copy or lock
+
+  def getHash(self):
+    return self._hash # string is immutable; need not copy or lock
 
   def getSize(self):
     sz = None
@@ -154,8 +167,8 @@ class MemoryDisplay(Display):
       img2 = self._rebox(img.convert("RGB"))
       with self._screenlock:
         self._screen.paste(img2,box=self.cropbox)
-      pass
-    pass
+      self._updateHash()
+      
   
   def getImage(self):
     img = None

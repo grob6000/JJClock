@@ -86,6 +86,9 @@ pytz.all_timezones
 tf = timezonefinder.TimezoneFinder()
 currentdt = datetime.datetime.now().astimezone(tz)
 
+# display update hash for polling
+displayhash = 0
+
 ## FUNCTIONS ##
   
 def onButton():
@@ -378,8 +381,8 @@ if __name__ == "__main__":
             if not tz == stat["tz"]:
               tzchanged = True
               tz = stat["tz"]
-              # update timezone setting --> this will trigger setting system tz also
-              settings.setSetting("manualtz", tz.zone, quiet=True)
+              # update timezone setting --> will trigger system tz update next time around
+              settings.setSetting("manualtz", tz.zone)
           else:
             dt = gpshandler.getDateTime(local=False).astimezone(tz)
             p = "using gps time + manual tz: "

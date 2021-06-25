@@ -39,7 +39,7 @@ class Setting():
   def getValue(self):
     return self._value
 
-_settingspath = "~/.jjclocksettings/settings.json"
+_settingspath = os.path.join("~",".config","jjclock.json")
 _settings = {}
 _settingsfilelock = Lock()
 _settingslock = Lock()

@@ -67,6 +67,9 @@ class GpsHandler():
     else:
       logging.warning("already disconnected!")
   
+  def isrunning(self):
+    return self._worker.is_alive()
+    
   def setPort(self, port):
     wasrunning = self._worker.is_alive()
     if wasrunning:

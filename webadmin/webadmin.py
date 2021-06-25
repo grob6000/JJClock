@@ -43,6 +43,7 @@ class WebAdmin():
     self._app.add_url_rule("/api/settings", view_func=self.setsetting, methods=['POST', 'PUT'])
     self._app.add_url_rule("/api/settings", view_func=self.getsetting, methods=['GET'])
     self._app.add_url_rule("/api/status", view_func=self.getstatus, methods=['GET'])
+    self._app.add_url_rule("/api/screenpoll", view_func=self.getpoll, methods=['GET'])    
     self._app.add_url_rule("/<string:fname>", view_func=self.getfavicon, methods=["GET"])
     self._savednetworks = []
     self._scannetworks = []
@@ -57,6 +58,9 @@ class WebAdmin():
   def start(self):
     self._worker.start()
     logging.info("webadmin server started")
+  
+  def isrunning(self):
+    return self._worker.is_alive()
 
   def _get_my_tid(self):
     if not self._worker.is_alive():
@@ -170,6 +174,11 @@ class WebAdmin():
     r = Response(w, mimetype="image/png", direct_passthrough=True)
     logging.debug(r)
     return r
+
+  def getpoll(self):
+    hash = self.display.getHash()
+    return {"hash":hash}
+
 
   def setmode(self):
     r = request.get_json(silent=True)

@@ -4,6 +4,7 @@
   <script>
     function updateall() {
       updatestatus()
+      pollimage()
     }
     function updatestatus() {
       var xhttp = new XMLHttpRequest();
@@ -11,7 +12,6 @@
       xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
           jr = JSON.parse(this.responseText);
-          console.log(jr)
           if ("gps" in jr) {
             document.getElementById("fixspan").classList.remove("bg-warning", "bg-danger", "bg-success")
             document.getElementById("timespan").classList.remove("bg-warning", "bg-danger", "bg-success")
@@ -39,11 +39,31 @@
       }
       xhttp.send()
     }
+    function pollimage() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("GET", "api/screenpoll", true);
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          jr = JSON.parse(this.responseText);
+          if ("hash" in jr) {
+            hash = document.getElementById("screenimg").getAttribute("data-hash");
+            if (jr["hash"] != hash) {
+              img = document.getElementById("screenimg");
+              img.src = "/api/screen.png?hash=" + jr["hash"];
+              img.setAttribute("data-hash", jr["hash"]);
+              updatestatus();
+            }
+          }
+        }      
+      }
+      xhttp.send();
+      setTimeout(pollimage, 2500);
+    }
   </script>
 {% endblock %}
 {% block content %}
 <div class="row mt-3 border">
-  <img src="/api/screen.png" class="col-12 img-fluid">
+  <img src="/api/screen.png" class="col-12 img-fluid" id="screenimg" data-hash="">
 </div>
 <div class="row mt-3 border">
   <div class="col-12 mt-3">
