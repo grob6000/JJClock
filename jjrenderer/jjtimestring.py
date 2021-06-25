@@ -308,7 +308,7 @@ def GetTimeString(dt=datetime.datetime.now(), lang="en"):
         elif dt.minute == 45:
             timestring += GetNumberString(h1, "fr") + " moins le quart" 
         elif dt.minute >= 40:
-            timestring += GetNumberString(h1, "fr") + " moins " + GetNumberString(60-dt.minute, "fr")
+            timestring += GetNumberString(60-dt.minute, "fr") + " moins " + GetNumberString(h1, "fr")
         else:
             timestring += GetNumberString(h, "fr")
             if h == 1:
