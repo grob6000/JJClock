@@ -111,7 +111,7 @@ class WebAdmin():
   
   def getfavicon(self, fname):
     if fname.startswith('favicon'):
-      return send_from_directory('static', "favicon/" + fname)
+      return send_from_directory('static', os.path.join("favicon", fname))
     else:
       abort(404)
 
