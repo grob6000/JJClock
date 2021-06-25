@@ -375,9 +375,9 @@ if __name__ == "__main__":
             dt = gpshandler.getDateTime(local=True)
             p = "using gps time + auto tz: "
             # update timezone cached
-            if not tz.zone == stat["tz"]:
+            if not tz == stat["tz"]:
               tzchanged = True
-              tz = pytz.timezone(stat["tz"])
+              tz = stat["tz"]
               # update timezone setting --> this will trigger setting system tz also
               settings.setSetting("manualtz", tz.zone, quiet=True)
           else:
