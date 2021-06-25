@@ -36,7 +36,7 @@
                 } else if (v["validation"] == "bool") {
                   input = '<input class="form-check-input" type="checkbox" id="setting_{{key}}">'
                 } else if (v["validation"] == "list") {
-                  input ='<select class="custom-select" id="setting_{{key}}">';
+                  input ='<select class="form-select" id="setting_{{key}}">';
                   for (option of v["validationlist"]) {
                     input += '<option value=' + option + '>' + option + '</option>';
                   }
