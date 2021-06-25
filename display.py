@@ -44,7 +44,6 @@ class Display():
     pass # a virtual display will do nothing with the image
 
   def _rebox(self, img):
-    logging.debug("rebox")
     sz = self.getSize()
     box = (0,0,sz[0],sz[1])
     if self.cropbox:
