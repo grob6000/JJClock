@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_from_directory, Response
+from flask import Flask, request, render_template, send_from_directory, Response, abort
 from werkzeug.wsgi import FileWrapper
 from io import BytesIO
 import threading
@@ -41,6 +41,7 @@ class WebAdmin():
     self._app.add_url_rule("/api/settings", view_func=self.setsetting, methods=['POST', 'PUT'])
     self._app.add_url_rule("/api/settings", view_func=self.getsetting, methods=['GET'])
     self._app.add_url_rule("/api/status", view_func=self.getstatus, methods=['GET'])
+    self._app.add_url_rule("/<string:fname>", view_func=self.getfavicon, methods=["GET"])
     self._savednetworks = []
     self._scannetworks = []
     self._menu = []
@@ -108,6 +109,12 @@ class WebAdmin():
     with self._datalock:
       self._statusdict = copy.deepcopy(statusdict) 
   
+  def getfavicon(self, fname):
+    if fname.startswith('favicon'):
+      return send_from_directory('static', "favicon/" + fname)
+    else:
+      abort(404)
+
   # returns action data dict, and clears action data (one shot)
   # returns None if there is no new data (can be polled)
   def getActionData(self):
