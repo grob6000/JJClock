@@ -110,6 +110,7 @@ def loadSettings():
     with _settingsfilelock:
       with open(_settingspath) as f:
         sdict = json.load(f)
+        logging.debug("settings file found, contains: " + str(sdict))
 
   with _settingslock:
     # populate defaults
@@ -117,15 +118,17 @@ def loadSettings():
     for k,v in _settingsdefaults.items():
       if not k in _settings.keys():
         _settings[k] = copy.deepcopy(v)
+        logging.debug("adding default setting " + k + " = " + str(_settings[k].getValue()))
       addedsomething = True
     # update values based on file
     for k, v in sdict.items():
       if k in _settings.keys():
         _settings[k].setValue(v) # include validation
+        logging.debug("update value of setting " + k + " = " + str(_settings[k].getValue()))
       else:
         _settings[k] = Setting(name=k,value=v) # create new setting object
+        logging.debug("generated orphan setting " + k + " = " + str(_settings[k].getValue()))
   fixRegistry() # make sure all settings are in here
-  logging.debug("settings loaded from file")
   # re-save if any defaults were added
   if addedsomething:
     saveSettings()

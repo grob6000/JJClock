@@ -270,8 +270,8 @@ event_manualtzupdate = Event()
 if __name__ == "__main__":
   
   # load settings
+  settings._settingsdefaults["mode"].validationlist = modelist # use mode list to select from
   settings.loadSettings()
-  settings._settings["mode"].validationlist = modelist # use mode list to select from
 
   # init gpio
   if "linux" in sys.platform:
@@ -329,6 +329,7 @@ if __name__ == "__main__":
   while not pleasequit:
       
       t = time.monotonic()
+
       if menutimeout_armed and t - t_lastbuttonpress > menutimeout:
         menutimeout_armed = False
         onMenuTimeout()
@@ -387,7 +388,7 @@ if __name__ == "__main__":
             dt = gpshandler.getDateTime(local=False).astimezone(tz)
             p = "using gps time + manual tz: "
       else:
-        t = time.monotonic()
+        
         if ((t - tlastupdate) > 2):
           # it's been more than a couple of seconds (gps should do 1/s) - probably not working, should use system time
           dt = datetime.datetime.now().astimezone(tz)
@@ -398,11 +399,11 @@ if __name__ == "__main__":
         tlastupdate = t
         updateTime(dt)
       elif tzchanged:
-        # don't have a new time but tzchanged so need to force an update - & use cached time
-        updateTime(currentdt, True)
+        # don't have a new time but tzchanged so need to force an update - & use cached time with new timezone
+        tlastupdate = t
+        updateTime(currentdt.astimezone(tz), True)
 
       # update check
-      t = time.monotonic()
       if t-lastsoftwareupdatecheck > minupdateinterval:
         if (dt and dt.hour == updatehour) or t-lastsoftwareupdatecheck > maxupdateinterval:
           checkForUpdate()
