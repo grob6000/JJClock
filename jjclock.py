@@ -84,7 +84,7 @@ menutimeout_armed = False
 tz = pytz.UTC
 pytz.all_timezones
 tf = timezonefinder.TimezoneFinder()
-currentdt = datetime.datetime.now()
+currentdt = datetime.datetime.now().astimezone(tz)
 
 ## FUNCTIONS ##
   
@@ -308,7 +308,8 @@ if __name__ == "__main__":
   
   # load system timezone
   tz = pytz.timezone(settings.getSettingValue("manualtz"))
-  
+  currentdt = datetime.datetime.now().astimezone(tz) # init currentdt using new datetime
+
   # load last mode
   changeMode(settings.getSettingValue("mode"))
   
@@ -409,7 +410,7 @@ if __name__ == "__main__":
         # data is available
         logging.debug(adata)
 
-      wa.provideStatus({"tz":tz.zone, "timestamp":str(currentdt.astimezone(tz)), "mode":currentmode, "gps":gpshandler.getStatus()})
+      wa.provideStatus({"tz":tz, "timestamp":currentdt.astimezone(tz), "mode":currentmode, "gps":gpshandler.getStatus()})
           
       time.sleep(0.1) # limit frequency / provide a thread opportunity
   

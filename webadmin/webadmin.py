@@ -9,7 +9,9 @@ import settings # should be relatively threadsafe...
 import urllib
 import copy
 from PIL import Image
+
 from jjcommon import *
+from gpshandler import formatlatlon
 
 from display import MemoryDisplay
 
@@ -91,19 +93,6 @@ class WebAdmin():
       self._app.run(debug=True, use_reloader=False, host='0.0.0.0', port=webadmin_port)
     except Exception as e:
       print("app stopped: {0}".format(e))
-  
-  #def provideWifiNetworks(self, networks):
-  #  with self._datalock:
-  #    self._savednetworks = networks
-  
-  #def provideWifiScan(self, networks):
-  #  with self._datalock:
-  #    self._scannetworks = networks  
-
-  #def provideMenu(self, menu):
-  #  with self._datalock:
-  #    self._menu = menu   
-  # 
 
   def provideStatus(self, statusdict):
     with self._datalock:
@@ -111,7 +100,7 @@ class WebAdmin():
   
   def getfavicon(self, fname):
     if fname.startswith('favicon'):
-      return send_from_directory('static', os.path.join("favicon", fname))
+      return send_from_directory(os.path.join('static','favicon'), fname)
     else:
       abort(404)
 
@@ -127,9 +116,6 @@ class WebAdmin():
     return render_template('index.html', pages=self._pages)
   
   def getpagewifi(self):
-    #with self._datalock:
-    #  networks = wifimanager.getNetworks()
-    #  scans = wifimanager.scanNetworks()
     return render_template('wifi.html', pages=self._pages)
   
   def getpagesettings(self):
@@ -222,6 +208,14 @@ class WebAdmin():
   def getstatus(self):
     with self._datalock:
       r = copy.deepcopy(self._statusdict)
+    # prepare some fields for jsonification: timezones as zone string, add location string, timestamps in ISO format (better than JSON crap)
+    if r["tz"]:
+      r["tz"] = r["tz"].zone
+    if r["gps"]["tz"]:
+      r["gps"]["tz"] = r["gps"]["tz"].zone
+    r["gps"]["loc"] = formatlatlon(r["gps"]["lat"], r["gps"]["lng"])
+    r["timestamp"] = str(r["timestamp"])
+    r["gps"]["dtutc"] = str(r["gps"]["dtutc"])
     return r
 
   def getnavbar(self):

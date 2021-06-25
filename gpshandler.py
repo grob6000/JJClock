@@ -90,14 +90,13 @@ class GpsHandler():
       hastime = bool(self._dt_utc)
       signalok = self._signalok
       hasfix = bool(self._lat) and bool(self._lng)
-      tzname = None
+      tz = None
       if self._tzfound:
-        tzname = self._tz.zone
+        tz = self._tz
       lat = self._lat
       lng = self._lng
       dt_utc = self._dt_utc
-    locstring = formatlatlon(lat,lng)
-    return {"hastime":hastime, "hasfix":hasfix, "signalok":signalok, "tz":tzname, "lat":lat, "lng":lng, "loc":locstring, "dtutc":str(dt_utc)}
+    return {"hastime":hastime, "hasfix":hasfix, "signalok":signalok, "tz":tz, "lat":lat, "lng":lng, "dtutc":dt_utc}
   
   # check if data has been updated since last call
   def pollUpdated(self):
