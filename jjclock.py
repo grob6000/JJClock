@@ -401,14 +401,8 @@ if __name__ == "__main__":
       # update check
       t = time.monotonic()
       if t-lastsoftwareupdatecheck > minupdateinterval:
-        if (dt and dt.hour == updatehour) or t-lastsoftwareupdatecheck > maxupdateinterval):
+        if (dt and dt.hour == updatehour) or t-lastsoftwareupdatecheck > maxupdateinterval:
           checkForUpdate()
-
-      # if web action is pending
-      adata = wa.getActionData()
-      if adata:
-        # data is available
-        logging.debug(adata)
 
       wa.provideStatus({"tz":tz, "timestamp":currentdt.astimezone(tz), "mode":currentmode, "gps":gpshandler.getStatus()})
           

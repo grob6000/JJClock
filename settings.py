@@ -50,7 +50,6 @@ _settingsdefaults =  {
                           "gpson":Setting(name="Enable GPS",value=True,validation="bool"),
                           "autotz":Setting(name="Auto Timezone",value=True,validation="bool"),
                           "manualtz":Setting(name="Timezone (Manual)",value="UTC",validation="list",validationlist=all_timezones),
-                          #"ntpon":Setting(name="Enable NTP",value=True,validation="bool"),
                      }  
 _registry = {}
 _registrylock = Lock()
