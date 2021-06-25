@@ -26,10 +26,10 @@ class WebAdmin():
     self._datalock = threading.Lock()
     self._requestwaiter = threading.Event()
     self._pages = [
-      {"url":"/","name":"Home","func":self.getpageindex},
-      {"url":"/wifi","name":"Wifi","func":self.getpagewifi},
-      {"url":"/settings","name":"Settings","func":self.getpagesettings},
-      {"url":"/menu","name":"Clock Menu","func":self.getpagemenu},
+      {"url":"/","name":"Home","id":"index","func":self.getpageindex},
+      {"url":"/menu","name":"Menu","id":"menu","func":self.getpagemenu},
+      {"url":"/wifi","name":"Wifi","id":"wifi","func":self.getpagewifi},
+      {"url":"/settings","name":"Settings","id":"settings","func":self.getpagesettings},
     ]
     for p in self._pages:
       self._app.add_url_rule(p["url"], view_func=p["func"], methods=['GET'])
@@ -44,7 +44,7 @@ class WebAdmin():
     self._app.add_url_rule("/api/settings", view_func=self.getsetting, methods=['GET'])
     self._app.add_url_rule("/api/status", view_func=self.getstatus, methods=['GET'])
     self._app.add_url_rule("/api/screenpoll", view_func=self.getpoll, methods=['GET'])    
-    self._app.add_url_rule("/<string:fname>", view_func=self.getfavicon, methods=["GET"])
+    self._app.add_url_rule("/<string:fname>", view_func=self.getgeneral, methods=["GET"])
     self._savednetworks = []
     self._scannetworks = []
     self._menu = []
@@ -76,7 +76,7 @@ class WebAdmin():
         if tobj is self._worker:
             self._worker._thread_id = tid
             return tid
-                
+
   def stop(self):
     if self._worker.is_alive():
       tid = self._get_my_tid()
@@ -102,7 +102,7 @@ class WebAdmin():
     with self._datalock:
       self._statusdict = copy.deepcopy(statusdict) 
   
-  def getfavicon(self, fname):
+  def getgeneral(self, fname):
     if fname.startswith('favicon'):
       return send_from_directory(os.path.join('static','favicon'), fname)
     else:
@@ -117,16 +117,16 @@ class WebAdmin():
     return adata
     
   def getpageindex(self):
-    return render_template('index.html', pages=self._pages)
+    return render_template('index.html', pages=self._pages, pageid="index")
   
   def getpagewifi(self):
-    return render_template('wifi.html', pages=self._pages)
+    return render_template('wifi.html', pages=self._pages, pageid="wifi")
   
   def getpagesettings(self):
-    return render_template('settings.html', pages=self._pages, settings=settings.getAllSettings())
+    return render_template('settings.html', pages=self._pages, pageid="settings")
   
   def getpagemenu(self):
-    return "not implemented"
+    return render_template('menu.html', pages=self._pages, pageid="menu")
     
   def getnetworks(self):
     with self._datalock:

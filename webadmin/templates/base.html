@@ -29,6 +29,12 @@
     <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <script src="static/bootstrap/js/bootstrap.bundle.min.js"></script>  
     <script src="static/mustache.min.js"></script>  
+    <script>
+      window.addEventListener("load", highlightnav, true);
+      function highlightnav() {
+        document.getElementById("nav_{{ pageid }}").classList.add("active");
+      }
+    </script>
     {% block js %}
     <script>
       function updateall() {}
@@ -46,7 +52,7 @@
           <ul class="navbar-nav me-auto mb-2 mb-md-0">
             {% for page in pages %}
             <li class="nav-item">
-              <a class="nav-link" href="{{ page.url }}" id="{{ page.name }}">{{ page.name }}</a>
+              <a class="nav-link" href="{{ page.url }}" id="nav_{{ page.id }}">{{ page.name }}</a>
             </li>       
             {% endfor %}
           </ul>
