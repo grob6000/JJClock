@@ -300,11 +300,12 @@ if __name__ == "__main__":
   wa = webadmin.WebAdmin()
   wa.start()
   displaymanager.displaylist.append(wa.display)
+  wa.providemenu(menu)
 
   # wifi manager init
   wifimanager.readHostapd() # read the official hostapd from system
   wifimanager.updateHostapd(settings.getSettingValue("apssid"), settings.getSettingValue("appass")) # update hostapd with settings
-  
+
   # now screen is running, check for update
   logging.info("checking for update...")
   checkForUpdate()

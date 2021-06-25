@@ -8,7 +8,7 @@ class RendererConfig(Renderer):
   def getName(self):
     return "config"
   def getMenuItem(self):
-    return {"icon":"config.png","text":"Configuration"}
+    return {"icon":"icon_config.png","text":"Configuration"}
   def doRender(self, screen, **kwargs):
     
     fill(screen)

@@ -59,16 +59,23 @@ def getFont(fontname="ebgaramondmedium", fontsize=24):
       logging.debug("did not find otf font")
       fnt = getFont() # return default
   return fnt
-  
-def getImage(imagename):
+
+def getImagePath(imagename):
   p = Path(_imgpath).joinpath(imagename).absolute()
-  if os.path.isfile(p):
-    return Image.open(p)
-  p = Path(_imgpath).joinpath(imagename + ".png").absolute()
-  if os.path.isfile(p):
-    return Image.open(p)
+  if not os.path.isfile(p):
+    p = Path(_imgpath).joinpath(imagename + ".png").absolute()
+    if not os.path.isfile(p):
+      p = None
+      logging.warning("could not find image " + imagename)
+  return p
+
+def getImage(imagename):
+  p = getImagePath(imagename)
+  if p:
+    img = Image.open(p)
   else:
-    raise FileNotFoundError("Image file could not be found: " + imagename)
+    img = None
+  return img
 
 #renderer base class
 class Renderer:
@@ -81,7 +88,7 @@ class Renderer:
   
   def getMenuItem(self):
     return {"text":"Default", "icon":"default.png"}
-  
+
   def doRender(self, screen, **kwargs):
     fill(screen) # fill screen with white
     stdfnt = getFont()

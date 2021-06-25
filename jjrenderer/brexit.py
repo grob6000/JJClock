@@ -9,7 +9,7 @@ class RendererBrexitClock(Renderer):
   def getName(self):
     return "clock_brexit"
   def getMenuItem(self):
-    return {"icon":"brexit.png","text":"Brexit"}
+    return {"icon":"icon_brexit.png","text":"Brexit"}
   def doRender(self, screen, **kwargs):
     if "timestamp" in kwargs and kwargs["timestamp"]:
       kwargs["tstring"] = ts.GetTimeString(kwargs["timestamp"], lang="en_idiomatic")

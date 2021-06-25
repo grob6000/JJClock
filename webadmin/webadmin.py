@@ -12,6 +12,7 @@ from PIL import Image
 
 from jjcommon import *
 from gpshandler import formatlatlon
+from jjrenderer.renderer import getImagePath
 
 from display import MemoryDisplay
 
@@ -44,6 +45,7 @@ class WebAdmin():
     self._app.add_url_rule("/api/settings", view_func=self.getsetting, methods=['GET'])
     self._app.add_url_rule("/api/status", view_func=self.getstatus, methods=['GET'])
     self._app.add_url_rule("/api/screenpoll", view_func=self.getpoll, methods=['GET'])    
+    self._app.add_url_rule("/api/icons/<string:iconfile>", view_func=self.geticon, methods=['GET'])    
     self._app.add_url_rule("/<string:fname>", view_func=self.getgeneral, methods=["GET"])
     self._savednetworks = []
     self._scannetworks = []
@@ -179,7 +181,6 @@ class WebAdmin():
     hash = self.display.getHash()
     return {"hash":hash}
 
-
   def setmode(self):
     r = request.get_json(silent=True)
     if "mode" in r:
@@ -226,6 +227,19 @@ class WebAdmin():
     r["timestamp"] = str(r["timestamp"])
     r["gps"]["dtutc"] = str(r["gps"]["dtutc"])
     return r
+  
+  def geticon(self, iconfile):
+    iconfile = "icon_" + iconfile # only serve stuff starting with icon_
+    p = getImagePath(iconfile)
+    if p:
+      return send_from_directory(os.path.dirname(p), os.path.basename(p))
+    abort(404) # not found otherwise
 
-  def getnavbar(self):
-    return render_template('navbar.html', pages=self._pages)
+  def providemenu(self, menu=[]):
+    logging.debug("menu provided to webadmin")
+    self._menudata = []
+    for r in menu:
+      md = copy.deepcopy(r.getMenuItem())
+      md["name"] = r.getName()
+    
+  
