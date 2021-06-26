@@ -17,7 +17,7 @@ class RendererNixieClock(Renderer):
   def getName(self):
     return "clock_nixie"
   def getMenuItem(self):
-    return {"icon":"icon_nixie.png","text":"Nixie"}
+    return {"icon":"icon_nixie.png","text":"Nixie","description":"Is clock, da?"}
   def doRender(self, screen, **kwargs):
     fill(screen)
     c = (int(screen.size[0]/2), int(screen.size[1]/2)-50)

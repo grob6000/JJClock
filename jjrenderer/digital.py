@@ -7,7 +7,7 @@ class RendererDigitalClock(Renderer):
   def getName(self):
     return "clock_digital"
   def getMenuItem(self):
-    return {"text":"Digital", "icon":"icon_digital.png"}
+    return {"text":"Digital", "icon":"icon_digital.png", "description":"Seven segments. Four digits. One time."}
   def doRender(self, screen, **kwargs):
     fill(screen)
     if "timestamp" in kwargs:

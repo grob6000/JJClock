@@ -13,21 +13,40 @@
         if (this.readyState == 4 && this.status == 200) {
           jr = JSON.parse(this.responseText);
           if ("gps" in jr) {
-            document.getElementById("fixspan").classList.remove("bg-warning", "bg-danger", "bg-success")
-            document.getElementById("timespan").classList.remove("bg-warning", "bg-danger", "bg-success")
+            // badges!
+            for (let i of document.querySelectorAll('*[id^="badge_"]')) {
+              i.classList.remove("bg-warning", "bg-danger", "bg-success")
+            }
             if (jr["gps"]["hasfix"] == true) {
-              document.getElementById("fixspan").classList.add("bg-success")
+              document.getElementById("badge_gpsfix").classList.add("bg-success")
             } else {
-              document.getElementById("fixspan").classList.add("bg-danger")
+              document.getElementById("badge_gpsfix").classList.add("bg-danger")
             }
             if (jr["gps"]["hastime"] == true) {
-              document.getElementById("timespan").classList.add("bg-success")
+              document.getElementById("badge_gpstime").classList.add("bg-success")
             } else {
-              document.getElementById("timespan").classList.add("bg-danger")
+              document.getElementById("badge_gpstime").classList.add("bg-danger")
             }
             document.getElementById("gpsloccell").innerHTML = jr["gps"]["loc"]
             document.getElementById("gpstimecell").innerHTML = jr["gps"]["dtutc"]
             document.getElementById("gpstzcell").innerHTML = jr["gps"]["tz"]
+          }
+          if ("threadstate" in jr) {
+            if (jr["threadstate"]["gps"] == true) {
+              document.getElementById("badge_thread_gps").classList.add("bg-success")
+            } else {
+              document.getElementById("badge_thread_gps").classList.add("bg-danger")
+            }
+            if (jr["threadstate"]["web"] == true) {
+              document.getElementById("badge_thread_web").classList.add("bg-success")
+            } else {
+              document.getElementById("badge_thread_web").classList.add("bg-danger")
+            }            
+            if (jr["threadstate"]["pygame"] == true) {
+              document.getElementById("badge_thread_pygame").classList.add("bg-success")
+            } else {
+              document.getElementById("badge_thread_pygame").classList.add("bg-danger")
+            }
           }
           if ("timestamp" in jr) {
             document.getElementById("timecell").innerHTML = jr["timestamp"]
@@ -85,7 +104,10 @@
       </tr>     
       <tr>
         <th scope="row">GPS Status:</th>
-        <td id="gpsstatuscell"><span class="badge bg-warning" id="fixspan">FIX</span> <span class="badge bg-warning" id="timespan">TIME</span></td>
+        <td id="gpsstatuscell">
+          <span class="badge bg-warning" id="badge_gpsfix">FIX</span>
+          <span class="badge bg-warning" id="badge_gpstime">TIME</span>
+        </td>
       </tr>
       <tr>
         <th scope="row">GPS Time:</th>
@@ -98,7 +120,15 @@
       <tr>
         <th scope="row">GPS Timezone:</th>
         <td id="gpstzcell">Unknown</td>
-      </tr>      
+      </tr>   
+      <tr>
+        <th scope="row">Thread Status:</th>
+        <td id="threadstatuscell">
+          <span class="badge bg-warning" id="badge_thread_gps">GPS</span>
+          <span class="badge bg-warning" id="badge_thread_web">WEB</span>
+          <span class="badge bg-warning" id="badge_thread_pygame">PYGAME</span>
+        </td>
+      </tr>         
     </table>
   </div>
 </div>

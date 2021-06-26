@@ -22,10 +22,7 @@ class WebAdmin():
     self._app = Flask(__name__)
     self._worker = threading.Thread(target=self._run, daemon=True)
     self._stopevent = threading.Event()
-    self._actionevent = threading.Event()
-    self._actiondata = {}
     self._datalock = threading.Lock()
-    self._requestwaiter = threading.Event()
     self._pages = [
       {"url":"/","name":"Home","id":"index","func":self.getpageindex},
       {"url":"/menu","name":"Menu","id":"menu","func":self.getpagemenu},
@@ -44,7 +41,8 @@ class WebAdmin():
     self._app.add_url_rule("/api/settings", view_func=self.setsetting, methods=['POST', 'PUT'])
     self._app.add_url_rule("/api/settings", view_func=self.getsetting, methods=['GET'])
     self._app.add_url_rule("/api/status", view_func=self.getstatus, methods=['GET'])
-    self._app.add_url_rule("/api/screenpoll", view_func=self.getpoll, methods=['GET'])    
+    self._app.add_url_rule("/api/screenpoll", view_func=self.getpoll, methods=['GET'])
+    self._app.add_url_rule("/api/setmode", view_func=self.setmode, methods=['POST'])        
     self._app.add_url_rule("/api/icons/<string:iconfile>", view_func=self.geticon, methods=['GET'])    
     self._app.add_url_rule("/<string:fname>", view_func=self.getgeneral, methods=["GET"])
     self._savednetworks = []
@@ -128,7 +126,7 @@ class WebAdmin():
     return render_template('settings.html', pages=self._pages, pageid="settings")
   
   def getpagemenu(self):
-    return render_template('menu.html', pages=self._pages, pageid="menu")
+    return render_template('menu.html', pages=self._pages, pageid="menu", menudata=self._menudata)
     
   def getnetworks(self):
     with self._datalock:
@@ -204,9 +202,11 @@ class WebAdmin():
   
   def getsetting(self):
     r = request.get_json(silent=True)
+    logging.debug("getsetting request: " + request.get_data().decode())
     s = None
     if r and "settings" in r:
       s = r["settings"]
+      logging.debug("getting partial settings: " + str(s))
       sdict = settings.getSettings(s)
     else:
       sdict = settings.getAllSettings()
@@ -229,8 +229,12 @@ class WebAdmin():
     return r
   
   def geticon(self, iconfile):
-    iconfile = "icon_" + iconfile # only serve stuff starting with icon_
-    p = getImagePath(iconfile)
+    logging.debug(iconfile)
+    i = iconfile
+    if not i.startswith("icon_"):
+      i = "icon_" + iconfile # only serve stuff starting with icon_ hehe
+    p = getImagePath(i)
+    logging.debug(i + " --> " + str(p.absolute()))
     if p:
       return send_from_directory(os.path.dirname(p), os.path.basename(p))
     abort(404) # not found otherwise
@@ -241,5 +245,5 @@ class WebAdmin():
     for r in menu:
       md = copy.deepcopy(r.getMenuItem())
       md["name"] = r.getName()
-    
-  
+      md["updateinterval"] = r.getUpdateInterval()
+      self._menudata.append(md)

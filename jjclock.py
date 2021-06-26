@@ -68,6 +68,11 @@ for k, r in rinstances.items():
     menu.append(r)
 logging.debug(menu)
 
+# mask for enabling/disabling items
+menuenable = {}
+for mi in menu:
+  menuenable[mi.getName()] = True
+
 menutimeout = 10 # seconds
 
 ## GLOBALS ##
@@ -409,7 +414,7 @@ if __name__ == "__main__":
         if (dt and dt.hour == updatehour) or t-lastsoftwareupdatecheck > maxupdateinterval:
           checkForUpdate()
 
-      wa.provideStatus({"tz":tz, "timestamp":currentdt.astimezone(tz), "mode":currentmode, "gps":gpshandler.getStatus()})
+      wa.provideStatus({"tz":tz, "timestamp":currentdt.astimezone(tz), "mode":currentmode, "gps":gpshandler.getStatus(), "threadstate":{"gps":gpshandler.isrunning(),"web":wa.isrunning(),"pygame":pygamedisplay.isrunning()}})
           
       time.sleep(0.1) # limit frequency / provide a thread opportunity
   

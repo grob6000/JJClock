@@ -132,6 +132,9 @@ class PygameDisplay(Display):
           pygame.quit()
           self._stopevent.set()
     logging.info("pygame thread quit")
+  
+  def isrunning(self):
+    return self._pygamethread.is_alive()
 
 # display stored in memory only - ideal for web
 # threadsafe access to image (locked & copies buffer)

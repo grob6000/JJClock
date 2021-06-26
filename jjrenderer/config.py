@@ -8,7 +8,7 @@ class RendererConfig(Renderer):
   def getName(self):
     return "config"
   def getMenuItem(self):
-    return {"icon":"icon_config.png","text":"Configuration"}
+    return {"icon":"icon_config.png","text":"Configuration","description":"Enters AP mode to help configure Wifi. You probably don't want to enable this from here!"}
   def doRender(self, screen, **kwargs):
     
     fill(screen)

@@ -3,6 +3,45 @@
 {% block js %}
   <script>
     function updateall() {
+      getcurrentmode()
+    }
+    function getcurrentmode() {
+      let out = {"settings":["mode"]}
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "api/settings", true);
+        xhttp.setRequestHeader("Content-type", "application/json");
+        xhttp.onreadystatechange = function () {
+          if (this.readyState == 4 && this.status == 200) {
+            let jr = JSON.parse(this.responseText)
+            updatemode(jr["settings"]["mode"]["value"])
+          }
+        }
+        xhttp.send(JSON.stringify(out))  
+    }
+    function setmode(id) {
+      let out = {"settings":{"mode":id}}
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "api/settings", true);
+        xhttp.setRequestHeader("Content-type", "application/json");
+        xhttp.onreadystatechange = function () {
+          if (this.readyState == 4 && this.status == 200) {
+            let jr = JSON.parse(this.responseText)
+            updatemode(jr["settings"]["mode"]["value"])
+          }
+        }
+        xhttp.send(JSON.stringify(out))      
+    }
+    function updatemode(id) {
+      dbs = document.querySelectorAll("[id^='display_']") // all display buttons
+      for (let db of dbs) {
+        if (db.id == "display_"+id) {
+          db.classList.add('btn-success')
+          db.disabled = true
+        } else {
+          db.classList.remove('btn-success')
+          db.disabled = false
+        }
+      }
     }
   </script>
 {% endblock %}
@@ -11,9 +50,24 @@
   <div class="col-12 mt-3">
     <h2>Menu:</h2>
   </div>
-  <div class="col-12 mt-0 mb-0">
-    <table class="table">
-    </table>
+  {% for menuitem in menudata %}
+  <div class="col-12 col-sm-6 col-md-4 g-3 mb-2">
+    <div class="card text-center h-100" id="card_{{ menuitem.name }}">
+      <img src="/api/icons/{{ menuitem.icon }}" class="card-img-top mx-auto p-3" style="max-width: 200px">
+      <div class="card-body">
+        <h5 class="card-title">{{ menuitem.text }}</h5>
+        <p class="card-text">{{ menuitem.description }}</p>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li class=list-group-item>
+          Updates every {{ menuitem.updateinterval }} min
+        </li>
+      </ul>
+      <div class="card-footer">
+        <button class="btn btn-primary" id="display_{{ menuitem.name }}" onclick="setmode('{{ menuitem.name }}')">Display</button>
+      </div>
+    </div>
   </div>
+  {% endfor %}
 </div>
 {% endblock %}

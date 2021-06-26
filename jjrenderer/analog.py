@@ -6,7 +6,7 @@ class RendererAnalogClock(Renderer):
   def getName(self):
     return "clock_analog"
   def getMenuItem(self):
-    return {"icon":"icon_analog.png","text":"Analog"}
+    return {"icon":"icon_analog.png","text":"Analog","description":"I'm just a simple country analog clock. Don't mind me."}
   def doRender(self, screen, **kwargs):
     fill(screen, color=0xFF)
     draw = ImageDraw.Draw(screen)
