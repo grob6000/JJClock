@@ -414,7 +414,7 @@ if __name__ == "__main__":
         if (dt and dt.hour == updatehour) or t-lastsoftwareupdatecheck > maxupdateinterval:
           checkForUpdate()
 
-      wa.provideStatus({"tz":tz, "timestamp":currentdt.astimezone(tz), "mode":currentmode, "gps":gpshandler.getStatus(), "threadstate":{"gps":gpshandler.isrunning(),"web":wa.isrunning(),"pygame":pygamedisplay.isrunning()}})
+      wa.provideStatus({"tz":tz, "timestamp":currentdt.astimezone(tz), "mode":currentmode, "gps":gpshandler.getStatus(), "threadstate":{"gps":(gpshandler and gpshandler.isrunning()),"web":(wa and wa.isrunning()),"pygame":(pygamedisplay and pygamedisplay.isrunning())}})
           
       time.sleep(0.1) # limit frequency / provide a thread opportunity
   
