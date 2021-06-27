@@ -86,11 +86,12 @@ class PygameDisplay(Display):
   
   displayfillcolor = (255, 255 ,255)
 
-  def __init__(self, windowsize=(1024,768)):
+  def __init__(self, windowsize=(1024,768), start=True):
     super().__init__()
     self._windowsize = windowsize
     self._pygamethread = Thread(target=self._run, daemon=True)
-    self._pygamethread.start()
+    if start:
+      self._pygamethread.start()
     self._updateevent = Event()
     self._stopevent = Event()
     self._imglock = Lock()
@@ -104,6 +105,15 @@ class PygameDisplay(Display):
   
   def getSize(self):
     return self._windowsize
+
+  def restart(self):
+    if self._pygamethread.is_alive():
+      logging.debug("requesting pygame stop...")
+      self._stopevent.set()
+      logging.debug("waiting for pygame stop...")
+      self._pygamethread.join()
+    logging.debug("pygame stopped. restarting...")
+    self._pygamethread.start()
   
   def __del__(self):
     if logging:
