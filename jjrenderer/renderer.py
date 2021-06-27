@@ -9,18 +9,27 @@ import urllib.request # for downloading images/data
 
 from jjcommon import owm_key
 
+import settings
+
 # directories to use
 _localdir = os.path.dirname(os.path.realpath(__file__))
 _fontpath = Path(_localdir).parent.joinpath("font").absolute()
 _imgpath = Path(_localdir).parent.joinpath("img").absolute()
 
-# open weather maps
-_owm = OWM(owm_key)
+_owm = None
 
 # list of renderers
 renderers = {}
 
+def openowm():
+  global _owm
+  _owm = OWM(settings.getSettingValue("owmkey"))
+
 def getWeatherByCity(city, country):
+# open weather maps
+  global _owm
+  if not _owm:
+    openowm()
   reg = _owm.city_id_registry()
   locs = reg.locations_for(city, country=country)
   if len(locs)>0:
@@ -30,6 +39,9 @@ def getWeatherByCity(city, country):
     return None
 
 def getWeatherByLoc(lat=0,lon=0):
+  global _owm
+  if not _owm:
+    openowm()
   mgr = _owm.weather_manager()
   try:
     one_call = mgr.one_call(lat=lat, lon=lon, units="metric")

@@ -195,8 +195,8 @@ def checkForUpdate():
   global lastsoftwareupdatecheck
   
   try:
-    g = Github(githubtoken)
-    repo = g.get_repo(githubrepo)
+    g = Github(settings.getSettingValue("githubtoken"))
+    repo = g.get_repo(settings.getSettingValue("githubrepo"))
     rels = repo.get_releases()
   except:
     logging.warning("could not connect to github - abandoning update check")
