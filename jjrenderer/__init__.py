@@ -3,8 +3,8 @@ from PIL import Image, ImageDraw, ImageFont
 import os.path #dirname, basename, isfile, join
 import glob
 import importlib
-import sys
 import inspect
+import logging
 
 from jjrenderer.renderer import *
 
@@ -20,4 +20,5 @@ for f in pyfiles:
         o = getattr(importlib.__import__("jjrenderer." + mname, globals(), locals(), [c]), c)
         #print(o)
         if inspect.isclass(o) and not o==Renderer and issubclass(o, Renderer):
-          renderers[c]=o
+          renderers[o.name]=o
+logging.debug("renderers = " + str(renderers))

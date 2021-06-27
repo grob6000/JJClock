@@ -11,7 +11,7 @@ import logging
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 ## INSTALL ANY MISSING PACKAGES ##
-required = {"numpy", "pyserial", "timezonefinder", "pytz", "pydbus", "pygithub", "gpiozero", "pillow", "flask", "pyowm", "pygame"}
+required = {"numpy", "pyserial", "timezonefinder", "pytz", "pydbus", "pygithub", "gpiozero", "pillow", "flask", "pyowm", "pygame", "psutil"}
 installed = {pkg.key for pkg in pkg_resources.working_set}
 missing = required - installed
 if missing:
@@ -28,6 +28,7 @@ import pytz
 import timezonefinder
 #from PIL import Image, ImageDraw, ImageFont
 from github import Github
+import psutil
 
 if "linux" in sys.platform:
   from gpiozero import Device, Button
@@ -52,26 +53,20 @@ from jjcommon import *
 
 modelist = ["splash","menu","config"]
 # load renderers, generate menu
-rinstances = {}
-for k,r in jjrenderer.renderers.items():
-    rinst = r()
-    name = rinst.getName()
-    rinstances[name] = rinst
-    if not name in modelist:
-      modelist.append(name)
+for k in jjrenderer.renderers.keys():
+    if not k in modelist:
+      modelist.append(k)
 logging.debug(str(modelist))
 
 # populate menu
-menu = [rinstances["config"]]
-for k, r in rinstances.items():
-  if "clock" in k and not k == "clock_birthday": # hide birthday mode!
-    menu.append(r)
+menu = {"config":jjrenderer.renderers["config"]}
+for k, r in jjrenderer.renderers.items():
+  if r.isclock and not k == "clock_birthday": # hide birthday mode!
+    menu[k] = r.menuitem
 logging.debug(menu)
 
-# mask for enabling/disabling items
-menuenable = {}
-for mi in menu:
-  menuenable[mi.getName()] = True
+# instantiate a renderer (will reuse this; only instantiate a new one on mode changes)
+currentrenderer = jjrenderer.Renderer()
 
 menutimeout = 10 # seconds
 
@@ -103,12 +98,15 @@ def onButton():
   global t_lastbuttonpress
   global currentmode
   global displaymanager
+  global currentrenderer
   t_lastbuttonpress = time.monotonic()
   logging.info("button pressed, t={0}".format(t_lastbuttonpress))
   if currentmode == "menu":
+    if not currentrenderer.name == "menu":
+      currentrenderer = jjrenderer.renderers["menu"]()
     menuitemselected = (menuitemselected+1)%len(menu) 
     logging.debug("selected item = " + str(menuitemselected))
-    displaymanager.doRender(rinstances["menu"], menu=menu, selecteditem=menuitemselected)
+    displaymanager.doRender(currentrenderer, menu=menu, selecteditem=menuitemselected)
   else:
     menutimeout_armed = True
     changeMode("menu")
@@ -116,7 +114,7 @@ def onButton():
 def onMenuTimeout():
   global menuitemselected
   logging.info("menu timeout")
-  changeMode(menu[menuitemselected].getName())
+  changeMode(menu[menuitemselected]["name"])
 
 def formatIP(ip):
   return "{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}".format(ip=ip)
@@ -126,12 +124,14 @@ def changeMode(mode):
   global currentmode
   global menuitemselected
   global menu
+  global currentrenderer
   r = None
   kwargs = {"mode":mode}
   if mode in modelist and not mode == currentmode:
     logging.info("changing mode to " + mode)
     currentmode = mode
     settings.setSetting("mode", mode, quiet=True) # update quietly; don't trigger registered events (they might have come here!)
+    r = None
     if mode == "config":
       # set wifi to AP mode
       wifimanager.setWifiMode("ap")
@@ -147,12 +147,12 @@ def changeMode(mode):
       kwargs["menu"] = menu
     else:
       wifimanager.setWifiMode("client") # all other modes should be in client state (if no wifi configured, will be disconnected...)
-    if mode in rinstances:
-      r = rinstances[mode]
+    if mode in modelist and not r:
+      currentrenderer = jjrenderer.renderers[mode]()
       kwargs["timestamp"] = currentdt
     else:
-      r = jjrenderer.Renderer()
-    displaymanager.doRender(r,**kwargs)
+      currentrenderer = jjrenderer.Renderer()
+    displaymanager.doRender(currentrenderer,**kwargs)
   else:
     logging.warning("same or invalid mode " + mode + " - not changing")
   
@@ -162,16 +162,17 @@ def updateTime(dt, force=False):
   global currentdt
   #global renderers
   global currentmode
+  global currentrenderer
   if force or not currentdt.minute == dt.minute:
     #print(dt)
     if ("clock" in currentmode):
       # BIRTHDAY EASTER EGG HAHA CAN'T FIX THIS
       if dt.day==birthday["day"] and dt.month==birthday["month"] and not currentmode=="clock_birthday":
         changeMode("clock_birthday")
-      elif (currentmode in rinstances):
-        ui = rinstances[currentmode].getUpdateInterval()
+      else:
+        ui = currentrenderer.updateinterval
         if force or ((dt.minute + dt.hour*60) % ui == 0):
-          displaymanager.doRender(rinstances[currentmode], timestamp=dt, mode=currentmode)
+          displaymanager.doRender(currentrenderer, timestamp=dt, mode=currentmode)
   currentdt = dt
 
 def setSystemTz(tzname):
@@ -266,6 +267,14 @@ def doUpdate(wgeturl, tag):
   # quit if all went well  
   if updateok:
     quit()
+
+modifiers = ['', 'k', 'M', 'G', 'T']
+def formatmemory(m):
+  i = 0
+  while (m>1024):
+    m = m / 1024
+    i = i + 1
+  return "{0:.4g} {1}B".format(m, modifiers[i])
 
 event_changemode = Event()
 event_apupdate = Event()
@@ -415,7 +424,9 @@ if __name__ == "__main__":
         if (dt and dt.hour == updatehour) or t-lastsoftwareupdatecheck > maxupdateinterval:
           checkForUpdate()
 
-      wa.provideStatus({"tz":tz, "timestamp":currentdt.astimezone(tz), "mode":currentmode, "gps":gpshandler.getStatus(), "threadstate":{"gps":(gpshandler and gpshandler.isrunning()),"web":(wa and wa.isrunning()),"pygame":(pygamedisplay and pygamedisplay.isrunning())}})
+      # provide status to webadmin
+      memoryusage = formatmemory(psutil.Process().memory_info().vms)
+      wa.provideStatus({"tz":tz, "timestamp":currentdt.astimezone(tz), "mode":currentmode, "gps":gpshandler.getStatus(), "memory":memoryusage, "threadstate":{"gps":(gpshandler and gpshandler.isrunning()),"web":(wa and wa.isrunning()),"pygame":(pygamedisplay and pygamedisplay.isrunning())}})
           
       time.sleep(0.1) # limit frequency / provide a thread opportunity
   

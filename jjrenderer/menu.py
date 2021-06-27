@@ -2,18 +2,18 @@ from jjrenderer.renderer import *
 from math import ceil
 
 class RendererMenu(Renderer):
+
+  name = "menu"
+  isclock = False
   
   menusize = (4,3)
   menupatchsize = (200,200)
   menuicondim = 120
   defaultmenu = [Renderer()]
-  
+
   def __init__(self, menu=defaultmenu):
     # populate menu entries
     self.setMenu(menu)
-  
-  def getName(self):
-    return "menu"
   
   def setMenu(self, menu):
     self.menu = menu

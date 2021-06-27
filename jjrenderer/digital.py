@@ -2,12 +2,14 @@ from jjrenderer.renderer import *
 
 # digital clock
 class RendererDigitalClock(Renderer):
+
+  name = "clock_digital"
+  isclock = True
+  menuitem = {"text":"Digital", "icon":"icon_digital.png", "description":"Seven segments. Four digits. One time."}
+
   digitalfont = getFont("digital",300)
   digitaldatefont = getFont("ebgaramondmedium", 50)
-  def getName(self):
-    return "clock_digital"
-  def getMenuItem(self):
-    return {"text":"Digital", "icon":"icon_digital.png", "description":"Seven segments. Four digits. One time."}
+
   def doRender(self, screen, **kwargs):
     fill(screen)
     if "timestamp" in kwargs:

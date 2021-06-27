@@ -9,11 +9,16 @@ import urllib.request # for downloading images/data
 
 from jjcommon import owm_key
 
+# directories to use
 _localdir = os.path.dirname(os.path.realpath(__file__))
 _fontpath = Path(_localdir).parent.joinpath("font").absolute()
 _imgpath = Path(_localdir).parent.joinpath("img").absolute()
 
+# open weather maps
 _owm = OWM(owm_key)
+
+# list of renderers
+renderers = {}
 
 def getWeatherByCity(city, country):
   reg = _owm.city_id_registry()
@@ -79,15 +84,11 @@ def getImage(imagename):
 
 #renderer base class
 class Renderer:
-
-  def getName(self):
-    return "default"
-    
-  def getUpdateInterval(self):
-    return 1
   
-  def getMenuItem(self):
-    return {"text":"Default", "icon":"default.png"}
+  name = "default"
+  isclock = False
+  menuitem = {"text":"Default", "icon":"default.png", "description":""}
+  updateinterval = 1
 
   def doRender(self, screen, **kwargs):
     fill(screen) # fill screen with white

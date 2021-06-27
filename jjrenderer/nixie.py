@@ -3,6 +3,10 @@ import jjrenderer.jjtimestring as ts
 
 class RendererNixieClock(Renderer):
   
+  name = "clock_nixie"
+  isclock = True
+  menuitem = {"icon":"icon_nixie.png","text":"Nixie","description":"Is clock, da?"}
+
   def __init__(self):
     # load this once
     self.mapimg = getImage('map_nixie')
@@ -14,10 +18,6 @@ class RendererNixieClock(Renderer):
     #logging.debug("x={0},y={1}".format(x,y))
     return self.mapimg.crop((x,y,x+150,y+300))
   
-  def getName(self):
-    return "clock_nixie"
-  def getMenuItem(self):
-    return {"icon":"icon_nixie.png","text":"Nixie","description":"Is clock, da?"}
   def doRender(self, screen, **kwargs):
     fill(screen)
     c = (int(screen.size[0]/2), int(screen.size[1]/2)-50)

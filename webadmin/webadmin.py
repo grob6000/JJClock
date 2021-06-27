@@ -12,7 +12,7 @@ from PIL import Image
 
 from jjcommon import *
 from gpshandler import formatlatlon
-from jjrenderer.renderer import getImagePath
+import jjrenderer
 
 from display import MemoryDisplay
 
@@ -233,7 +233,7 @@ class WebAdmin():
     i = iconfile
     if not i.startswith("icon_"):
       i = "icon_" + iconfile # only serve stuff starting with icon_ hehe
-    p = getImagePath(i)
+    p = jjrenderer.getImagePath(i)
     logging.debug(i + " --> " + str(p.absolute()))
     if p:
       return send_from_directory(os.path.dirname(p), os.path.basename(p))
@@ -242,8 +242,9 @@ class WebAdmin():
   def providemenu(self, menu=[]):
     logging.debug("menu provided to webadmin")
     self._menudata = []
-    for r in menu:
-      md = copy.deepcopy(r.getMenuItem())
-      md["name"] = r.getName()
-      md["updateinterval"] = r.getUpdateInterval()
+    for rname in menu:
+      r = jjrenderer.renderers[rname]
+      md = copy.deepcopy(r.menuitem)
+      md["name"] = r.name
+      md["updateinterval"] = r.updateinterval
       self._menudata.append(md)

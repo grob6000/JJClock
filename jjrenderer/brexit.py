@@ -2,14 +2,14 @@ from jjrenderer.renderer import *
 import jjrenderer.jjtimestring as ts
 import random
 import logging
-import datetime
-
 
 class RendererBrexitClock(Renderer):
-  def getName(self):
-    return "clock_brexit"
-  def getMenuItem(self):
-    return {"icon":"icon_brexit.png","text":"Brexit", "description":"Celebrate your sov-ren-tee with half-arsed time delivered by Britain's favourite tabloids!" }
+
+  name = "clock_brexit"
+  isclock = True
+  menuitem = {"icon":"icon_brexit.png","text":"Brexit", "description":"Celebrate your sov-ren-tee with half-arsed time delivered by Britain's favourite tabloids!" }
+  updateinterval = 5 # lazy bloody polish plumbers taking english jobs aigh?
+
   def doRender(self, screen, **kwargs):
     if "timestamp" in kwargs and kwargs["timestamp"]:
       kwargs["tstring"] = ts.GetTimeString(kwargs["timestamp"], lang="en_idiomatic")
@@ -23,8 +23,6 @@ class RendererBrexitClock(Renderer):
       return styles[r].doRender(self, screen, **kwargs) # pass the render down to the selected style
     else:
       return super().doRender(screen, **kwargs) # use default...
-  def getUpdateInterval(self):
-    return 5 # 5 MINUTE UPDATES
 
 class _StyleSun(RendererBrexitClock):
   def doRender(self, screen, **kwargs):

@@ -7,16 +7,16 @@
     }
     function getcurrentmode() {
       let out = {"settings":["mode"]}
-        var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", "api/settings", true);
-        xhttp.setRequestHeader("Content-type", "application/json");
-        xhttp.onreadystatechange = function () {
-          if (this.readyState == 4 && this.status == 200) {
-            let jr = JSON.parse(this.responseText)
-            updatemode(jr["settings"]["mode"]["value"])
-          }
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("GET", "api/settings", true);
+      xhttp.setRequestHeader("Content-type", "application/json");
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          let jr = JSON.parse(this.responseText)
+          updatemode(jr["settings"]["mode"]["value"])
         }
-        xhttp.send(JSON.stringify(out))  
+      }
+      xhttp.send(JSON.stringify(out))  
     }
     function setmode(id) {
       let out = {"settings":{"mode":id}}

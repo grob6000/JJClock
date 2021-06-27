@@ -2,13 +2,13 @@ from jjrenderer.renderer import *
 
 class RendererConfig(Renderer):
 
+  name = "config"
+  isclock = False
+  menuitem = {"icon":"icon_config.png","text":"Configuration","description":"Enters AP mode to help configure Wifi. You probably don't want to enable this from here!"}
+
   bigfont = getFont(fontsize=100)
   mediumfont = getFont(fontsize=50)
-  
-  def getName(self):
-    return "config"
-  def getMenuItem(self):
-    return {"icon":"icon_config.png","text":"Configuration","description":"Enters AP mode to help configure Wifi. You probably don't want to enable this from here!"}
+
   def doRender(self, screen, **kwargs):
     
     fill(screen)

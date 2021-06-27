@@ -2,11 +2,13 @@ from jjrenderer.renderer import *
 import math
 
 class RendererAnalogClock(Renderer):
+
+  name = "clock_analog"
+  isclock = True
+  menuitem = {"icon":"icon_analog.png","text":"Analog","description":"I'm just a simple country analog clock. Don't mind me."}
+
   romannumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
-  def getName(self):
-    return "clock_analog"
-  def getMenuItem(self):
-    return {"icon":"icon_analog.png","text":"Analog","description":"I'm just a simple country analog clock. Don't mind me."}
+
   def doRender(self, screen, **kwargs):
     fill(screen, color=0xFF)
     draw = ImageDraw.Draw(screen)

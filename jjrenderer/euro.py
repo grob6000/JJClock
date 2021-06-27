@@ -10,10 +10,10 @@ import pyowm # python open weather map - for local weather in EURRRROPE
 
 class RendererEuroClock(Renderer):
   
-  def getName(self):
-    return "clock_euro"
-  def getMenuItem(self):
-    return {"icon":"icon_euro.png","text":"Euro","description":"One for every country in the union. Eventually..."}
+  name = "clock_euro"
+  isclock = True
+  menuitem = {"icon":"icon_euro.png","text":"Euro","description":"One for every country in the union. Eventually..."}
+
   def doRender(self, screen, **kwargs):
     if len(styles) > 0:
       r = random.randint(0,len(styles)-1) # select a random style

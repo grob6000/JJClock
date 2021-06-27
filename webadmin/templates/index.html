@@ -54,6 +54,9 @@
           if ("tz" in jr) {
             document.getElementById("tzcell").innerHTML = jr["tz"]
           }
+          if ("memory" in jr) {
+            document.getElementById("memoryusage").innerHTML = jr["memory"];
+          }
         }      
       }
       xhttp.send()
@@ -128,7 +131,11 @@
           <span class="badge bg-warning" id="badge_thread_web">WEB</span>
           <span class="badge bg-warning" id="badge_thread_pygame">PYGAME</span>
         </td>
-      </tr>         
+      </tr>  
+      <tr>
+        <th scope="row">Memory Usage:</th>
+        <td id="memoryusage">Unknown</td>
+      </tr>          
     </table>
   </div>
 </div>

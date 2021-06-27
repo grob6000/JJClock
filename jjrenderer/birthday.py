@@ -1,10 +1,11 @@
 from jjrenderer.renderer import *
 
 class RendererBirthdayClock(Renderer):
-  def getName(self):
-    return "clock_birthday"
-  def getMenuItem(self):
-    return {"icon":"icon_birthday.png","text":"Birthday","description":"Happy Birthday JJ!"}
+
+  name = "clock_birthday"
+  isclock = True
+  menuitem = {"icon":"icon_birthday.png","text":"Birthday","description":"Happy Birthday JJ!"}
+
   def doRender(self, screen, **kwargs):
     #fill(screen)
     bg = getImage("bg_cake")
