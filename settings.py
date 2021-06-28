@@ -44,7 +44,7 @@ _settings = {}
 _settingsfilelock = Lock()
 _settingslock = Lock()
 _settingsdefaults =  {
-                          "mode":Setting(name="Mode",value="clock_digital",validation="list",validationlist=[]),
+                          "mode":Setting(name="Mode",value="clock_surprise",validation="list",validationlist=[]),
                           "apssid":Setting(name="AP SSID", value=jjcommon.ap_ssid, validation="string"),
                           "appass":Setting(name="AP Password",value=jjcommon.ap_pass,validation="password"),
                           "gpson":Setting(name="Enable GPS",value=True,validation="bool"),
