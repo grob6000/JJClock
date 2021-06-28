@@ -246,7 +246,7 @@ def doUpdate(wgeturl, tag):
   if "linux" in sys.platform:
     
     # display an updating screen
-    displaymanager.doRender(jjrenderer.renderers["RendererUpdating"](), version=tag)
+    displaymanager.doRender(jjrenderer.renderers["updating"](), version=tag)
     
     # make sure temp dir exists
     subprocess.run(["mkdir", "/tmp/jjclock"])

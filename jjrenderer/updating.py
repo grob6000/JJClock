@@ -1,10 +1,11 @@
 from jjrenderer.renderer import *
 
 class RendererUpdating(Renderer):
-  def getName(self):
-    return "updating"
-  def getMenuItem(self):
-    return {"icon":"default.png","text":"Updating"}
+
+  name = "updating"
+  isclock = False
+  menuitem = {"icon":"default.png","text":"Updating","description":""}
+
   def doRender(self, screen, **kwargs):
     screen.paste(getImage("updating.png"))
     if "version" in kwargs:
