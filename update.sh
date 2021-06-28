@@ -1,25 +1,16 @@
 #!/bin/sh
 
-# get flags
-while getopts u:p: flag
-do
-    case "${flag}" in
-        u) githubuser=${OPTARG};;
-        p) githubpass=${OPTARG};;
-    esac
-done
-
 set -x # print stuff
 
-# this should work from outside the install directory!
+# this should work from outside the install directory and regardless of user
 cd /home/pi/JJClock
 
 # stop service
 sudo systemctl stop jjclock.service
 
 # ensure git credentials are there (so bad!)
-git config --global user.name "${GITHUBUSER}"
-git config --global user.password "${GITHUBPASS}"
+git config --global user.name "$1"
+git config --global user.password "$2"
 
 # use git to update
 git fetch --all
