@@ -57,6 +57,9 @@
           if ("memory" in jr) {
             document.getElementById("memoryusage").innerHTML = jr["memory"];
           }
+          if ("version" in jr) {
+            document.getElementById("swversion").innerHTML = jr["version"];
+          }
         }      
       }
       xhttp.send()
@@ -135,7 +138,11 @@
       <tr>
         <th scope="row">Memory Usage:</th>
         <td id="memoryusage">Unknown</td>
-      </tr>          
+      </tr>  
+      <tr>
+        <th scope="row">Software Version:</th>
+        <td id="swversion"></td>
+      </tr>            
     </table>
   </div>
 </div>

@@ -76,6 +76,7 @@ currentmode = -1 # initialise as an invalid mode; any mode change will trigger c
 displaymanger = None # set up
 menuindexselected = 0
 lastsoftwareupdatecheck = 0
+swversion = None
 
 # timing
 t_lastbuttonpress = 0
@@ -193,7 +194,8 @@ def getSystemTz():
 
 def checkForUpdate():
   global lastsoftwareupdatecheck
-  
+  global swversion
+
   try:
     g = Github(settings.getSettingValue("githubtoken"))
     repo = g.get_repo(settings.getSettingValue("githubrepo"))
@@ -224,10 +226,11 @@ def checkForUpdate():
       logging.warning("unknown version. will update.")
   logging.debug("current version: " + str(myname))
   lastsoftwareupdatecheck = time.monotonic()
-  
+  swversion = myname
+
   if tag and myname:
     if myname == tag:
-      logging.info("currently latest version. no update required.")
+      logging.info("currently latest version: " + myname + ". no update required.")
     else:
       if "linux" in sys.platform:
         logging.info("current version: " + myname + ", available: " + tag)
@@ -432,7 +435,7 @@ if __name__ == "__main__":
 
       # provide status to webadmin
       memoryusage = formatmemory(psutil.Process().memory_info().vms)
-      wa.provideStatus({"tz":tz, "timestamp":currentdt.astimezone(tz), "mode":currentmode, "gps":gpshandler.getStatus(), "memory":memoryusage, "threadstate":{"gps":(gpshandler and gpshandler.isrunning()),"web":(wa and wa.isrunning()),"pygame":(pygamedisplay and pygamedisplay.isrunning())}})
+      wa.provideStatus({"tz":tz, "timestamp":currentdt.astimezone(tz), "mode":currentmode, "gps":gpshandler.getStatus(), "memory":memoryusage, "threadstate":{"gps":(gpshandler and gpshandler.isrunning()),"web":(wa and wa.isrunning()),"pygame":(pygamedisplay and pygamedisplay.isrunning())}, "version":swversion})
           
       time.sleep(0.1) # limit frequency / provide a thread opportunity
   

@@ -224,8 +224,10 @@ class WebAdmin():
     if r["gps"]["tz"]:
       r["gps"]["tz"] = r["gps"]["tz"].zone
     r["gps"]["loc"] = formatlatlon(r["gps"]["lat"], r["gps"]["lng"])
-    r["timestamp"] = str(r["timestamp"])
-    r["gps"]["dtutc"] = str(r["gps"]["dtutc"])
+    if r["timestamp"]:
+      r["timestamp"] = str(r["timestamp"])
+    if r["gps"]["dtutc"]:
+      r["gps"]["dtutc"] = str(r["gps"]["dtutc"])
     return r
   
   def geticon(self, iconfile):
