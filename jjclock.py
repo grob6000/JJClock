@@ -59,10 +59,10 @@ for k in jjrenderer.renderers.keys():
 logging.debug(str(modelist))
 
 # populate menu
-menu = {"config":jjrenderer.renderers["config"]}
+menu = [jjrenderer.renderers["config"],]
 for k, r in jjrenderer.renderers.items():
   if r.isclock and not k == "clock_birthday": # hide birthday mode!
-    menu[k] = r.menuitem
+    menu.append(r)
 logging.debug(menu)
 
 # instantiate a renderer (will reuse this; only instantiate a new one on mode changes)
@@ -74,7 +74,7 @@ menutimeout = 10 # seconds
 pleasequit = False
 currentmode = -1 # initialise as an invalid mode; any mode change will trigger change
 displaymanger = None # set up
-menuitemselected = 0
+menuindexselected = 0
 lastsoftwareupdatecheck = 0
 
 # timing
@@ -92,7 +92,7 @@ displayhash = 0
 ## FUNCTIONS ##
   
 def onButton():
-  global menuitemselected
+  global menuindexselected
   global menu
   global menutimeout_armed
   global t_lastbuttonpress
@@ -105,16 +105,16 @@ def onButton():
   if currentmode == "menu":
     if not currentrenderer.name == "menu":
       currentrenderer = jjrenderer.renderers["menu"]()
-    menuitemselected = (menuitemselected+1)%len(menu) 
-    logging.debug("selected item = " + str(menuitemselected))
-    displaymanager.doRender(currentrenderer, menu=menu, selecteditem=menuitemselected)
+    menuindexselected = (menuindexselected+1)%len(menu) 
+    logging.debug("selected item = " + str(menuindexselected))
+    displaymanager.doRender(currentrenderer, menu=menu, selecteditem=menuindexselected)
   else:
     changeMode("menu")
 
 def onMenuTimeout():
-  global menuitemselected
+  global menuindexselected
   logging.info("menu timeout")
-  changeMode(menu[menuitemselected]["name"])
+  changeMode(menu[menuindexselected].name)
 
 def formatIP(ip):
   return "{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}".format(ip=ip)
@@ -122,7 +122,7 @@ def formatIP(ip):
 def changeMode(mode):
   global modelist
   global currentmode
-  global menuitemselected
+  global menuindexselected
   global menu
   global currentrenderer
   r = None
@@ -143,7 +143,7 @@ def changeMode(mode):
       kwargs["gpsstat"] = gpsstat
     elif mode == "menu":
       # do not change mode for menu
-      kwargs["selecteditem"] = menuitemselected
+      kwargs["selecteditem"] = menuindexselected
       kwargs["menu"] = menu
     else:
       wifimanager.setWifiMode("client") # all other modes should be in client state (if no wifi configured, will be disconnected...)

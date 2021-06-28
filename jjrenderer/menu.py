@@ -41,13 +41,13 @@ class RendererMenu(Renderer):
         menuimg = Image.new('L', RendererMenu.menupatchsize)
         fill(menuimg)
         try:
-          img = getImage(self.menu[mi].getMenuItem()["icon"])
+          img = getImage(self.menu[mi].menuitem["icon"])
         except FileNotFoundError:
           img = getImage("default.png")
         if img:
           menuimg.paste(img.resize((RendererMenu.menuicondim,RendererMenu.menuicondim),Image.ANTIALIAS),(int((RendererMenu.menupatchsize[0]-RendererMenu.menuicondim)/2),20))
         draw2 = ImageDraw.Draw(menuimg)
-        t = self.menu[mi].getMenuItem()["text"]
+        t = self.menu[mi].menuitem["text"]
         fsz = stdfnt.getsize(t)
         draw2.text((int(menuimg.size[0]/2-fsz[0]/2), RendererMenu.menuicondim + 30),t,font=stdfnt,fill=0x00)
         x = int((pi % RendererMenu.menusize[0] + 0.5) * (screen.size[0] / RendererMenu.menusize[0]) - RendererMenu.menupatchsize[0]/2)

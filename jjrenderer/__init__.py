@@ -9,7 +9,6 @@ import logging
 from jjrenderer.renderer import *
 
 ## AUTO IMPORT RENDERERS IN THIS DIR ##
-renderers = {}
 pyfiles = glob.glob(os.path.join(os.path.dirname(__file__), "*.py"))
 for f in pyfiles:
   if os.path.isfile(f) and not os.path.basename(f).startswith("_"):
