@@ -242,9 +242,8 @@ class WebAdmin():
   def providemenu(self, menu=[]):
     logging.debug("menu provided to webadmin")
     self._menudata = []
-    for rname in menu:
-      r = jjrenderer.renderers[rname]
-      md = copy.deepcopy(r.menuitem)
-      md["name"] = r.name
-      md["updateinterval"] = r.updateinterval
+    for rclass in menu:
+      md = copy.deepcopy(rclass.menuitem)
+      md["name"] = rclass.name
+      md["updateinterval"] = rclass.updateinterval
       self._menudata.append(md)

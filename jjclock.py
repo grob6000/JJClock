@@ -100,6 +100,7 @@ def onButton():
   global displaymanager
   global currentrenderer
   t_lastbuttonpress = time.monotonic()
+  menutimeout_armed = True
   logging.info("button pressed, t={0}".format(t_lastbuttonpress))
   if currentmode == "menu":
     if not currentrenderer.name == "menu":
@@ -108,7 +109,6 @@ def onButton():
     logging.debug("selected item = " + str(menuitemselected))
     displaymanager.doRender(currentrenderer, menu=menu, selecteditem=menuitemselected)
   else:
-    menutimeout_armed = True
     changeMode("menu")
 
 def onMenuTimeout():
@@ -346,9 +346,15 @@ if __name__ == "__main__":
       
       t = time.monotonic()
 
-      if menutimeout_armed and t - t_lastbuttonpress > menutimeout:
-        menutimeout_armed = False
-        onMenuTimeout()
+      if pygamedisplay.buttonevent.is_set():
+        pygamedisplay.buttonevent.clear()
+        onButton()
+
+      if menutimeout_armed:
+        tdiff = t - t_lastbuttonpress
+        if tdiff > menutimeout:
+          menutimeout_armed = False
+          onMenuTimeout()
       
       if event_apupdate.is_set():
         event_apupdate.clear()

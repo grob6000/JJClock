@@ -96,6 +96,7 @@ class PygameDisplay(Display):
     self._stopevent = Event()
     self._imglock = Lock()
     self._img = None
+    self.buttonevent = Event()
   
   def displayImage(self, img=None):
     if img and self._pygamethread.is_alive(): # only if pygame is running
@@ -125,6 +126,7 @@ class PygameDisplay(Display):
     logging.debug("pygame thread start")
     pygame.init()
     surf = pygame.display.set_mode(self._windowsize)
+    pygame.fastevent.init()
 
     while not self._stopevent.is_set():
       if self._updateevent.is_set():
@@ -137,10 +139,15 @@ class PygameDisplay(Display):
         pygame.display.flip()
         self._updateevent.clear()
       time.sleep(0.1) # limit loop frequency / encourage other threads to run!
-      for event in pygame.event.get():
+      for event in pygame.fastevent.get():
         if event.type == pygame.QUIT:
           pygame.quit()
           self._stopevent.set()
+        if event.type == pygame.MOUSEBUTTONUP:
+          if event.button == pygame.BUTTON_LEFT:
+            self.buttonevent.set()
+
+
     logging.info("pygame thread quit")
   
   def isrunning(self):
