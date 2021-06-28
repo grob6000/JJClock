@@ -24,6 +24,7 @@ webadmin_port = 80
 
 # updating
 githubtoken = "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"
+githubuser = "grob6000"
 githubrepo = "grob6000/JJClock"
 updatetempfile = "/tmp/jjclock/update.sh"
 minupdateinterval = 3600 * 1 # seconds

@@ -50,6 +50,7 @@ _settingsdefaults =  {
                           "gpson":Setting(name="Enable GPS",value=True,validation="bool"),
                           "autotz":Setting(name="Auto Timezone",value=True,validation="bool"),
                           "manualtz":Setting(name="Timezone (Manual)",value="UTC",validation="list",validationlist=all_timezones),
+                          "githubuser":Setting(name="Github Username", value=jjcommon.githubuser, validation="string"),
                           "githubtoken":Setting(name="Github Access Token", value=jjcommon.githubtoken, validation="string"),
                           "githubrepo":Setting(name="Github Repository", value=jjcommon.githubrepo, validation="string"),
                           "owmkey":Setting(name="Open Weather Maps Key", value=jjcommon.owm_key, validation="string"),
