@@ -16,7 +16,7 @@ class RendererSurpriseClock(Renderer):
     self._clocklist = [] # list of clocks to pick from
     for rclass in renderers.values():
       cname = str(rclass.name).lower()
-      if cname.startswith("clock_") and not cname == "clock_birthday": # only pick clocks; using class name
+      if cname.startswith("clock_") and not cname == "clock_birthday" and not cname == self.name: # only pick clocks; using class name. Not me!
         self._clocklist.append(rclass)
     logging.debug("clocks being used by surprise clock: " + str(self._clocklist))
 
