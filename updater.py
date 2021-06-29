@@ -74,19 +74,11 @@ def doUpdate(tag=None):
   else:
     logging.info("updating now...")
     if "linux" in sys.platform:
-      # make sure temp dir exists
-      tempfile = pathlib.Path(jjcommon.updatetempfile)
-      logging.debug("tempfile = " + str(tempfile.absolute()))
-      subprocess.run(["mkdir", "-p", str(tempfile.parent.absolute())])
-      # copy update script to temp location
+      updatescript = pathlib.Path(jjcommon.scriptpath).joinpath("update.sh").absolute()
       try:
-        subprocess.run(["cp", os.path.join(jjcommon.scriptpath, "update.sh"), str(tempfile.absolute())], check=True)
+        subprocess.Popen(["bash", str(updatescript), jjcommon.scriptpath, settings.getSettingValue("githubuser"), settings.getSettingValue("githubtoken"), tag])
       except subprocess.CalledProcessError:
-        logging.error("could not move update script")
-      try:
-        subprocess.Popen(["bash", tempfile.absolute(), jjcommon.scriptpath, settings.getSettingValue("githubuser"), settings.getSettingValue("githubtoken")], tag)
-      except subprocess.CalledProcessError:
-        logging.error("problem starting update script")
+        logging.error("problem running update script")
     else:
       logging.warning("not able to update on this system")
   # check and return the current version after update
