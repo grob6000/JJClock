@@ -108,13 +108,16 @@ class PygameDisplay(Display):
     return self._windowsize
 
   def restart(self):
+    self.stop()
+    logging.debug("pygame stopped. restarting...")
+    self._pygamethread.start()
+  
+  def stop(self):
     if self._pygamethread.is_alive():
       logging.debug("requesting pygame stop...")
       self._stopevent.set()
       logging.debug("waiting for pygame stop...")
-      self._pygamethread.join()
-    logging.debug("pygame stopped. restarting...")
-    self._pygamethread.start()
+      self._pygamethread.join()  
   
   def __del__(self):
     if logging:

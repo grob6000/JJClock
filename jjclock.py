@@ -29,6 +29,7 @@ import timezonefinder
 #from PIL import Image, ImageDraw, ImageFont
 from github import Github
 import psutil
+from time import sleep
 
 if "linux" in sys.platform:
   from gpiozero import Device, Button
@@ -46,6 +47,7 @@ import wifimanager
 import webadmin
 import settings
 import display
+import updater
 
 ## CONSTANTS ##
 
@@ -75,8 +77,6 @@ pleasequit = False
 currentmode = -1 # initialise as an invalid mode; any mode change will trigger change
 displaymanger = None # set up
 menuindexselected = 0
-lastsoftwareupdatecheck = 0
-swversion = None
 
 # timing
 t_lastbuttonpress = 0
@@ -193,83 +193,25 @@ def getSystemTz():
     return "UTC"
 
 def checkForUpdate():
-  global lastsoftwareupdatecheck
-  global swversion
-
-  try:
-    g = Github(settings.getSettingValue("githubtoken"))
-    repo = g.get_repo(settings.getSettingValue("githubrepo"))
-    rels = repo.get_releases()
-  except:
-    logging.warning("could not connect to github - abandoning update check")
-    return None, None
-
-  latestpub = datetime.datetime.min
-  latestrel = None
-  wgeturl = None
-  tag = None
-  for r in rels:
-    if r.published_at > latestpub:
-      latestpub = r.published_at
-      latestrel = r
-  if latestrel:
-    wgeturl = latestrel.tarball_url
-    tag = latestrel.tag_name
-    logging.debug("found tag " + tag)
-  
-  # get the current tag of the repo
-  myname = None
-  if "linux" in sys.platform:
-    try:
-      myname = subprocess.run(["git", "describe", "--tags", "--abbrev=0"], text=True, capture_output=True).stdout.strip()
-    except subprocess.CalledProcessError:
-      logging.warning("unknown version. will update.")
-  logging.debug("current version: " + str(myname))
-  lastsoftwareupdatecheck = time.monotonic()
-  swversion = myname
-
-  if tag and myname:
-    if myname == tag:
-      logging.info("currently latest version: " + myname + ". no update required.")
+  updater.getCurrentVersion()
+  updater.getLatestVersion()
+  if updater.latestversion and updater.currentversion:
+    if updater.latestversion == updater.currentversion:
+      logging.info("currently latest version: " + updater.latestversion + ". no update required.")
     else:
       if "linux" in sys.platform:
-        logging.info("current version: " + myname + ", available: " + tag)
-        doUpdate(wgeturl, tag)
+        logging.info("current version: " + updater.currentversion + ", available: " + updater.latestversion)
+        displaymanager.doRender(jjrenderer.renderers["updating"], version="{0} --> {1}".format(updater.currentversion, updater.latestversion))
+        logging.debug("killing threads...")
+        wa.stop()
+        gpshandler.disconnect()
+        pygamedisplay.stop()
+        updater.doUpdate(updater.latestversion)
+        updater.restartService() # this quits!
       else:
         logging.warning("will not update on windows")
   else:
     logging.warning("will not update, unknown version information.")
-    
-  return wgeturl, tag
-
-def doUpdate(wgeturl, tag):
-
-  updateok = True
-  logging.info("updating now...")
-  if "linux" in sys.platform:
-    
-    # display an updating screen
-    displaymanager.doRender(jjrenderer.renderers["updating"](), version=tag)
-    
-    # make sure temp dir exists
-    subprocess.run(["mkdir", "/tmp/jjclock"])
-    
-    # copy update script to temp location
-    try:
-      subprocess.run(["cp", os.path.join(scriptpath, "update.sh"), updatetempfile], check=True)
-    except subprocess.CalledProcessError:
-      logging.error("could not move update script")
-      updateok = False     
-      
-    try:
-      subprocess.Popen(["bash", updatetempfile])
-    except subprocess.CalledProcessError:
-      logging.error("problem starting update script")
-      updateok = False
-  
-  # quit if all went well  
-  if updateok:
-    quit()
 
 modifiers = ['', 'k', 'M', 'G', 'T']
 def formatmemory(m):
@@ -343,7 +285,7 @@ if __name__ == "__main__":
   settings.register(["mode"], event_changemode) # change mode when mode setting is updated from web interface (or elsewhere, unquietly)
   settings.register(["manualtz"], event_manualtzupdate) # update the timezone when manual timezone is changed
   settings.register(["apssid", "appass"], event_apupdate) # register wifimanager to respond to future changes to hostapd settings
-
+  
   tlastupdate = time.monotonic()
   while not pleasequit:
       
@@ -371,6 +313,14 @@ if __name__ == "__main__":
         # change mode as per settings
         newmode = settings.getSettingValue("mode")
         changeMode(newmode)
+
+      if wa.updatecheckrequest.is_set():
+        wa.updatecheckrequest.clear()
+        updater.getLatestVersion()
+      
+      if wa.updatedorequest.is_set():
+        wa.updatedorequest.clear()
+        updater.doUpdate() # default tag will be the last checked version
 
       autotz = settings.getSettingValue("autotz")
 
@@ -429,13 +379,23 @@ if __name__ == "__main__":
         updateTime(currentdt.astimezone(tz), True)
 
       # update check
-      if t-lastsoftwareupdatecheck > minupdateinterval:
-        if (dt and dt.hour == updatehour) or t-lastsoftwareupdatecheck > maxupdateinterval:
+      secondssinceupdatecheck = updater.getTimeSinceLastChecked().total_seconds()
+      if secondssinceupdatecheck > minupdateinterval:
+        if (dt and dt.hour == updatehour) or secondssinceupdatecheck > maxupdateinterval:
           checkForUpdate()
 
       # provide status to webadmin
       memoryusage = formatmemory(psutil.Process().memory_info().vms)
-      wa.provideStatus({"tz":tz, "timestamp":currentdt.astimezone(tz), "mode":currentmode, "gps":gpshandler.getStatus(), "memory":memoryusage, "threadstate":{"gps":(gpshandler and gpshandler.isrunning()),"web":(wa and wa.isrunning()),"pygame":(pygamedisplay and pygamedisplay.isrunning())}, "version":swversion})
+      wa.provideStatus({
+        "tz":tz,
+        "timestamp":currentdt.astimezone(tz),
+        "mode":currentmode, 
+        "gps":gpshandler.getStatus(),
+        "memory":memoryusage,
+        "threadstate":{"gps":(gpshandler and gpshandler.isrunning()),"web":(wa and wa.isrunning()),"pygame":(pygamedisplay and pygamedisplay.isrunning())},
+        "currentversion":updater.currentversion,
+        "latestversion":updater.latestversion,
+      })
           
       time.sleep(0.1) # limit frequency / provide a thread opportunity
   

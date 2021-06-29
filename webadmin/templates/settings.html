@@ -8,6 +8,7 @@
 
       function updateall() {
         updatesettings()
+        updateswversion()
       }
 
       function dict2view(dict) {
@@ -17,6 +18,47 @@
           v.push(s)
         }
         return v
+      }
+      
+      function updateswversion() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "api/status", true);
+        xhttp.onreadystatechange = function () {
+          if (this.readyState == 4 && this.status == 200) {
+            jr = JSON.parse(this.responseText);
+            if ("currentversion" in jr) {
+              document.getElementById("currentversion").innerHTML = jr["currentversion"]
+            }
+            if ("latestversion" in jr) {
+              document.getElementById("latestversion").innerHTML = jr["latestversion"]
+              if (!(jr["latestversion"]==null)) {
+                document.getElementById("btn_updatedo").hidden = false
+              }
+            }
+            document.getElementById("btn_updatecheck").disabled = false
+          }
+        }
+        xhttp.send()
+      }
+
+      function checkupdate() {
+        document.getElementById("btn_updatecheck").disabled = true
+        document.getElementById("currentversion").innerHTML = "Checking... Please Wait..."
+        document.getElementById("latestversion").innerHTML = "Checking... Please Wait..."
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "api/update/check", true);
+        xhttp.send()
+        setTimeout(updateswversion, 2500);
+      }
+
+      function doupdate() {
+        btn = document.getElementById("btn_updatedo")
+        btn.hidden = true
+        document.getElementById("currentversion").innerHTML = "Updating... Please Wait..."
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "api/update/do", true);
+        xhttp.send()
+        setTimeout(updateswversion, 20000);
       }
 
       function updatesettings() {
@@ -123,6 +165,13 @@
         <tbody id="settingrows">
         </tbody>
       </table>
+    </div>
+    <h2>Update</h2>
+    <div class="col-12 mb-3">
+      <p>Current Version: <span id="currentversion"></span></p>
+      <p>Available Version: <span id="latestversion"></span></p>
+      <button type="button" class="btn btn-primary" onclick="checkupdate()" id="btn_updatecheck">Check For Update</button>
+      <button type="button" class="btn btn-primary" onclick="doupdate()" hidden id="btn_updatedo">Update Now</button>
     </div>
   </div>
 {% endblock %}
