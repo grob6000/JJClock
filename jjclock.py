@@ -321,6 +321,7 @@ if __name__ == "__main__":
       if wa.updatedorequest.is_set():
         wa.updatedorequest.clear()
         updater.doUpdate() # default tag will be the last checked version
+        updater.restartService() # restart the service!
 
       autotz = settings.getSettingValue("autotz")
 
