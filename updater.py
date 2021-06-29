@@ -69,8 +69,8 @@ def doUpdate(tag=None):
     tag = latestversion
   if not tag:
     logging.warning("updater doesn't know the target version. will not update.")
-  elif tag == currentversion:
-    logging.warning("already this version. will not update.")
+  #elif tag == currentversion: # temporarily allow forced updating
+  #  logging.warning("already this version. will not update.")
   else:
     logging.info("updating now...")
     if "linux" in sys.platform:
