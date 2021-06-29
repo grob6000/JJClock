@@ -76,11 +76,11 @@ def doUpdate(tag=None):
     if "linux" in sys.platform:
       # make sure temp dir exists
       tempfile = pathlib.Path(jjcommon.updatetempfile)
-      logging.debug("tempfile = " + tempfile.absolute())
-      subprocess.run(["mkdir", "-p", tempfile.parent.absolute()])
+      logging.debug("tempfile = " + str(tempfile.absolute()))
+      subprocess.run(["mkdir", "-p", str(tempfile.parent.absolute())])
       # copy update script to temp location
       try:
-        subprocess.run(["cp", os.path.join(jjcommon.scriptpath, "update.sh"), tempfile.absolute()], check=True)
+        subprocess.run(["cp", os.path.join(jjcommon.scriptpath, "update.sh"), str(tempfile.absolute())], check=True)
       except subprocess.CalledProcessError:
         logging.error("could not move update script")
       try:
