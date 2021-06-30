@@ -219,9 +219,7 @@ def doUpdate():
       pygamedisplay.stop() # kill pygame display
     if epddisplay:
       epddisplay.disconnect() # disconnect epddisplay from SPI (if this is still alive when next version starts, will fail)
-    updater.doUpdate(updater.latestversion)
-    logger.error("update did not terminate process. i have to quit now.")
-    quit()
+    updater.doUpdate(updater.latestversion) # this will quit!
   else:
     logger.warning("will not update on windows")
 
