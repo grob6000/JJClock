@@ -261,11 +261,11 @@ def _doAPMode():
     if "linux" in sys.platform:
       lp = logpipe.LogPipe(jjlogger.DEBUG, logger)
       try:
-        subprocess.run(["wpa_cli", "-i", jjcommon.iface, "disconnect"], check=True, strerr=lp, stdout=lp)
-        subprocess.run(["sudo", "ip", "link", "set", "dev", jjcommon.iface, "down"], check=True, strerr=lp, stdout=lp)
-        subprocess.run(["sudo", "ip", "addr", "add", jjcommon.ap_addr+"/25", "dev", jjcommon.iface], check=True, strerr=lp, stdout=lp)
-        subprocess.run(["sudo", "systemctl", "restart", "dnsmasq.service"], check=True, strerr=lp, stdout=lp)
-        subprocess.run(["sudo", "systemctl", "restart", "hostapd.service"], check=True, strerr=lp, stdout=lp)
+        subprocess.run(["wpa_cli", "-i", jjcommon.iface, "disconnect"], check=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        subprocess.run(["sudo", "ip", "link", "set", "dev", jjcommon.iface, "down"], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["sudo", "ip", "addr", "add", jjcommon.ap_addr+"/25", "dev", jjcommon.iface], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["sudo", "systemctl", "restart", "dnsmasq.service"], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["sudo", "systemctl", "restart", "hostapd.service"], check=True, stderr=lp, stdout=lp)
       except subprocess.CalledProcessError:
         logger.error("unsuccessful changing to ap mode")
       else:
@@ -283,14 +283,14 @@ def _doClientMode():
     if "linux" in sys.platform:
       lp = logpipe.LogPipe(jjlogger.DEBUG, logger)
       try:
-        subprocess.run(["sudo", "systemctl", "stop", "hostapd.service"], check=True, strerr=lp, stdout=lp)
-        subprocess.run(["sudo", "systemctl", "stop", "dnsmasq.service"], check=True, strerr=lp, stdout=lp)
-        subprocess.run(["sudo", "ip", "link", "set", "dev", jjcommon.iface, "down"], check=True, strerr=lp, stdout=lp)
-        subprocess.run(["sudo", "ip", "addr", "flush", "dev", jjcommon.iface], check=True, strerr=lp, stdout=lp)
-        subprocess.run(["wpa_cli", "-i", jjcommon.iface, "reconfigure"], check=True, strerr=lp, stdout=lp)
-        subprocess.run(["sudo", "systemctl", "daemon-reload"], check=True, strerr=lp, stdout=lp)
-        subprocess.run(["sudo", "systemctl", "restart", "dhcpcd.service"], check=True, strerr=lp, stdout=lp)
-        subprocess.run(["sudo", "dhclient", jjcommon.iface], check=True, strerr=lp, stdout=lp)
+        subprocess.run(["sudo", "systemctl", "stop", "hostapd.service"], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["sudo", "systemctl", "stop", "dnsmasq.service"], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["sudo", "ip", "link", "set", "dev", jjcommon.iface, "down"], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["sudo", "ip", "addr", "flush", "dev", jjcommon.iface], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["wpa_cli", "-i", jjcommon.iface, "reconfigure"], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["sudo", "systemctl", "daemon-reload"], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["sudo", "systemctl", "restart", "dhcpcd.service"], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["sudo", "dhclient", jjcommon.iface], check=True, stderr=lp, stdout=lp)
       except subprocess.CalledProcessError:
         logger.error("unsuccessful changing to client mode")
       else:
