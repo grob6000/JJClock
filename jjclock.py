@@ -210,7 +210,7 @@ def doUpdate():
   global epddisplay, wa, displaymanager
   if "linux" in sys.platform:
     logger.debug("current version: " + updater.currentversion + ", available: " + updater.latestversion)
-    displaymanager.doRender(jjrenderer.renderers["updating"], version="{0} --> {1}".format(updater.currentversion, updater.latestversion))
+    displaymanager.doRender(jjrenderer.renderers["updating"](), version="{0} --> {1}".format(updater.currentversion, updater.latestversion))
     logger.debug("killing things...")
     if wa:
       wa.stop() # stop web admin
