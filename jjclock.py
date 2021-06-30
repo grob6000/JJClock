@@ -78,6 +78,8 @@ menutimeout = 10 # seconds
 pleasequit = False
 currentmode = -1 # initialise as an invalid mode; any mode change will trigger change
 displaymanger = None # set up
+wa = None
+gpsh = None
 menuindexselected = 0
 
 # timing
@@ -138,7 +140,10 @@ def changeMode(mode):
     if mode == "config":
       # set wifi to AP mode
       wifimanager.setWifiMode("ap")
-      gpsstat = gpshandler.getStatus()
+      if gpsh:
+        gpsstat = gpsh.getStatus()
+      else:
+        gpsstat = None
       kwargs["ssid"] = settings.getSettingValue("apssid")
       kwargs["password"] = settings.getSettingValue("appass")
       kwargs["ip"] = ap_addr
@@ -207,14 +212,15 @@ def checkForUpdate():
     logger.warning("will not update, unknown version information.")
 
 def doUpdate():
-  global epddisplay, wa, displaymanager
+  global epddisplay, wa, displaymanager, gpsh, pygamedisplay
   if "linux" in sys.platform:
     logger.debug("current version: " + updater.currentversion + ", available: " + updater.latestversion)
     displaymanager.doRender(jjrenderer.renderers["updating"](), version="{0} --> {1}".format(updater.currentversion, updater.latestversion))
     logger.debug("killing things...")
     if wa:
       wa.stop() # stop web admin
-    gpshandler.disconnect() # disconnect gps from serial (if this is still alive when next version starts, will fail)
+    if gpsh:
+      gpsh.disconnect() # disconnect gps from serial (if this is still alive when next version starts, will fail)
     if pygamedisplay:
       pygamedisplay.stop() # kill pygame display
     if epddisplay:
@@ -294,8 +300,8 @@ if __name__ == "__main__":
   
   # gps serial
   logger.info("Connecting to GPS...")
-  gpshandler = gpshandler.GpsHandler() # create and start gps handler
-  gpshandler.connect()
+  gpsh = gpshandler.GpsHandler() # create and start gps handler
+  gpsh.connect()
   
   # setting change event registration - other threads might change settings, but reaction to changes should always be routed through the main loop
   settings.register(["mode"], event_changemode) # change mode when mode setting is updated from web interface (or elsewhere, unquietly)
@@ -362,12 +368,12 @@ if __name__ == "__main__":
       p = ""
       gpson = settings.getSettingValue("gpson")
       autotz = settings.getSettingValue("autotz")
-      if gpson and gpshandler.pollUpdated():
+      if gpson and gpsh.pollUpdated():
         # have some gps data I can use
-        stat = gpshandler.getStatus()
+        stat = gpsh.getStatus()
         if stat["hastime"]:
           if autotz and stat["tz"]:
-            dt = gpshandler.getDateTime(local=True)
+            dt = gpsh.getDateTime(local=True)
             p = "using gps time + auto tz: "
             # update timezone cached
             if not tz == stat["tz"]:
@@ -376,7 +382,7 @@ if __name__ == "__main__":
               # update timezone setting --> will trigger system tz update next time around
               settings.setSetting("manualtz", tz.zone)
           else:
-            dt = gpshandler.getDateTime(local=False).astimezone(tz)
+            dt = gpsh.getDateTime(local=False).astimezone(tz)
             p = "using gps time + manual tz: "
       else:
         
@@ -402,13 +408,17 @@ if __name__ == "__main__":
 
       # provide status to webadmin
       memoryusage = formatmemory(psutil.Process().memory_info().vms)
+      if gpsh:
+        gpsstat = gpsh.getStatus()
+      else:
+        gpsstat = None
       wa.provideStatus({
         "tz":tz,
         "timestamp":currentdt.astimezone(tz),
         "mode":currentmode, 
-        "gps":gpshandler.getStatus(),
+        "gps":gpsstat,
         "memory":memoryusage,
-        "threadstate":{"gps":(gpshandler and gpshandler.isrunning()),"web":(wa and wa.isrunning()),"pygame":(pygamedisplay and pygamedisplay.isrunning())},
+        "threadstate":{"gps":(gpsh and gpsh.isrunning()),"web":(wa and wa.isrunning()),"pygame":(pygamedisplay and pygamedisplay.isrunning())},
         "currentversion":updater.currentversion,
         "latestversion":updater.latestversion,
       })
