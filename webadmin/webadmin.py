@@ -3,12 +3,11 @@ from werkzeug.wsgi import FileWrapper
 from io import BytesIO
 import threading
 import ctypes
-import logging
 import wifimanager # should be relatively threadsafe...
 import settings # should be relatively threadsafe...
-import urllib
 import copy
 from PIL import Image
+import waitress
 
 from jjcommon import *
 from gpshandler import formatlatlon
@@ -16,10 +15,16 @@ import jjrenderer
 
 from display import MemoryDisplay
 
+import jjlogger
+logger = jjlogger.getLogger("webadmin")
+jjlogger.subsumeLogger("werkzeug")
+jjlogger.subsumeLogger("waitress")
+
 class WebAdmin():
   
   def __init__(self):
     self._app = Flask(__name__)
+    jjlogger.subsumeLogger(self._app.logger)
     self._worker = threading.Thread(target=self._run, daemon=True)
     self._stopevent = threading.Event()
     self._datalock = threading.Lock()
@@ -61,14 +66,14 @@ class WebAdmin():
       
   def start(self):
     self._worker.start()
-    logging.info("webadmin server started")
+    logger.info("webadmin server started")
   
   def isrunning(self):
     return self._worker.is_alive()
 
   def _get_my_tid(self):
     if not self._worker.is_alive():
-      logging.warning("the webadmin thread is not active")
+      logger.warning("the webadmin thread is not active")
       return None
     
     # do we have it cached?
@@ -87,18 +92,19 @@ class WebAdmin():
       exc = ctypes.py_object(SystemExit)
       res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), exc)
       if res == 0:
-        logging.warning("invalid thread id, could not stop")
+        logger.warning("invalid thread id, could not stop")
       elif res != 1:
         ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), None)
       else:
-        logging.debug("thread stopped")
+        logger.debug("thread stopped")
     else:
-      logging.info("thread was not running, already stopped!")
+      logger.info("thread was not running, already stopped!")
       return
   
   def _run(self):
     try:
-      self._app.run(debug=True, use_reloader=False, host='0.0.0.0', port=webadmin_port)
+      waitress.serve(self._app, listen='*:80')
+      #self._app.run(debug=False, use_reloader=False, host='0.0.0.0', port=webadmin_port)
     except Exception as e:
       print("app stopped: {0}".format(e))
 
@@ -148,7 +154,7 @@ class WebAdmin():
       i = wifimanager.addNetwork(ssid, psk)
       return {"id":i, "ssid":ssid}
     else:
-      logging.warning("bad request to addnetwork")
+      logger.warning("bad request to addnetwork")
       return ""
       
   def removenetwork(self):
@@ -156,7 +162,7 @@ class WebAdmin():
     if network and "id" in network:
       wifimanager.removeNetwork(network["id"])
     else:
-      logging.warning("bad request to addnetwork")
+      logger.warning("bad request to addnetwork")
     return ""
         
   def scan(self):
@@ -169,14 +175,14 @@ class WebAdmin():
     return {"result":"ok"}
   
   def getscreen(self):
-    logging.debug("getscreen")
+    logger.debug("getscreen")
     img = self.display.getImage()
     b = BytesIO()
     img.save(b, format="PNG")
     b.seek(0)
     w = FileWrapper(b)
     r = Response(w, mimetype="image/png", direct_passthrough=True)
-    logging.debug(r)
+    logger.debug(r)
     return r
 
   def getpoll(self):
@@ -191,7 +197,7 @@ class WebAdmin():
       if r["mode"] == "client":
         wifimanager.setWifiMode("client")
     else:
-      logging.warning("bad request to setmode")
+      logger.warning("bad request to setmode")
     return {"mode":wifimanager.getWifiMode()}
 
   def setsetting(self):
@@ -206,11 +212,11 @@ class WebAdmin():
   
   def getsetting(self):
     r = request.get_json(silent=True)
-    logging.debug("getsetting request: " + request.get_data().decode())
+    logger.debug("getsetting request: " + request.get_data().decode())
     s = None
     if r and "settings" in r:
       s = r["settings"]
-      logging.debug("getting partial settings: " + str(s))
+      logger.debug("getting partial settings: " + str(s))
       sdict = settings.getSettings(s)
     else:
       sdict = settings.getAllSettings()
@@ -235,18 +241,18 @@ class WebAdmin():
     return r
   
   def geticon(self, iconfile):
-    logging.debug(iconfile)
+    logger.debug(iconfile)
     i = iconfile
     if not i.startswith("icon_"):
       i = "icon_" + iconfile # only serve stuff starting with icon_ hehe
     p = jjrenderer.getImagePath(i)
-    logging.debug(i + " --> " + str(p.absolute()))
+    logger.debug(i + " --> " + str(p.absolute()))
     if p:
       return send_from_directory(os.path.dirname(p), os.path.basename(p))
     abort(404) # not found otherwise
 
   def providemenu(self, menu=[]):
-    logging.debug("menu provided to webadmin")
+    logger.debug("menu provided to webadmin")
     self._menudata = []
     for rclass in menu:
       md = copy.deepcopy(rclass.menuitem)

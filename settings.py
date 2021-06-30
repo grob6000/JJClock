@@ -1,14 +1,16 @@
 import json
 import os
-import logging
 from pathlib import Path
 from threading import Lock, Event
 import copy
-import jjcommon
 import copy
 from pytz import all_timezones
 
-logging.debug("importing settings.py")
+import jjcommon
+import jjlogger
+logger = jjlogger.getLogger(__name__)
+
+logger.debug("importing settings.py")
 
 class Setting():
   def __init__(self, name="", value=None, validation=None, validationlist=[]):
@@ -30,12 +32,12 @@ class Setting():
       try:
         self._value = int(value)
       except:
-        logging.warning(str(value) + " is not a nice integer, did not update value")
+        logger.warning(str(value) + " is not a nice integer, did not update value")
     elif self.validation == "list":
       if value in self.validationlist:
         self._value = value
       else:
-        logging.warning("attempted to set " + self.name + " to unlisted value " + str(value))
+        logger.warning("attempted to set " + self.name + " to unlisted value " + str(value))
   def getValue(self):
     return self._value
 
@@ -74,7 +76,7 @@ def register(settinglist=None, event=Event()):
   global _settings
   global _settingslock
   if not event:
-    logging.debug("no event specified - not registering")
+    logger.debug("no event specified - not registering")
     return None
   if not settinglist:
     with _settingslock:
@@ -84,7 +86,7 @@ def register(settinglist=None, event=Event()):
       if s in _registry:
         _registry[s].append(event)
       else:
-        logging.debug("no such setting, will not register: " + str(s))
+        logger.debug("no such setting, will not register: " + str(s))
         event = None
   return event
 
@@ -103,7 +105,7 @@ def callUpdate(settinglist=[]):
       if k in _registry:
         events = events.union(set(_registry[k]))
   for ev in events:
-    logging.debug("settings change has triggered event: " + str(ev))
+    logger.debug("settings change has triggered event: " + str(ev))
     ev.set()
 
 def loadSettings():
@@ -114,7 +116,7 @@ def loadSettings():
     with _settingsfilelock:
       with open(_settingspath) as f:
         sdict = json.load(f)
-        logging.debug("settings file found, contains: " + str(sdict))
+        logger.debug("settings file found, contains: " + str(sdict))
 
   with _settingslock:
     # populate defaults
@@ -122,16 +124,16 @@ def loadSettings():
     for k,v in _settingsdefaults.items():
       if not k in _settings.keys():
         _settings[k] = copy.deepcopy(v)
-        logging.debug("adding default setting " + k + " = " + str(_settings[k].getValue()))
+        logger.debug("adding default setting " + k + " = " + str(_settings[k].getValue()))
       addedsomething = True
     # update values based on file
     for k, v in sdict.items():
       if k in _settings.keys():
         _settings[k].setValue(v) # include validation
-        logging.debug("update value of setting " + k + " = " + str(_settings[k].getValue()))
+        logger.debug("update value of setting " + k + " = " + str(_settings[k].getValue()))
       else:
         _settings[k] = Setting(name=k,value=v) # create new setting object
-        logging.debug("generated orphan setting " + k + " = " + str(_settings[k].getValue()))
+        logger.debug("generated orphan setting " + k + " = " + str(_settings[k].getValue()))
   fixRegistry() # make sure all settings are in here
   # re-save if any defaults were added
   if addedsomething:
@@ -143,16 +145,16 @@ def saveSettings():
   sdir = Path(_settingspath).parent
   if not os.path.isdir(sdir):
     os.makedirs(sdir)
-    logging.debug("making settings dir " + str(sdir))
+    logger.debug("making settings dir " + str(sdir))
   with open(_settingspath, 'w') as f:
     with _settingsfilelock:
       global _settings
       sdict={}
       for k,v in _settings.items():
         sdict[k] = v.getValue() # only saving key and value - the rest is internal
-      logging.debug("settings dict to be saved: " + str(sdict))
+      logger.debug("settings dict to be saved: " + str(sdict))
       json.dump(sdict, f)
-  logging.debug("settings saved")
+  logger.debug("settings saved")
 
 def getSettingValue(name):
   with _settingslock:
