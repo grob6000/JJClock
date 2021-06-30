@@ -266,15 +266,10 @@ if __name__ == "__main__":
     displaymanager.displaylist.append(epddisplay) # register display
   else:
     logger.warning("No display on this platform. Using pygame.")
-    
-    #pygamedisplay = display.PygameDisplay(start=False) # don't start just yet...
-    #pygamedisplay.resize = True
-    #displaymanager.displaylist.append(pygamedisplay)
-    #pygamedisplay.restart() # start!
-
-    epddisplay = display.VirtualEPDDisplay()
-    epddisplay.cropbox = cropbox
-    displaymanager.displaylist.append(epddisplay)
+    pygamedisplay = display.PygameDisplay(start=False) # don't start just yet...
+    pygamedisplay.resize = True
+    displaymanager.displaylist.append(pygamedisplay)
+    pygamedisplay.restart() # start!
   
   # admin server
   logger.info("Starting Webserver...")
