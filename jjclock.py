@@ -210,10 +210,13 @@ def doUpdate():
     logging.info("current version: " + updater.currentversion + ", available: " + updater.latestversion)
     displaymanager.doRender(jjrenderer.renderers["updating"], version="{0} --> {1}".format(updater.currentversion, updater.latestversion))
     logging.debug("killing things...")
-    wa.stop() # stop web admin
+    if wa:
+      wa.stop() # stop web admin
     gpshandler.disconnect() # disconnect gps from serial (if this is still alive when next version starts, will fail)
-    pygamedisplay.stop() # kill pygame display
-    epddisplay.disconnect() # disconnect epddisplay from SPI (if this is still alive when next version starts, will fail)
+    if pygamedisplay:
+      pygamedisplay.stop() # kill pygame display
+    if epddisplay:
+      epddisplay.disconnect() # disconnect epddisplay from SPI (if this is still alive when next version starts, will fail)
     updater.doUpdate(updater.latestversion)
     logging.error("update did not terminate process. i have to quit now.")
     quit()
@@ -303,7 +306,7 @@ if __name__ == "__main__":
       
       t = time.monotonic()
 
-      if pygamedisplay.buttonevent.is_set():
+      if pygamedisplay and pygamedisplay.buttonevent.is_set():
         pygamedisplay.buttonevent.clear()
         onButton()
 
