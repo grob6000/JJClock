@@ -4,9 +4,8 @@ import sys
 
 from psutil import virtual_memory
 if "linux" in sys.platform:
-  from IT8951.display import AutoEPDDisplay, VirtualEPDDisplay
+  from IT8951.display import AutoEPDDisplay
   from IT8951 import constants
-import logging
 import pygame
 import time
 import jjrenderer
@@ -14,6 +13,8 @@ import datetime
 from hashlib import md5
 
 import jjcommon
+import jjlogger
+logger = jjlogger.getLogger(__name__)
 
 class DisplayManager:
   
@@ -80,7 +81,7 @@ class EPDDisplay(Display):
     try:
       self._epddisplay = AutoEPDDisplay(vcom=self.vcom)
     except:
-      logging.warning("EPD Display failed to init; will not function")
+      logger.warning("EPD Display failed to init; will not function")
       self._epddisplay = None   
 
   def getSize(self):
@@ -92,16 +93,7 @@ class EPDDisplay(Display):
   def displayImage(self, img=None):
     if img and self._epddisplay:
       self._epddisplay.frame_buf.paste(self._rebox(img), self._getorigin()) # paste image as per the cropbox
-      self._epddisplay.draw_full(constants.DisplayModes.GC16) # display update
-
-# waveshare builin simulator - try it out?
-class VirtualEPDDisplay(EPDDisplay):
-  def connect(self):
-    try:
-      self._epddisplay = VirtualEPDDisplay(dims=jjcommon.screensize)
-    except:
-      logging.warning("Virtual EPD Display failed to init; will not function")
-      self._epddisplay = None      
+      self._epddisplay.draw_full(constants.DisplayModes.GC16) # display update    
 
 class PygameDisplay(Display):
   
@@ -130,24 +122,24 @@ class PygameDisplay(Display):
 
   def restart(self):
     self.stop()
-    logging.debug("pygame stopped. restarting...")
+    logger.debug("pygame stopped. restarting...")
     self._pygamethread.start()
   
   def stop(self):
     if self._pygamethread.is_alive():
-      logging.debug("requesting pygame stop...")
+      logger.debug("requesting pygame stop...")
       self._stopevent.set()
-      logging.debug("waiting for pygame stop...")
+      logger.debug("waiting for pygame stop...")
       self._pygamethread.join()  
   
   def __del__(self):
-    if logging:
-      logging.debug("pygamedisplay __del__")
+    if logger:
+      logger.debug("pygamedisplay __del__")
     self._stopevent.set()
     self._pygamethread.join() # wait for close of thread
 
   def _run(self):
-    logging.debug("pygame thread start")
+    logger.debug("pygame thread start")
     pygame.init()
     surf = pygame.display.set_mode(self._windowsize)
     pygame.fastevent.init()
@@ -172,7 +164,7 @@ class PygameDisplay(Display):
             self.buttonevent.set()
 
 
-    logging.info("pygame thread quit")
+    logger.info("pygame thread quit")
   
   def isrunning(self):
     return self._pygamethread.is_alive()
@@ -219,13 +211,13 @@ class MemoryDisplay(Display):
     with self._screenlock:
       if self._screen:
         img = self._screen.copy()
-    logging.debug(img)
+    logger.debug(img)
     return img
 
 ## TEST SCRIPT ##
 if __name__ == "__main__":
   print("DISPLAY TEST")
-  logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+  logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
   dm = DisplayManager()
   pgd = PygameDisplay(dm.getSize())
   dm.displaylist.append(pgd)
