@@ -3,14 +3,11 @@ import os
 from pathlib import Path
 from threading import Lock, Event
 import copy
-import copy
 from pytz import all_timezones
 
 import jjcommon
 import jjlogger
 logger = jjlogger.getLogger(__name__)
-
-logger.debug("importing settings.py")
 
 class Setting():
   def __init__(self, name="", value=None, validation=None, validationlist=[]):
