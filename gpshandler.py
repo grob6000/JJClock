@@ -168,7 +168,7 @@ class GpsHandler():
           tzname = self._tf.certain_timezone_at(lat=lat,lng=lng)
           tz = pytz.timezone(tzname)
           lasttzcheck = t
-          logger.info("Collected timezone from GPS data")
+          logger.info("Collected timezone from GPS data: " + tzname)
         
         #logger.debug("setting data...")
         # update data
