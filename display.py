@@ -1,8 +1,10 @@
 from PIL import Image
 from threading import Lock, Thread, Event
 import sys
+
+from psutil import virtual_memory
 if "linux" in sys.platform:
-  from IT8951.display import AutoEPDDisplay
+  from IT8951.display import AutoEPDDisplay, VirtualEPDDisplay
   from IT8951 import constants
 import logging
 import pygame
@@ -10,6 +12,8 @@ import time
 import jjrenderer
 import datetime
 from hashlib import md5
+
+import jjcommon
 
 class DisplayManager:
   
@@ -65,11 +69,19 @@ class EPDDisplay(Display):
 
   def __init__(self, vcom=-2.55):
     super().__init__()
+    self._vcom = vcom
+    self.connect()
+  
+  def disconnect(self):
+    del self._epddisplay
+    self._epddisplay = None
+  
+  def connect(self):
     try:
-      self._epddisplay = AutoEPDDisplay(vcom=vcom)
+      self._epddisplay = AutoEPDDisplay(vcom=self.vcom)
     except:
       logging.warning("EPD Display failed to init; will not function")
-      self._epddisplay = None
+      self._epddisplay = None   
 
   def getSize(self):
     if self._epddisplay:
@@ -81,6 +93,15 @@ class EPDDisplay(Display):
     if img and self._epddisplay:
       self._epddisplay.frame_buf.paste(self._rebox(img), self._getorigin()) # paste image as per the cropbox
       self._epddisplay.draw_full(constants.DisplayModes.GC16) # display update
+
+# waveshare builin simulator - try it out?
+class VirtualEPDDisplay(EPDDisplay):
+  def connect(self):
+    try:
+      self._epddisplay = VirtualEPDDisplay(dims=jjcommon.screensize)
+    except:
+      logging.warning("Virtual EPD Display failed to init; will not function")
+      self._epddisplay = None      
 
 class PygameDisplay(Display):
   

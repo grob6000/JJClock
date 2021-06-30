@@ -193,25 +193,32 @@ def getSystemTz():
     return "UTC"
 
 def checkForUpdate():
+  # this does a version check before proceeding
   updater.getCurrentVersion()
   updater.getLatestVersion()
   if updater.latestversion and updater.currentversion:
     if updater.latestversion == updater.currentversion:
       logging.info("currently latest version: " + updater.latestversion + ". no update required.")
     else:
-      if "linux" in sys.platform:
-        logging.info("current version: " + updater.currentversion + ", available: " + updater.latestversion)
-        displaymanager.doRender(jjrenderer.renderers["updating"], version="{0} --> {1}".format(updater.currentversion, updater.latestversion))
-        logging.debug("killing threads...")
-        wa.stop()
-        gpshandler.disconnect()
-        pygamedisplay.stop()
-        updater.doUpdate(updater.latestversion)
-        updater.restartService() # this quits!
-      else:
-        logging.warning("will not update on windows")
+      doUpdate()
   else:
     logging.warning("will not update, unknown version information.")
+
+def doUpdate():
+  global epddisplay, wa, displaymanager
+  if "linux" in sys.platform:
+    logging.info("current version: " + updater.currentversion + ", available: " + updater.latestversion)
+    displaymanager.doRender(jjrenderer.renderers["updating"], version="{0} --> {1}".format(updater.currentversion, updater.latestversion))
+    logging.debug("killing things...")
+    wa.stop() # stop web admin
+    gpshandler.disconnect() # disconnect gps from serial (if this is still alive when next version starts, will fail)
+    pygamedisplay.stop() # kill pygame display
+    epddisplay.disconnect() # disconnect epddisplay from SPI (if this is still alive when next version starts, will fail)
+    updater.doUpdate(updater.latestversion)
+    logging.error("update did not terminate process. i have to quit now.")
+    quit()
+  else:
+    logging.warning("will not update on windows")
 
 modifiers = ['', 'k', 'M', 'G', 'T']
 def formatmemory(m):
@@ -243,9 +250,8 @@ if __name__ == "__main__":
   
   # init display(s)
   displaymanager = display.DisplayManager(size=(cropbox[2]-cropbox[0], cropbox[3]-cropbox[1])) # display manager primary surface will be the size of the target surface of the display
-  pygamedisplay = display.PygameDisplay(start=False) # don't start just yet...
-  pygamedisplay.resize = True
-  displaymanager.displaylist.append(pygamedisplay)
+  pygamedisplay = None
+  epddisplay = None
   if "linux" in sys.platform:
     logging.info("init epd display")
     epddisplay = display.EPDDisplay(vcom=display_vcom) # init epd display
@@ -253,6 +259,12 @@ if __name__ == "__main__":
     displaymanager.displaylist.append(epddisplay) # register display
   else:
     logging.warning("no display on this platform. using pygame.")
+    pygamedisplay = display.PygameDisplay(start=False) # don't start just yet...
+    pygamedisplay.resize = True
+    displaymanager.displaylist.append(pygamedisplay)
+    epddisplay = display.VirtualEPDDisplay()
+    epddisplay.cropbox = cropbox
+    displaymanager.displaylist.append(epddisplay)
     pygamedisplay.restart() # start!
   
   # admin server
@@ -321,7 +333,6 @@ if __name__ == "__main__":
       if wa.updatedorequest.is_set():
         wa.updatedorequest.clear()
         updater.doUpdate() # default tag will be the last checked version
-        updater.restartService() # restart the service!
 
       autotz = settings.getSettingValue("autotz")
 

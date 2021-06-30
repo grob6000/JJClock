@@ -76,7 +76,7 @@ def doUpdate(tag=None):
     if "linux" in sys.platform:
       updatescript = pathlib.Path(jjcommon.scriptpath).joinpath("update.sh").absolute()
       try:
-        subprocess.Popen(["bash", str(updatescript), jjcommon.scriptpath, settings.getSettingValue("githubuser"), settings.getSettingValue("githubtoken"), tag])
+        subprocess.Popen(["bash", str(updatescript), jjcommon.scriptpath, settings.getSettingValue("githubuser"), settings.getSettingValue("githubtoken"), tag], start_new_session=True)
       except subprocess.CalledProcessError:
         logging.error("problem running update script")
     else:
@@ -91,8 +91,8 @@ def restartService():
     subprocess.Popen(["sudo", "systemctl", "restart", "jjclock.service"], start_new_session=True)
   else:
     logging.warning("no service to stop on this platform")
-  for i in range(10,1,-1):
+  for i in range(60,1,-1):
     logging.debug("quit in " + str(i))
     time.sleep(1)
-  logging.debug("service was not terminated, quitting internally")
+  logging.debug("service was not terminated - this process probably not the service. quitting")
   quit()
