@@ -8,6 +8,7 @@ import copy
 ## MODULES ##
 
 import jjcommon
+import settings
 import jjlogger
 logger = jjlogger.getLogger(__name__)
 
