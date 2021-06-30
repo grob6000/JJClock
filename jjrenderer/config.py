@@ -16,7 +16,7 @@ class RendererConfig(Renderer):
     # header
     t = "Configuration"
     tsz = RendererConfig.bigfont.getsize(t)
-    configicon = getImage("config")
+    configicon = getImage("icon_config")
     x0 = int((screen.size[0] - configicon.size[0] - tsz[0] - 50) / 2)
     y0 = 200
     screen.paste(configicon, (x0, y0))
