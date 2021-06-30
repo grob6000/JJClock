@@ -1,5 +1,4 @@
 import subprocess
-import logging
 import github
 import datetime
 import sys
@@ -10,6 +9,8 @@ from threading import Lock
 
 import settings
 import jjcommon
+import jjlogger
+logger = jjlogger.getLogger(__name__)
 
 currentversion = None
 latestversion = None
@@ -21,9 +22,9 @@ def getCurrentVersion():
   try:
     tag = subprocess.run(["git", "describe", "--tags", "--abbrev=0"], text=True, capture_output=True).stdout.strip()
   except subprocess.CalledProcessError:
-    logging.warning("could not determine current repository version")
+    logger.warning("could not determine current repository version")
     tag = None
-  logging.debug("determined current version: " + str(tag))
+  logger.debug("determined current version: " + str(tag))
   currentversion = tag
   return tag
 
@@ -43,7 +44,7 @@ def getLatestVersion():
     repo = g.get_repo(settings.getSettingValue("githubrepo"))
     rels = repo.get_releases()
   except:
-    logging.warning("could not connect to github - abandoning update check")
+    logger.warning("could not connect to github - abandoning update check")
     latestversion = None
   latestpub = datetime.datetime.min
   latestrel = None
@@ -54,7 +55,7 @@ def getLatestVersion():
       latestrel = r
   if latestrel:
     tag = latestrel.tag_name
-    logging.info("retrieved latest github repo version: " + tag)
+    logger.info("retrieved latest github repo version: " + tag)
   latestversion = tag
   lastchecked = datetime.datetime.utcnow()
   return tag
@@ -63,36 +64,32 @@ def getLatestVersion():
 def doUpdate(tag=None):
   global latestversion
   global currentversion
-  logging.debug(tag)
+  logger.debug(tag)
   if not tag:
-    logging.debug("using latest version")
+    logger.debug("using latest version")
     tag = latestversion
   if not tag:
-    logging.warning("updater doesn't know the target version. will not update.")
+    logger.warning("updater doesn't know the target version. will not update.")
   #elif tag == currentversion: # temporarily allow forced updating
-  #  logging.warning("already this version. will not update.")
+  #  logger.warning("already this version. will not update.")
   else:
-    logging.info("updating now...")
+    logger.info("updating now...")
     if "linux" in sys.platform:
       updatescript = pathlib.Path(jjcommon.scriptpath).joinpath("update.sh").absolute()
       try:
         subprocess.Popen(["bash", str(updatescript), jjcommon.scriptpath, settings.getSettingValue("githubuser"), settings.getSettingValue("githubtoken"), tag], start_new_session=True)
       except subprocess.CalledProcessError:
-        logging.error("problem running update script")
+        logger.error("problem running update script")
     else:
-      logging.warning("not able to update on this system")
-  # check and return the current version after update
-  return getCurrentVersion()
+      logger.warning("not able to update on this system")
 
 # asks system to restart the service, and quits
 def restartService():
   if "linux" in sys.platform:
-    logging.info("requesting service restart...")
+    logger.info("requesting service restart...")
     subprocess.Popen(["sudo", "systemctl", "restart", "jjclock.service"], start_new_session=True)
-  else:
-    logging.warning("no service to stop on this platform")
-  for i in range(60,1,-1):
-    logging.debug("quit in " + str(i))
     time.sleep(1)
-  logging.debug("service was not terminated - this process probably not the service. quitting")
-  quit()
+    logger.debug("service was not terminated - this process probably not the service. quitting")
+    quit()
+  else:
+    logger.warning("no service to stop on this platform")

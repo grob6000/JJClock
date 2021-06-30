@@ -8,15 +8,16 @@ import pkg_resources
 
 # set up logger
 import logging
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+import jjlogger
+logger = jjlogger.getLogger(None)
 
 ## INSTALL ANY MISSING PACKAGES ##
-required = {"numpy", "pyserial", "timezonefinder", "pytz", "pydbus", "pygithub", "gpiozero", "pillow", "flask", "pyowm", "pygame", "psutil"}
+required = {"numpy", "pyserial", "timezonefinder", "pytz", "pydbus", "pygithub", "gpiozero", "pillow", "flask", "pyowm", "pygame", "psutil", "waitress"}
 installed = {pkg.key for pkg in pkg_resources.working_set}
 missing = required - installed
 if missing:
     # implement pip as a subprocess:
-    logging.info("installing packages: " + str(missing))
+    logger.info("installing packages: " + str(missing))
     subprocess.check_call([sys.executable, '-m', 'pip', 'install',*missing])
 
 ## INCLUDES (remaining) ##
@@ -53,19 +54,20 @@ import updater
 
 from jjcommon import *
 
+# collect all availabel modes
 modelist = ["splash","menu","config"]
 # load renderers, generate menu
 for k in jjrenderer.renderers.keys():
     if not k in modelist:
       modelist.append(k)
-logging.debug(str(modelist))
+logging.debug("modelist = " + str(modelist))
 
 # populate menu
 menu = [jjrenderer.renderers["config"],]
 for k, r in jjrenderer.renderers.items():
   if r.isclock and not k == "clock_birthday": # hide birthday mode!
     menu.append(r)
-logging.debug(menu)
+logging.debug("menu = " + str(menu))
 
 # instantiate a renderer (will reuse this; only instantiate a new one on mode changes)
 currentrenderer = jjrenderer.Renderer()
@@ -102,19 +104,19 @@ def onButton():
   global currentrenderer
   t_lastbuttonpress = time.monotonic()
   menutimeout_armed = True
-  logging.info("button pressed, t={0}".format(t_lastbuttonpress))
+  logger.info("button pressed, t={0}".format(t_lastbuttonpress))
   if currentmode == "menu":
     if not currentrenderer.name == "menu":
       currentrenderer = jjrenderer.renderers["menu"]()
     menuindexselected = (menuindexselected+1)%len(menu) 
-    logging.debug("selected item = " + str(menuindexselected))
+    logger.debug("selected item = " + str(menuindexselected))
     displaymanager.doRender(currentrenderer, menu=menu, selecteditem=menuindexselected)
   else:
     changeMode("menu")
 
 def onMenuTimeout():
   global menuindexselected
-  logging.info("menu timeout")
+  logger.info("menu timeout")
   changeMode(menu[menuindexselected].name)
 
 def formatIP(ip):
@@ -129,7 +131,7 @@ def changeMode(mode):
   r = None
   kwargs = {"mode":mode}
   if mode in modelist and not mode == currentmode:
-    logging.info("changing mode to " + mode)
+    logger.info("changing mode to " + mode)
     currentmode = mode
     settings.setSetting("mode", mode, quiet=True) # update quietly; don't trigger registered events (they might have come here!)
     r = None
@@ -155,11 +157,11 @@ def changeMode(mode):
       currentrenderer = jjrenderer.Renderer()
     displaymanager.doRender(currentrenderer,**kwargs)
   else:
-    logging.warning("same or invalid mode " + mode + " - not changing")
+    logger.warning("same or invalid mode " + mode + " - not changing")
   
 def updateTime(dt, force=False):
   if force:
-    logging.debug("forcing display update!")
+    logger.debug("forcing display update!")
   global currentdt
   #global renderers
   global currentmode
@@ -178,18 +180,18 @@ def updateTime(dt, force=False):
 
 def setSystemTz(tzname):
     if "linux" in sys.platform:
-        logging.info("updating system timezone")
+        logger.info("updating system timezone")
         r = subprocess.run(["sudo","timedatectl","set-timezone",tzname])
         if r.returncode == 0:
-          logging.info("success - system timezone changed to " + getSystemTz())
+          logger.info("success - system timezone changed to " + getSystemTz())
     else:
-      logging.warning("non-linux os: cannot update system timezone.")
+      logger.warning("non-linux os: cannot update system timezone.")
 
 def getSystemTz():
   if "linux" in sys.platform:
     return pydbus.SystemBus().get(".timedate1").Timezone
   else:
-    logging.warning("cannot access system timezone. returning dummy.")
+    logger.warning("cannot access system timezone. returning dummy.")
     return "UTC"
 
 def checkForUpdate():
@@ -198,18 +200,18 @@ def checkForUpdate():
   updater.getLatestVersion()
   if updater.latestversion and updater.currentversion:
     if updater.latestversion == updater.currentversion:
-      logging.info("currently latest version: " + updater.latestversion + ". no update required.")
+      logger.info("currently latest version: " + updater.latestversion + ". no update required.")
     else:
       doUpdate()
   else:
-    logging.warning("will not update, unknown version information.")
+    logger.warning("will not update, unknown version information.")
 
 def doUpdate():
   global epddisplay, wa, displaymanager
   if "linux" in sys.platform:
-    logging.info("current version: " + updater.currentversion + ", available: " + updater.latestversion)
+    logger.debug("current version: " + updater.currentversion + ", available: " + updater.latestversion)
     displaymanager.doRender(jjrenderer.renderers["updating"], version="{0} --> {1}".format(updater.currentversion, updater.latestversion))
-    logging.debug("killing things...")
+    logger.debug("killing things...")
     if wa:
       wa.stop() # stop web admin
     gpshandler.disconnect() # disconnect gps from serial (if this is still alive when next version starts, will fail)
@@ -218,10 +220,10 @@ def doUpdate():
     if epddisplay:
       epddisplay.disconnect() # disconnect epddisplay from SPI (if this is still alive when next version starts, will fail)
     updater.doUpdate(updater.latestversion)
-    logging.error("update did not terminate process. i have to quit now.")
+    logger.error("update did not terminate process. i have to quit now.")
     quit()
   else:
-    logging.warning("will not update on windows")
+    logger.warning("will not update on windows")
 
 modifiers = ['', 'k', 'M', 'G', 'T']
 def formatmemory(m):
@@ -237,52 +239,57 @@ event_manualtzupdate = Event()
 
 ## SCRIPT ##
 if __name__ == "__main__":
+
+  logger.info("JJClock starts!")
   
   # load settings
   settings._settingsdefaults["mode"].validationlist = modelist # use mode list to select from
   settings.loadSettings()
 
   # init gpio
+  logger.info("Initializing GPIO...")
   if "linux" in sys.platform:
-    logging.info("init gpio")
     #Device.pin_factory = MockFactory()
     userbutton = Button(buttongpio, bounce_time=debounce/1000.0)
     userbutton.when_pressed = onButton
   else:
-    logging.warning("GPIO not available on this platform, no button enabled.")
+    logger.warning("GPIO not available on this platform, no button enabled.")
   
   # init display(s)
+  logger.info("Initializing Display...")
   displaymanager = display.DisplayManager(size=(cropbox[2]-cropbox[0], cropbox[3]-cropbox[1])) # display manager primary surface will be the size of the target surface of the display
   pygamedisplay = None
   epddisplay = None
   if "linux" in sys.platform:
-    logging.info("init epd display")
     epddisplay = display.EPDDisplay(vcom=display_vcom) # init epd display
     epddisplay.cropbox = cropbox # set cropbox to match frame
     displaymanager.displaylist.append(epddisplay) # register display
   else:
-    logging.warning("no display on this platform. using pygame.")
-    pygamedisplay = display.PygameDisplay(start=False) # don't start just yet...
-    pygamedisplay.resize = True
-    displaymanager.displaylist.append(pygamedisplay)
+    logger.warning("No display on this platform. Using pygame.")
+    
+    #pygamedisplay = display.PygameDisplay(start=False) # don't start just yet...
+    #pygamedisplay.resize = True
+    #displaymanager.displaylist.append(pygamedisplay)
+    #pygamedisplay.restart() # start!
+
     epddisplay = display.VirtualEPDDisplay()
     epddisplay.cropbox = cropbox
     displaymanager.displaylist.append(epddisplay)
-    pygamedisplay.restart() # start!
   
   # admin server
-  logging.info("starting webserver")
+  logger.info("Starting Webserver...")
   wa = webadmin.WebAdmin()
   wa.start()
   displaymanager.displaylist.append(wa.display)
   wa.providemenu(menu)
 
   # wifi manager init
+  logger.info("Setting up Wifi Configuration...")
   wifimanager.readHostapd() # read the official hostapd from system
   wifimanager.updateHostapd(settings.getSettingValue("apssid"), settings.getSettingValue("appass")) # update hostapd with settings
 
   # now screen is running, check for update
-  logging.info("checking for update...")
+  logger.info("Checking for Update...")
   checkForUpdate()
   
   # load system timezone
@@ -293,6 +300,7 @@ if __name__ == "__main__":
   changeMode(settings.getSettingValue("mode"))
   
   # gps serial
+  logger.info("Connecting to GPS...")
   gpshandler = gpshandler.GpsHandler() # create and start gps handler
   gpshandler.connect()
   
@@ -346,11 +354,11 @@ if __name__ == "__main__":
         try:
           tztemp = pytz.timezone(manualtz)
         except pytz.UnknownTimeZoneError:
-          logging.warning("bad manual timezone: " + manualtz)
+          logger.warning("bad manual timezone: " + manualtz)
         else:
           tzchanged = bool(not (tz.zone == tztemp.zone))
           if tzchanged:
-            logging.debug("tzchanged")
+            logger.debug("tzchanged")
           tz = tztemp
       
       if tzchanged and not getSystemTz() == tz.zone:
@@ -385,7 +393,7 @@ if __name__ == "__main__":
           p = "using system time + manual tz: "
 
       if dt:
-        logging.debug(p + dt.strftime("%H:%M:%S %z") + " (" + tz.zone + ")")
+        logger.debug(p + dt.strftime("%H:%M:%S %z") + " (" + tz.zone + ")")
         tlastupdate = t
         updateTime(dt)
       elif tzchanged:
@@ -415,4 +423,4 @@ if __name__ == "__main__":
       time.sleep(0.1) # limit frequency / provide a thread opportunity
   
   # Close the window and quit.
-  logging.info("quitting")
+  logger.info("Exiting")

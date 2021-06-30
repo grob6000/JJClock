@@ -9,7 +9,9 @@ import atexit
 import time
 from sys import platform
 import datetime
-import logging
+
+import jjlogger
+logger = jjlogger.getLogger(__name__)
 
 def formatlatlon(lat, lng):
   if lat and lng:
@@ -31,7 +33,7 @@ class GpsHandler():
   _tzcheckinterval = 300
   
   def __init__(self, port='/dev/serial0'):
-    logging.debug("initializing gpshandler")
+    logger.debug("initializing gpshandler")
     self._datalock = threading.Lock()
     self._stopevent = threading.Event()
     self._newdataevent = threading.Event()
@@ -55,7 +57,7 @@ class GpsHandler():
   
   def connect(self):
     if self._worker.is_alive():
-      logging.warning("already connected!")
+      logger.warning("already connected!")
     else:
       self._worker.start()
   
@@ -63,9 +65,9 @@ class GpsHandler():
     if self._worker.is_alive():
       self._stopevent.set()
       self._worker.join()
-      logging.info("gps listener disconnected")
+      logger.info("gps listener disconnected")
     else:
-      logging.warning("already disconnected!")
+      logger.warning("already disconnected!")
   
   def isrunning(self):
     return self._worker.is_alive()
@@ -110,29 +112,29 @@ class GpsHandler():
   def _run(self):
   
     if not "linux" in platform:
-      logging.warning("no serial, handler will quit (blank values available only)")
+      logger.warning("no serial, handler will quit (blank values available only)")
       return
     
-    logging.debug("opening port" + self._port)
+    logger.debug("opening port" + self._port)
     try:
       ser = serial.Serial(self._port, GpsHandler._baud, timeout=1)
     except serial.serialutil.SerialException:
-      logging.error("could not open port. GPS will not be initialized. thread quit.")
+      logger.error("could not open port. GPS will not be initialized. thread quit.")
       return
       
     lasttzcheck = time.monotonic() - GpsHandler._tzcheckinterval # keep track of when timezone was last checked; set up to trigger soonish
     while not self._stopevent.is_set(): # repeat until stop
-      #logging.debug("waiting for serial input...")
+      #logger.debug("waiting for serial input...")
       line = ser.readline()# readline from serial - timeouts will return 
-      #logging.debug("serial received: " + line.decode('ascii'))
+      #logger.debug("serial received: " + line.decode('ascii'))
       try:
         fields = line.decode('ascii').split(",")
       except UnicodeDecodeError:
-        logging.error("gps serial data garbage line - ignoring")
+        logger.error("gps serial data garbage line - ignoring")
         fields = [""]
         
       if fields[0] == "$GPRMC": # only parse GPRMC messages
-        #logging.debug("received message: " + str(fields))
+        #logger.debug("received message: " + str(fields))
         # utc time
         dt_utc = None
         if (len(fields[1]) >= 6) and (len(fields[9]) >= 6):
@@ -165,7 +167,7 @@ class GpsHandler():
           tzname = self._tf.certain_timezone_at(lat=lat,lng=lng)
           tz = pytz.timezone(tzname)
         
-        #logging.debug("setting data...")
+        #logger.debug("setting data...")
         # update data
         with self._datalock:
           if dt_utc:
@@ -181,9 +183,9 @@ class GpsHandler():
             self._signalok = sigok
             
         self._newdataevent.set() # set event for new data
-        #logging.debug("newdataevent status = {0}".format(self._newdataevent.is_set()))
+        #logger.debug("newdataevent status = {0}".format(self._newdataevent.is_set()))
   
     ser.close() # after quit, close the serial port
-    logging.info("quit gpshandler thread success")
+    logger.info("quit gpshandler thread success")
     
       

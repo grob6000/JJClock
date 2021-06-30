@@ -2,14 +2,14 @@
 
 import sys
 import subprocess
-import logging
 import threading
 import copy
 
-## COMMON DATA ##
+## MODULES ##
 
 import jjcommon
-import settings
+import jjlogger
+logger = jjlogger.getLogger(__name__)
 
 ## MODULE GLOBALS ##
 
@@ -59,14 +59,14 @@ def readHostapd():
         hostapdtext = subprocess.run(["cat", "/etc/hostapd/hostapd.conf"], capture_output=True, text=True, check=True)
         conf = _parseconftext(hostapdtext)
       except subprocess.CalledProcessError:
-        logging.error("could not read hostapd.conf - using default")
+        logger.error("could not read hostapd.conf - using default")
         conf = copy.deepcopy(_hostapdconf)
     else:
       # dummy - return global memory version without reading anything
-      logging.warning("no hostapd.conf - returning internal copy only")
+      logger.warning("no hostapd.conf - returning internal copy only")
       conf = copy.deepcopy(_hostapdconf)
   
-  logging.debug("read hostapdconf: " + str(_hostapdconf))
+  logger.debug("read hostapdconf: " + str(_hostapdconf))
   return conf
 
 def writeHostapd():
@@ -74,20 +74,20 @@ def writeHostapd():
   global _wifimanagerlock
   with _wifimanagerlock:
     global _hostapdconf, _currentwifimode
-    logging.debug("writing hostapdconf: " + str(_hostapdconf))
+    logger.debug("writing hostapdconf: " + str(_hostapdconf))
     if "linux" in sys.platform:
       with open("/tmp/hostapd.conf", "w") as f:
         f.write(_makeconftext(_hostapdconf))
       try:
         subprocess.run(["sudo", "cp", "/tmp/hostapd.conf", "/etc/hostapd/hostapd.conf"], check=True)
       except subprocess.CalledProcessError:
-        logging.error("could not copy hostapd.conf")
+        logger.error("could not copy hostapd.conf")
       if _currentwifimode == "ap":
         # restart ap mode
         needtochange = True
     else:
       # dummy - return global memory version without reading anything
-      logging.warning("no hostapd.conf - will not write")
+      logger.warning("no hostapd.conf - will not write")
   if needtochange:
     _doAPMode()
 
@@ -107,7 +107,7 @@ def updateHostapd(apssid, appass):
   if modified:
     writeHostapd()
   else:
-    logging.debug("no need to update hostapd; details not changed")
+    logger.debug("no need to update hostapd; details not changed")
 
 
 def getChannel(freq):
@@ -149,9 +149,9 @@ def getNetworks():
         else:
           for n in networks:
             n["connected"] = False
-          logging.error("could not get wifi status")
+          logger.error("could not get wifi status")
     else:
-      logging.error("cannot access wifi config")
+      logger.error("cannot access wifi config")
       global _dummynetworks
       networks = _dummynetworks
   return networks
@@ -177,11 +177,11 @@ def scanNetworks():
                 scannetworks.append(network)
                 i = i + 1
         else:
-          logging.error("could not retrieve scanned networks")
+          logger.error("could not retrieve scanned networks")
       else:
-        logging.error("could not scan wifi networks")
+        logger.error("could not scan wifi networks")
     else:
-      logging.error("cannot access wifi config")
+      logger.error("cannot access wifi config")
       global _dummyscanresult
       scannetworks = _dummyscanresult
   return scannetworks
@@ -193,12 +193,12 @@ def removeNetwork(netindex):
     if "linux" in sys.platform:
       cp = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "remove_network", str(netindex)], capture_output=True, text=True)
       if not "OK" in cp.stdout:
-        logging.error("could not delete network " + str(netindex))
+        logger.error("could not delete network " + str(netindex))
       cp = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "save_config"], capture_output=True, text=True)
       if not "OK" in cp.stdout:
-        logging.error("error saving wifi config")
+        logger.error("error saving wifi config")
     else:
-      logging.error("cannot access wifi config")
+      logger.error("cannot access wifi config")
       global _dummynetworks
       for n in _dummynetworks:
         if n["id"] == netindex:
@@ -217,29 +217,29 @@ def addNetwork(ssid, psk=None):
       cp = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "add_network"], capture_output=True, text=True)
       if cp.returncode == 0:
         netindex = int(cp.stdout.strip())
-        logging.debug("netindex={0}".format(netindex))
+        logger.debug("netindex={0}".format(netindex))
         allok = True
         cp2 = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "set_network", str(netindex), "ssid", "\""+str(ssid)+"\""], capture_output=True, text=True)
         if "FAIL" in cp2.stdout:
           allok = False
-          logging.debug("set ssid fail: " + cp2.stdout)
+          logger.debug("set ssid fail: " + cp2.stdout)
         if psk:
           cp2 = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "set_network", str(netindex), "psk", "\""+str(psk)+"\""], capture_output=True, text=True)
           if "FAIL" in cp2.stdout:
             allok = False
-            logging.debug("set psk fail: " + cp2.stdout)
+            logger.debug("set psk fail: " + cp2.stdout)
         else:
-          logging.debug("no psk specified; not adding to entry")
+          logger.debug("no psk specified; not adding to entry")
         if allok:
           cp = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "save_config"], capture_output=True, text=True)
           if not "OK" in cp.stdout:
-            logging.error("error saving wifi config")
+            logger.error("error saving wifi config")
         else:
-          logging.error("error setting ssid/psk for wifi")
+          logger.error("error setting ssid/psk for wifi")
       else:
-        logging.error("error adding wifi network")
+        logger.error("error adding wifi network")
     else:
-      logging.error("cannot access wifi config")
+      logger.error("cannot access wifi config")
       indexused = []
       global _dummynetworks
       for n in _dummynetworks:
@@ -264,11 +264,11 @@ def _doAPMode():
         subprocess.run(["sudo", "systemctl", "restart", "dnsmasq.service"], check=True)
         subprocess.run(["sudo", "systemctl", "restart", "hostapd.service"], check=True)
       except subprocess.CalledProcessError:
-        logging.error("unsuccessful changing to ap mode")
+        logger.error("unsuccessful changing to ap mode")
       else:
         newmode = "ap"
     else:
-      logging.warning("cannot change wifi mode")
+      logger.warning("cannot change wifi mode")
     global _currentwifimode
     _currentwifimode = newmode
   
@@ -287,11 +287,11 @@ def _doClientMode():
         subprocess.run(["sudo", "systemctl", "restart", "dhcpcd.service"], check=True)
         subprocess.run(["sudo", "dhclient", jjcommon.iface], check=True)
       except subprocess.CalledProcessError:
-        logging.error("unsuccessful changing to client mode")
+        logger.error("unsuccessful changing to client mode")
       else:
         newmode = "client"
     else:
-      logging.warning("cannot change wifi mode")
+      logger.warning("cannot change wifi mode")
     global _currentwifimode
     _currentwifimode = newmode  
 
@@ -304,11 +304,11 @@ def reconfigureWifi():
         try:
           subprocess.run(["wpa_cli", "-i", jjcommon.iface, "reconfigure"], check=True)
         except subprocess.CalledProcessError:
-          logging.error("unsuccessful reconfiguring wifi")
+          logger.error("unsuccessful reconfiguring wifi")
       else:
-        logging.warning("cannot reconfigure wifi; in AP mode")
+        logger.warning("cannot reconfigure wifi; in AP mode")
   else:
-    logging.error("cannot reconfigure wifi")
+    logger.error("cannot reconfigure wifi")
     
 _modechangefuncs = {"ap":_doAPMode, "client":_doClientMode}
 
@@ -317,11 +317,11 @@ def setWifiMode(newwifimode):
   with _wifimanagerlock:
     global _currentwifimode
     if _currentwifimode == "changing":
-      logging.warning("wifi mode currently changing; request ignored")
+      logger.warning("wifi mode currently changing; request ignored")
     elif (newwifimode == _currentwifimode):
-      logging.info("wifi mode unchanged")
+      logger.info("wifi mode unchanged")
     elif newwifimode == "ap" or newwifimode == "client":
-      logging.info("wifi mode changing to " + newwifimode)
+      logger.info("wifi mode changing to " + newwifimode)
       global _targetwifimode
       _targetwifimode = newwifimode
       _currentwifimode = "changing"
@@ -329,7 +329,7 @@ def setWifiMode(newwifimode):
       t = threading.Thread(target=_modechangefuncs[newwifimode], daemon=False)
       t.start()
     else:
-      logging.info("invalid wifi mode, no change")
+      logger.info("invalid wifi mode, no change")
 
 def getWifiMode():
   global _wifimanagerlock
