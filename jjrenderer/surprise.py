@@ -1,7 +1,9 @@
 import random
-import logging
 
 from jjrenderer.renderer import *
+
+import jjlogger
+logger = jjlogger.getLogger(__name__)
 
 class RendererSurpriseClock(Renderer):
 
@@ -18,7 +20,7 @@ class RendererSurpriseClock(Renderer):
       cname = str(rclass.name).lower()
       if cname.startswith("clock_") and not cname == "clock_birthday" and not cname == self.name: # only pick clocks; using class name. Not me!
         self._clocklist.append(rclass)
-    logging.debug("clocks being used by surprise clock: " + str(self._clocklist))
+    logger.debug("clocks being used by surprise clock: " + str(self._clocklist))
 
   def doRender(self, screen, **kwargs):
     # maybe pick a new one
@@ -30,7 +32,7 @@ class RendererSurpriseClock(Renderer):
         self._currentrenderer = self._clocklist[rnd]() # instantiate new renderer
         self.updateinterval = self._currentrenderer.updateinterval
         self._lastpickdate = thedate
-        logging.info("surprise clock selected: " + self._currentrenderer.name)
+        logger.info("surprise clock selected: " + self._currentrenderer.name)
     # render using my captive renderer
     screen = self._currentrenderer.doRender(screen, **kwargs)
     return screen
