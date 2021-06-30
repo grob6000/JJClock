@@ -69,7 +69,7 @@ class EPDDisplay(Display):
 
   def __init__(self, vcom=-2.55):
     super().__init__()
-    self._vcom = vcom
+    self.vcom = vcom
     self.connect()
   
   def disconnect(self):
