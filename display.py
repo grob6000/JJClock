@@ -12,7 +12,6 @@ import jjrenderer
 import datetime
 from hashlib import md5
 
-import jjcommon
 import jjlogger
 logger = jjlogger.getLogger(__name__)
 

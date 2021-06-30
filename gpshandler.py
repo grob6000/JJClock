@@ -57,7 +57,7 @@ class GpsHandler():
   
   def connect(self):
     if self._worker.is_alive():
-      logger.warning("already connected!")
+      logger.debug("already connected!")
     else:
       self._worker.start()
   
@@ -65,9 +65,9 @@ class GpsHandler():
     if self._worker.is_alive():
       self._stopevent.set()
       self._worker.join()
-      logger.info("gps listener disconnected")
+      # gps thread reports disconnection
     else:
-      logger.warning("already disconnected!")
+      logger.debug("already disconnected!")
   
   def isrunning(self):
     return self._worker.is_alive()
@@ -115,22 +115,22 @@ class GpsHandler():
       logger.warning("no serial, handler will quit (blank values available only)")
       return
     
-    logger.debug("opening port" + self._port)
     try:
       ser = serial.Serial(self._port, GpsHandler._baud, timeout=1)
     except serial.serialutil.SerialException:
       logger.error("could not open port. GPS will not be initialized. thread quit.")
       return
+    else:
+      logger.info("GPS connected")
       
     lasttzcheck = time.monotonic() - GpsHandler._tzcheckinterval # keep track of when timezone was last checked; set up to trigger soonish
     while not self._stopevent.is_set(): # repeat until stop
-      #logger.debug("waiting for serial input...")
+      
       line = ser.readline()# readline from serial - timeouts will return 
-      #logger.debug("serial received: " + line.decode('ascii'))
       try:
         fields = line.decode('ascii').split(",")
       except UnicodeDecodeError:
-        logger.error("gps serial data garbage line - ignoring")
+        logger.warning("GPS serial data garbage line - ignoring")
         fields = [""]
         
       if fields[0] == "$GPRMC": # only parse GPRMC messages
@@ -163,9 +163,12 @@ class GpsHandler():
     
         # get timezone - check 1/min if all preconditions met (signal quality indicator we will ignore; as long as we have a fix it's probably fine for TZ)
         tz = None
-        if dt_utc and time.monotonic() - lasttzcheck > GpsHandler._tzcheckinterval and lat and lng:
+        t = time.monotonic() # reuse this
+        if dt_utc and t - lasttzcheck > GpsHandler._tzcheckinterval and lat and lng:
           tzname = self._tf.certain_timezone_at(lat=lat,lng=lng)
           tz = pytz.timezone(tzname)
+          lasttzcheck = t
+          logger.info("Collected timezone from GPS data")
         
         #logger.debug("setting data...")
         # update data
@@ -186,6 +189,6 @@ class GpsHandler():
         #logger.debug("newdataevent status = {0}".format(self._newdataevent.is_set()))
   
     ser.close() # after quit, close the serial port
-    logger.info("quit gpshandler thread success")
+    logger.info("GPS disconnected")
     
       

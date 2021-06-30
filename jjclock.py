@@ -106,7 +106,7 @@ def onButton():
   global currentrenderer
   t_lastbuttonpress = time.monotonic()
   menutimeout_armed = True
-  logger.info("button pressed, t={0}".format(t_lastbuttonpress))
+  logger.debug("button pressed, t={0}".format(t_lastbuttonpress))
   if currentmode == "menu":
     if not currentrenderer.name == "menu":
       currentrenderer = jjrenderer.renderers["menu"]()
@@ -118,8 +118,9 @@ def onButton():
 
 def onMenuTimeout():
   global menuindexselected
-  logger.info("menu timeout")
-  changeMode(menu[menuindexselected].name)
+  newmode = menu[menuindexselected].name
+  logger.info("Menu closed")
+  changeMode(newmode)
 
 def formatIP(ip):
   return "{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}".format(ip=ip)
@@ -132,8 +133,12 @@ def changeMode(mode):
   global currentrenderer
   r = None
   kwargs = {"mode":mode}
-  if mode in modelist and not mode == currentmode:
-    logger.info("changing mode to " + mode)
+  if not mode in modelist:
+    logger.warning("Unrecognized mode requested: " + mode)
+  elif mode == currentmode:
+    logger.debug("Already in mode, no change required: " + mode)
+  else:
+    logger.info("Changing mode to: " + mode)
     currentmode = mode
     settings.setSetting("mode", mode, quiet=True) # update quietly; don't trigger registered events (they might have come here!)
     r = None
@@ -150,7 +155,7 @@ def changeMode(mode):
       kwargs["port"] = webadmin_port
       kwargs["gpsstat"] = gpsstat
     elif mode == "menu":
-      # do not change mode for menu
+      # do not change wifimode for menu
       kwargs["selecteditem"] = menuindexselected
       kwargs["menu"] = menu
     else:
@@ -161,8 +166,6 @@ def changeMode(mode):
     else:
       currentrenderer = jjrenderer.Renderer()
     displaymanager.doRender(currentrenderer,**kwargs)
-  else:
-    logger.warning("same or invalid mode " + mode + " - not changing")
   
 def updateTime(dt, force=False):
   if force:
@@ -353,7 +356,7 @@ if __name__ == "__main__":
         try:
           tztemp = pytz.timezone(manualtz)
         except pytz.UnknownTimeZoneError:
-          logger.warning("bad manual timezone: " + manualtz)
+          logger.warning("Bad manual timezone, will not change: " + manualtz)
         else:
           tzchanged = bool(not (tz.zone == tztemp.zone))
           if tzchanged:

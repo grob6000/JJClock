@@ -92,13 +92,13 @@ class WebAdmin():
       exc = ctypes.py_object(SystemExit)
       res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), exc)
       if res == 0:
-        logger.warning("invalid thread id, could not stop")
+        logger.debug("invalid thread id, could not stop")
       elif res != 1:
         ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), None)
       else:
         logger.debug("thread stopped")
     else:
-      logger.info("thread was not running, already stopped!")
+      logger.debug("thread was not running, already stopped!")
       return
   
   def _run(self):
@@ -106,7 +106,7 @@ class WebAdmin():
       waitress.serve(self._app, listen='*:80')
       #self._app.run(debug=False, use_reloader=False, host='0.0.0.0', port=webadmin_port)
     except Exception as e:
-      print("app stopped: {0}".format(e))
+      logger.info("Webapp stopped")
 
   def provideStatus(self, statusdict):
     with self._datalock:

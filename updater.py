@@ -22,7 +22,7 @@ def getCurrentVersion():
   try:
     tag = subprocess.run(["git", "describe", "--tags", "--abbrev=0"], text=True, capture_output=True).stdout.strip()
   except subprocess.CalledProcessError:
-    logger.warning("could not determine current repository version")
+    logger.warning("Could not determine current github repository version")
     tag = None
   logger.debug("determined current version: " + str(tag))
   currentversion = tag
@@ -44,7 +44,7 @@ def getLatestVersion():
     repo = g.get_repo(settings.getSettingValue("githubrepo"))
     rels = repo.get_releases()
   except:
-    logger.warning("could not connect to github - abandoning update check")
+    logger.warning("Could not connect to github - abandoning update check")
     latestversion = None
   latestpub = datetime.datetime.min
   latestrel = None
@@ -55,7 +55,7 @@ def getLatestVersion():
       latestrel = r
   if latestrel:
     tag = latestrel.tag_name
-    logger.info("retrieved latest github repo version: " + tag)
+    logger.info("Latest github repo version: " + tag)
   latestversion = tag
   lastchecked = datetime.datetime.utcnow()
   return tag
@@ -69,31 +69,32 @@ def doUpdate(tag=None):
     logger.debug("using latest version")
     tag = latestversion
   if not tag:
-    logger.warning("updater doesn't know the target version. will not update.")
+    logger.warning("Updater doesn't know the target version. Will not update.")
   #elif tag == currentversion: # temporarily allow forced updating
   #  logger.warning("already this version. will not update.")
   else:
-    logger.info("updating now...")
+    logger.info("Updating now...")
     if "linux" in sys.platform:
       updatescript = pathlib.Path(jjcommon.scriptpath).joinpath("update.sh").absolute()
       try:
         subprocess.Popen(["bash", str(updatescript), jjcommon.scriptpath, settings.getSettingValue("githubuser"), settings.getSettingValue("githubtoken"), tag], start_new_session=True)
       except subprocess.CalledProcessError:
-        logger.error("problem running update script")
+        logger.error("Problem running update script")
       else:
         # rely on update script to restart the service, should quit now to free up resources
         # don't stop the service, as the bash script needs to keep running (should keep going in new session)
+        logger.info("Update initiated, quitting now")
         quit()
     else:
-      logger.warning("not able to update on this system")
+      logger.warning("Not able to update on this system")
 
 # asks system to restart the service, and quits
 def restartService():
   if "linux" in sys.platform:
-    logger.info("requesting service restart...")
-    subprocess.Popen(["sudo", "systemctl", "restart", "jjclock.service"])
+    logger.info("Requesting service restart...")
+    subprocess.Popen(["sudo", "systemctl", "restart", "jjclock.service"]) # if this is within the service, the progam should be terminated
     time.sleep(1)
-    logger.debug("service was not terminated - this process probably not the service. quitting")
+    logger.error("Service was not terminated - this process probably not the service. quitting")
     quit()
   else:
-    logger.warning("no service to stop on this platform")
+    logger.warning("No service to stop on this platform")

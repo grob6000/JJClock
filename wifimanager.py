@@ -9,6 +9,7 @@ import copy
 
 import jjcommon
 import settings
+import logpipe
 import jjlogger
 logger = jjlogger.getLogger(__name__)
 
@@ -258,16 +259,18 @@ def _doAPMode():
   global _wifimanagerlock
   with _wifimanagerlock:
     if "linux" in sys.platform:
+      lp = logpipe.LogPipe(jjlogger.DEBUG, logger)
       try:
-        subprocess.run(["wpa_cli", "-i", jjcommon.iface, "disconnect"], check=True)
-        subprocess.run(["sudo", "ip", "link", "set", "dev", jjcommon.iface, "down"], check=True)
-        subprocess.run(["sudo", "ip", "addr", "add", jjcommon.ap_addr+"/25", "dev", jjcommon.iface], check=True)
-        subprocess.run(["sudo", "systemctl", "restart", "dnsmasq.service"], check=True)
-        subprocess.run(["sudo", "systemctl", "restart", "hostapd.service"], check=True)
+        subprocess.run(["wpa_cli", "-i", jjcommon.iface, "disconnect"], check=True, strerr=lp, stdout=lp)
+        subprocess.run(["sudo", "ip", "link", "set", "dev", jjcommon.iface, "down"], check=True, strerr=lp, stdout=lp)
+        subprocess.run(["sudo", "ip", "addr", "add", jjcommon.ap_addr+"/25", "dev", jjcommon.iface], check=True, strerr=lp, stdout=lp)
+        subprocess.run(["sudo", "systemctl", "restart", "dnsmasq.service"], check=True, strerr=lp, stdout=lp)
+        subprocess.run(["sudo", "systemctl", "restart", "hostapd.service"], check=True, strerr=lp, stdout=lp)
       except subprocess.CalledProcessError:
         logger.error("unsuccessful changing to ap mode")
       else:
         newmode = "ap"
+      lp.close()
     else:
       logger.warning("cannot change wifi mode")
     global _currentwifimode
@@ -278,19 +281,21 @@ def _doClientMode():
   global _wifimanagerlock
   with _wifimanagerlock:
     if "linux" in sys.platform:
+      lp = logpipe.LogPipe(jjlogger.DEBUG, logger)
       try:
-        subprocess.run(["sudo", "systemctl", "stop", "hostapd.service"], check=True)
-        subprocess.run(["sudo", "systemctl", "stop", "dnsmasq.service"], check=True)
-        subprocess.run(["sudo", "ip", "link", "set", "dev", jjcommon.iface, "down"], check=True)
-        subprocess.run(["sudo", "ip", "addr", "flush", "dev", jjcommon.iface], check=True)
-        subprocess.run(["wpa_cli", "-i", jjcommon.iface, "reconfigure"], check=True)
-        subprocess.run(["sudo", "systemctl", "daemon-reload"], check=True)
-        subprocess.run(["sudo", "systemctl", "restart", "dhcpcd.service"], check=True)
-        subprocess.run(["sudo", "dhclient", jjcommon.iface], check=True)
+        subprocess.run(["sudo", "systemctl", "stop", "hostapd.service"], check=True, strerr=lp, stdout=lp)
+        subprocess.run(["sudo", "systemctl", "stop", "dnsmasq.service"], check=True, strerr=lp, stdout=lp)
+        subprocess.run(["sudo", "ip", "link", "set", "dev", jjcommon.iface, "down"], check=True, strerr=lp, stdout=lp)
+        subprocess.run(["sudo", "ip", "addr", "flush", "dev", jjcommon.iface], check=True, strerr=lp, stdout=lp)
+        subprocess.run(["wpa_cli", "-i", jjcommon.iface, "reconfigure"], check=True, strerr=lp, stdout=lp)
+        subprocess.run(["sudo", "systemctl", "daemon-reload"], check=True, strerr=lp, stdout=lp)
+        subprocess.run(["sudo", "systemctl", "restart", "dhcpcd.service"], check=True, strerr=lp, stdout=lp)
+        subprocess.run(["sudo", "dhclient", jjcommon.iface], check=True, strerr=lp, stdout=lp)
       except subprocess.CalledProcessError:
         logger.error("unsuccessful changing to client mode")
       else:
         newmode = "client"
+      lp.close()
     else:
       logger.warning("cannot change wifi mode")
     global _currentwifimode

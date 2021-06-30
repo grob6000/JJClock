@@ -1,6 +1,13 @@
 import logging
 import sys
 
+DEBUG = logging.DEBUG
+INFO = logging.INFO
+WARNING = logging.WARNING
+ERROR = logging.ERROR
+CRITICAL = logging.CRITICAL
+FATAL = logging.FATAL
+
 # create a top level logger
 logger = logging.getLogger("jjclock")
 formatter = logging.Formatter('%(asctime)-12s %(name)-20s %(levelname)-8s %(message)s', '%Y-%m-%d %H:%M:%S')
