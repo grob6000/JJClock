@@ -12,7 +12,7 @@ import jjlogger
 logger = jjlogger.getLogger(None)
 
 ## INSTALL ANY MISSING PACKAGES ##
-required = {"numpy", "pyserial", "timezonefinder", "pytz", "pydbus", "pygithub", "gpiozero", "pillow", "flask", "pyowm", "pygame", "psutil", "waitress"}
+required = {"numpy", "pyserial", "timezonefinder", "pytz", "pydbus", "pygithub", "gpiozero", "pillow", "flask", "pyowm", "pygame", "psutil", "waitress", "sdnotify"}
 installed = {pkg.key for pkg in pkg_resources.working_set}
 missing = required - installed
 if missing:
@@ -39,6 +39,7 @@ if "linux" in sys.platform:
   from IT8951 import constants
   import pydbus
   import subprocess
+  import sdnotify
 
 ## LOCAL MODULES ##
 
@@ -85,6 +86,12 @@ menuindexselected = 0
 # timing
 t_lastbuttonpress = 0
 menutimeout_armed = False
+
+# systemd watchdog
+wdev = os.getenv('WATCHDOG_USEC')
+watchdoginterval = 30 # seconds; default
+if wdev:
+  watchdocinterval = int(wdev)/2000000 # seconds
 
 tz = pytz.UTC
 pytz.all_timezones
@@ -251,6 +258,10 @@ event_gitcredentials = Event()
 if __name__ == "__main__":
 
   logger.info("JJClock starts!")
+
+  sdn = None
+  if "linux" in sys.platform:
+    sdn = sdnotify.SystemdNotifier()
   
   # load settings
   settings._settingsdefaults["mode"].validationlist = modelist # use mode list to select from
@@ -316,10 +327,23 @@ if __name__ == "__main__":
   settings.register(["apssid", "appass"], event_apupdate) # register wifimanager to respond to future changes to hostapd settings
   settings.register(["githubuser", "githubtoken"], event_gitcredentials) # update git credentials
 
+  # at this point consider the service ready
+  twatchdog = time.monotonic()
+  if sdn:
+    sdn.notify("READY=1")
+    sdn.notify("WATCHDOG=1")
+
+
+  ## MAIN LOOP ##
+
   tlastupdate = time.monotonic()
   while not pleasequit:
       
       t = time.monotonic()
+
+      if sdn:
+        if (twatchdog - t) > watchdoginterval:
+          sdn.notify("WATCHDOG=1")
 
       if pygamedisplay and pygamedisplay.buttonevent.is_set():
         pygamedisplay.buttonevent.clear()
