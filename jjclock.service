@@ -10,7 +10,10 @@ StandardError=inherit
 StandardOutput=inherit
 Restart=always
 RestartPreventExitStatus=83
+RestartSec=2
 User=pi
+TimeoutStopSec=10
+
 
 [Install]
 WantedBy=multi-user.target
