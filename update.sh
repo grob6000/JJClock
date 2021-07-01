@@ -17,7 +17,6 @@ git config --global user.password "$3"
 # use git to update
 git fetch --all
 git checkout $4
-git pull origin HEAD
 
 # restart service
 sudo systemctl restart jjclock.service
