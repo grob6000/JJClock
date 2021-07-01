@@ -81,7 +81,7 @@ def doUpdate(tag=None):
       lp = logpipe.LogPipe(jjlogger.DEBUG, logger)
       try:
         subprocess.run(["git", "config", "--global", "user.name", settings.getSettingValue("githubuser")], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["git", "config", "--global", "user.password", settings.getSettingValue("githubpass")], check=True, stderr=lp, stdout=lp)        
+        subprocess.run(["git", "config", "--global", "user.password", settings.getSettingValue("githubtoken")], check=True, stderr=lp, stdout=lp)        
         subprocess.run(["git", "fetch", "--all"], check=True, stderr=lp, stdout=lp)
         subprocess.run(["git", "checkout", tag], check=True, stderr=lp, stdout=lp)
         #s = subprocess.Popen(["bash", str(updatescript), jjcommon.scriptpath, settings.getSettingValue("githubuser"), settings.getSettingValue("githubtoken"), tag])
