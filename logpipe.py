@@ -9,7 +9,7 @@ class LogPipe(threading.Thread):
         and start the thread
         """
         threading.Thread.__init__(self)
-        self.daemon = False
+        self.daemon = True
         self.level = level
         self.fdRead, self.fdWrite = os.pipe()
         self.pipeReader = os.fdopen(self.fdRead)
