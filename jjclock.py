@@ -343,6 +343,7 @@ if __name__ == "__main__":
 
       if sdn:
         if (t - twatchdog) > watchdoginterval:
+          twatchdog = t
           sdn.notify("WATCHDOG=1")
           logger.debug("sent watchdog msg")
 
