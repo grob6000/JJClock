@@ -10,7 +10,7 @@ FATAL = logging.FATAL
 
 # create a top level logger
 logger = logging.getLogger("jjclock")
-formatter = logging.Formatter('%(asctime)-12s %(name)-20s %(levelname)-8s %(message)s', '%Y-%m-%d %H:%M:%S')
+formatter = logging.Formatter('%(levelname)s : %(name)s : %(message)s')
 handler = logging.StreamHandler(sys.stderr)
 handler.setFormatter(formatter)
 logger.handlers.clear()
