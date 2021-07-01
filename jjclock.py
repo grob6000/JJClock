@@ -332,7 +332,7 @@ if __name__ == "__main__":
   if sdn:
     sdn.notify("READY=1")
     sdn.notify("WATCHDOG=1")
-
+    logger.debug("sent watchdog msg")
 
   ## MAIN LOOP ##
 
@@ -342,8 +342,9 @@ if __name__ == "__main__":
       t = time.monotonic()
 
       if sdn:
-        if (twatchdog - t) > watchdoginterval:
+        if (t - twatchdog) > watchdoginterval:
           sdn.notify("WATCHDOG=1")
+          logger.debug("sent watchdog msg")
 
       if pygamedisplay and pygamedisplay.buttonevent.is_set():
         pygamedisplay.buttonevent.clear()
