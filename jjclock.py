@@ -244,6 +244,7 @@ def formatmemory(m):
 event_changemode = Event()
 event_apupdate = Event()
 event_manualtzupdate = Event()
+event_gitcredentials = Event()
 
 ## SCRIPT ##
 if __name__ == "__main__":
@@ -288,6 +289,7 @@ if __name__ == "__main__":
 
   # now screen is running, check for update
   logger.info("Checking for Update...")
+  updater.setGitCredentials() # do this on boot; and when settings change
   checkForUpdate()
   
   # load timezone
@@ -313,6 +315,7 @@ if __name__ == "__main__":
   settings.register(["mode"], event_changemode) # change mode when mode setting is updated from web interface (or elsewhere, unquietly)
   settings.register(["manualtz"], event_manualtzupdate) # update the timezone when manual timezone is changed
   settings.register(["apssid", "appass"], event_apupdate) # register wifimanager to respond to future changes to hostapd settings
+  settings.register(["githubuser", "githubtoken"], event_gitcredentials) # update git credentials
   
   tlastupdate = time.monotonic()
   while not pleasequit:
@@ -341,6 +344,10 @@ if __name__ == "__main__":
         # change mode as per settings
         newmode = settings.getSettingValue("mode")
         changeMode(newmode)
+      
+      if event_gitcredentials.is_set():
+        event_gitcredentials.clear()
+        updater.setGitCredentials()
 
       if wa.updatecheckrequest.is_set():
         wa.updatecheckrequest.clear()

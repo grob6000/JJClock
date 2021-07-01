@@ -62,6 +62,22 @@ def getLatestVersion():
   lastchecked = datetime.datetime.utcnow()
   return tag
 
+def setGitCredentials():
+  subprocess.run(["git", "config", "--local", "credential.helper", "store"])
+  githubuser = settings.getSettingValue("githubuser")
+  githubpass = settings.getSettingValue("githubtoken")
+  data = "username={0}\npassword={1}\nhostname=github.com\nprotocol=https\n\n".format(githubuser,githubpass).encode()
+  try:
+    with subprocess.Popen(["git", "credential-store", "store"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE) as p:
+      try:
+        p.communicate(data, timeout=5)
+      except subprocess.TimeoutExpired:
+        logger.error("Git credential error - timeout.")
+      else:
+        logger.info("Git credentials updated")
+  except subprocess.CalledProcessError as e:
+    logger.error("Problem encountered attempting to store credentials: " + str(e))
+  
 # update to specified version - note this does not stop the program, this needs to be done separately
 def doUpdate(tag=None):
   global latestversion
@@ -81,9 +97,7 @@ def doUpdate(tag=None):
     if "linux" in sys.platform:
       #updatescript = pathlib.Path(jjcommon.scriptpath).joinpath("update.sh").absolute()
       lp = logpipe.LogPipe(jjlogger.DEBUG, logger)
-      try:
-        subprocess.run(["git", "config", "--global", "user.name", settings.getSettingValue("githubuser")], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["git", "config", "--global", "user.password", settings.getSettingValue("githubtoken")], check=True, stderr=lp, stdout=lp)        
+      try:      
         subprocess.run(["git", "fetch", "--all"], check=True, stderr=lp, stdout=lp)
         subprocess.run(["git", "checkout", tag], check=True, stderr=lp, stdout=lp)
         #s = subprocess.Popen(["bash", str(updatescript), jjcommon.scriptpath, settings.getSettingValue("githubuser"), settings.getSettingValue("githubtoken"), tag])
