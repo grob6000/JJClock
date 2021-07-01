@@ -188,10 +188,11 @@ def updateTime(dt, force=False):
 
 def setSystemTz(tzname):
     if "linux" in sys.platform:
-        logger.info("updating system timezone")
         r = subprocess.run(["sudo","timedatectl","set-timezone",tzname])
         if r.returncode == 0:
-          logger.info("success - system timezone changed to " + getSystemTz())
+          logger.info("System timezone changed to: " + getSystemTz())
+        else:
+          logger.info("Error while attempting to update system timezone to: " + tzname)
     else:
       logger.warning("non-linux os: cannot update system timezone.")
 
@@ -208,11 +209,11 @@ def checkForUpdate():
   updater.getLatestVersion()
   if updater.latestversion and updater.currentversion:
     if updater.latestversion == updater.currentversion:
-      logger.info("currently latest version: " + updater.latestversion + ". no update required.")
+      logger.info("Currently latest version: " + updater.latestversion + ". No update required.")
     else:
       doUpdate()
   else:
-    logger.warning("will not update, unknown version information.")
+    logger.warning("Will not update, unknown version information.")
 
 def doUpdate():
   global epddisplay, wa, displaymanager, gpsh, pygamedisplay
@@ -228,7 +229,7 @@ def doUpdate():
       pygamedisplay.stop() # kill pygame display
     if epddisplay:
       epddisplay.disconnect() # disconnect epddisplay from SPI (if this is still alive when next version starts, will fail)
-    updater.doUpdate(updater.latestversion) # this will quit!
+    updater.doUpdate(updater.latestversion) # will quit
   else:
     logger.warning("will not update on windows")
 
@@ -278,12 +279,7 @@ if __name__ == "__main__":
     displaymanager.displaylist.append(pygamedisplay)
     pygamedisplay.restart() # start!
   
-  # admin server
-  logger.info("Starting Webserver...")
-  wa = webadmin.WebAdmin()
-  wa.start()
-  displaymanager.displaylist.append(wa.display)
-  wa.providemenu(menu)
+
 
   # wifi manager init
   logger.info("Setting up Wifi Configuration...")
@@ -294,7 +290,7 @@ if __name__ == "__main__":
   logger.info("Checking for Update...")
   checkForUpdate()
   
-  # load system timezone
+  # load timezone
   tz = pytz.timezone(settings.getSettingValue("manualtz"))
   currentdt = datetime.datetime.now().astimezone(tz) # init currentdt using new datetime
 
@@ -306,6 +302,13 @@ if __name__ == "__main__":
   gpsh = gpshandler.GpsHandler() # create and start gps handler
   gpsh.connect()
   
+  # start webadmin server
+  logger.info("Starting Webserver...")
+  wa = webadmin.WebAdmin()
+  wa.start()
+  displaymanager.displaylist.append(wa.display)
+  wa.providemenu(menu)
+
   # setting change event registration - other threads might change settings, but reaction to changes should always be routed through the main loop
   settings.register(["mode"], event_changemode) # change mode when mode setting is updated from web interface (or elsewhere, unquietly)
   settings.register(["manualtz"], event_manualtzupdate) # update the timezone when manual timezone is changed

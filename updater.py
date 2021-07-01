@@ -67,11 +67,13 @@ def doUpdate(tag=None):
   global latestversion
   global currentversion
   logger.debug(tag)
+  ecode = 0
   if not tag:
     logger.debug("using latest version")
     tag = latestversion
   if not tag:
     logger.warning("Updater doesn't know the target version. Will not update.")
+    ecode=1
   #elif tag == currentversion: # temporarily allow forced updating
   #  logger.warning("already this version. will not update.")
   else:
@@ -85,15 +87,17 @@ def doUpdate(tag=None):
         subprocess.run(["git", "fetch", "--all"], check=True, stderr=lp, stdout=lp)
         subprocess.run(["git", "checkout", tag], check=True, stderr=lp, stdout=lp)
         #s = subprocess.Popen(["bash", str(updatescript), jjcommon.scriptpath, settings.getSettingValue("githubuser"), settings.getSettingValue("githubtoken"), tag])
-      except subprocess.CalledProcessError:
-        logger.error("Problem encountered during update")
+      except subprocess.CalledProcessError as e:
+        logger.error("Problem encountered during update: " + str(e))
+        ecode=1
       else:
         # rely on update script to restart the service
         logger.info("Update complete, quitting now")
-        # quit, citing exit code 0 (success). systemd will restart service
-        sys.exit(0)
+        ecode=0
     else:
-      logger.warning("Not able to update on this system")
+      logger.warning("Not able to update on this system, ignoring request to update.")
+      ecode=1
+  sys.exit(ecode) # we always quit
 
 # asks system to restart the service, and quits
 #def restartService():
