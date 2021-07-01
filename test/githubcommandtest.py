@@ -1,24 +1,10 @@
 import subprocess
 
-def doGitCommand(_CMD):
+def setGitCredentials():
   githubuser = "grob6000"
   githubpass = "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"
-  if (_CMD[0] == "git"):
-    with subprocess.Popen(_CMD, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE) as p:
-      for n in range(0,3):
-        print("round " + str(n))
-        try:
-          o,e = p.communicate(timeout=5)
-        except subprocess.TimeoutExpired:
-          print("timeout")
-        if o:
-          t = o.decode()
-          if t.startswith("Username"):
-            p.communicate(githubuser + "\n")
-            print("gave username")
-          elif t.startswith("Password"):
-            p.communicate(githubpass + "\n")
-            print("gave password")
-            break
-            
-doGitCommand(["git", "pull"])
+  data = "username={0}\npassword={1}\nhostname=github.com\nprotocol=https\n\n".format(githubuser,githubpass).encode()
+  with subprocess.Popen(["git", "credential-store", "store"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE) as p:
+    p.communicate(data, timeout=5)
+
+setGitCredentials()
