@@ -108,6 +108,7 @@ def doUpdate(tag=None):
         # rely on update script to restart the service
         logger.info("Update complete, quitting now")
         ecode=0
+      lp.close()
     else:
       logger.warning("Not able to update on this system, ignoring request to update.")
       ecode=1
