@@ -241,9 +241,10 @@ class _StyleTheTimes(RendererBrexitClock):
     bbox = (49, 418, 49+515, 418+392)
     T = ts.GetTimeString(kwargs["timestamp"], lang="en")
     hmax = bbox[3]-bbox[1]    
+    lines = [T, ""]
     if len(T)>10 and " " in T:
       lines = ts.HalfAndHalf(T)
-    lines = ["The time is", lines[0], lines[1]]
+    lines = ["It's about", lines[0], lines[1]]
     hmax = int((bbox[3]-bbox[1]-pad*(len(lines)-1))/len(lines))
     #print("hmax={0}".format(hmax))
     logging.debug(lines)
