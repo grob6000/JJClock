@@ -115,7 +115,7 @@ class GpsHandler():
       return
     
     try:
-      ser = serial.Serial(self._port, GpsHandler._baud, timeout=1)
+      ser = serial.Serial(self._port, GpsHandler._baud, timeout=0.2)
     except serial.serialutil.SerialException:
       logger.error("could not open port. GPS will not be initialized. thread quit.")
       return
@@ -167,7 +167,7 @@ class GpsHandler():
           tzname = self._tf.certain_timezone_at(lat=lat,lng=lng)
           tz = pytz.timezone(tzname)
           lasttzcheck = t
-          logger.info("Collected timezone from GPS data: " + tzname)
+          logger.debug("collected timezone from GPS data: " + tzname)
         
         #logger.debug("setting data...")
         # update data
