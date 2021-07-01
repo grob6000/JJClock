@@ -1,6 +1,7 @@
 import subprocess
 
 def setGitCredentials():
+  subprocess.run(["git", "config", "--local", "credential.helper", "cache"])
   githubuser = "grob6000"
   githubpass = "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"
   data = "username={0}\npassword={1}\nhostname=github.com\nprotocol=https\n\n".format(githubuser,githubpass).encode()
