@@ -5,6 +5,8 @@ def doGitCommand(_CMD):
   githubpass = "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"
   if (_CMD[0] == "git"):
     with subprocess.Popen(_CMD, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE) as p:
-        p.communicate(githubuser + "\n" + githubpass + "\n")
+        o,e = p.communicate((githubuser + "\n" + githubpass + "\n").encode())
+    print("o: " + o.decode())
+    print("e: " + e.decode())
 
-doGitCommand(["git", "tags"])
+doGitCommand(["git", "pull"])
