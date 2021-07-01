@@ -241,6 +241,7 @@ def formatmemory(m):
     i = i + 1
   return "{0:.4g} {1}B".format(m, modifiers[i])
 
+# setting change events
 event_changemode = Event()
 event_apupdate = Event()
 event_manualtzupdate = Event()
@@ -280,8 +281,6 @@ if __name__ == "__main__":
     displaymanager.displaylist.append(pygamedisplay)
     pygamedisplay.restart() # start!
   
-
-
   # wifi manager init
   logger.info("Setting up Wifi Configuration...")
   wifimanager.readHostapd() # read the official hostapd from system
@@ -316,7 +315,7 @@ if __name__ == "__main__":
   settings.register(["manualtz"], event_manualtzupdate) # update the timezone when manual timezone is changed
   settings.register(["apssid", "appass"], event_apupdate) # register wifimanager to respond to future changes to hostapd settings
   settings.register(["githubuser", "githubtoken"], event_gitcredentials) # update git credentials
-  
+
   tlastupdate = time.monotonic()
   while not pleasequit:
       
@@ -369,9 +368,9 @@ if __name__ == "__main__":
           logger.warning("Bad manual timezone, will not change: " + manualtz)
         else:
           tzchanged = bool(not (tz.zone == tztemp.zone))
-          if tzchanged:
-            logger.debug("tzchanged")
           tz = tztemp
+          if tzchanged:
+            logger.info("Manually set new timezone: " + tz.zone)
       
       if tzchanged and not getSystemTz() == tz.zone:
         setSystemTz(tz.zone)
@@ -390,6 +389,7 @@ if __name__ == "__main__":
             p = "using gps time + auto tz: "
             # update timezone cached
             if not tz == stat["tz"]:
+              logger.info("GPS provides new timezone: " + tz.zone)
               tzchanged = True
               tz = stat["tz"]
               # update timezone setting --> will trigger system tz update next time around

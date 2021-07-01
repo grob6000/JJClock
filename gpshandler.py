@@ -2,7 +2,6 @@
 
 import serial
 import threading
-import queue
 import pytz
 import timezonefinder
 import atexit
@@ -30,7 +29,7 @@ def formatlatlon(lat, lng):
 class GpsHandler():
   
   _baud = 9600
-  _tzcheckinterval = 300
+  _tzcheckinterval = 900
   
   def __init__(self, port='/dev/serial0'):
     logger.debug("initializing gpshandler")
