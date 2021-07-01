@@ -2,11 +2,13 @@ from jjrenderer.renderer import *
 
 import random
 import importlib
-import logging
 import datetime
 import jjrenderer.jjtimestring as ts
 
 import pyowm # python open weather map - for local weather in EURRRROPE
+
+import jjlogger
+logger = jjlogger.getLogger(__name__)
 
 class RendererEuroClock(Renderer):
   
@@ -60,7 +62,7 @@ class _StyleFrench(RendererEuroClock):
     if "timestamp" in kwargs and kwargs["timestamp"]:
       t = ts.GetTimeString(kwargs["timestamp"], lang="fr")
       d = ts.GetDateString(kwargs["timestamp"], lang="fr").upper()
-    logging.info("time: {0}, date: {1}".format(t,d))
+    logger.debug("time: {0}, date: {1}".format(t,d))
     
     fill(screen)
     
@@ -82,7 +84,7 @@ class _StyleFrench(RendererEuroClock):
     y = y + logo.size[1] + pad
     
     # intermediate bar
-    barheight = 120
+    barheight = 130
     screen.paste(0x80, box=(100, y, screen.size[0]-100, y+barheight))
     dividers = 2
     ifont1 = getFont("arialnarrow",42)
@@ -90,7 +92,7 @@ class _StyleFrench(RendererEuroClock):
     itext1 = ["DERNIÈRES", "AFFAIRES", "LE MONDE"]
     itext2 = ["NOUVELLES", "EN COURS", "DES LIVRES"]
     itextheight = ifont1.getsize("X")[1]
-    iy1 = int(y + (barheight-itextheight*2)/3)
+    iy1 = int(y + (barheight-itextheight*2)/3)-5
     iy2 = int(y + itextheight + (barheight-itextheight*2)/3*2)
     for i in range(dividers+1):
       x = int(((screen.size[0]-200) / (dividers+1)) * (i)) + 100
@@ -167,7 +169,7 @@ class _StyleEstonian(RendererEuroClock):
     weatherdata = getWeatherByCity("Tallinn", None)
     icon = None
     if weatherdata:
-      logging.debug(weatherdata.current)
+      logger.debug(weatherdata.current)
       icon = getWeatherIcon(weatherdata.current.weather_icon_name).resize((30,30), Image.ANTIALIAS)
       tt = "{0:.0f}° C".format(weatherdata.current.temperature()["temp"])
     else:
@@ -268,9 +270,10 @@ class _StyleGerman(RendererEuroClock):
        
 
 # automated luxury space communist style collection
+
 styles = []
 l = locals().copy()
 for name, obj in l.items():
   if name.startswith("_Style"):
     styles.append(obj)
-logging.debug("euro styles loaded: " + str(styles))
+logger.debug("euro styles loaded: " + str(styles))
