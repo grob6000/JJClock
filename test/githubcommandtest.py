@@ -5,7 +5,8 @@ def doGitCommand(_CMD):
   githubpass = "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"
   if (_CMD[0] == "git"):
     with subprocess.Popen(_CMD, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE) as p:
-      while p.poll():
+      for n in range(0,3):
+        print("round " + str(n))
         try:
           o,e = p.communicate(timeout=5)
         except subprocess.TimeoutExpired:
@@ -18,5 +19,6 @@ def doGitCommand(_CMD):
           elif t.startswith("Password"):
             p.communicate(githubpass + "\n")
             print("gave password")
+            break
             
 doGitCommand(["git", "pull"])
