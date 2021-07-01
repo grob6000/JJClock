@@ -66,7 +66,7 @@ def setGitCredentials():
   subprocess.run(["git", "config", "--local", "credential.helper", "store"])
   githubuser = settings.getSettingValue("githubuser")
   githubpass = settings.getSettingValue("githubtoken")
-  data = "username={0}\npassword={1}\nhostname=github.com\nprotocol=https\n\n".format(githubuser,githubpass).encode()
+  data = "username={0}\npassword={1}\nhost=github.com\nprotocol=https\n\n".format(githubuser,githubpass).encode()
   try:
     with subprocess.Popen(["git", "credential-store", "store"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE) as p:
       try:
