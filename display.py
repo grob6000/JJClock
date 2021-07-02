@@ -158,7 +158,7 @@ class PygameDisplay(Display):
         if event.type == pygame.MOUSEBUTTONUP:
           if event.button == pygame.BUTTON_LEFT:
             self.buttonevent.set()
-            
+    pygame.quit()
     logger.info("pygame thread quit")
   
   def isrunning(self):
