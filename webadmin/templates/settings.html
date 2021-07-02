@@ -32,7 +32,9 @@
             if ("latestversion" in jr) {
               document.getElementById("latestversion").innerHTML = jr["latestversion"]
               if (!(jr["latestversion"]==null)) {
-                document.getElementById("btn_updatedo").hidden = false
+                dobutton = document.getElementById("btn_updatedo")
+                dobutton.hidden = false
+                dobutton.disabled = (jr["latestversion"]==jr["currentversion"])
               }
             }
             document.getElementById("btn_updatecheck").disabled = false
