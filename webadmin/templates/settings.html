@@ -58,7 +58,8 @@
         var xhttp = new XMLHttpRequest();
         xhttp.open("GET", "api/update/do", true);
         xhttp.send()
-        setTimeout(updateswversion, 20000);
+        //setTimeout(updateswversion, 20000);
+        pbtimer()
       }
 
       function updatesettings() {
@@ -145,6 +146,21 @@
         xhttp.send(JSON.stringify(out))
       }
 
+      let tstart = null
+      function pbtimer() {
+        if (tstart == null) {
+          tstart = new Date().getTime();
+        }
+        deltams = new Date().getTime()-tstart;
+        if (deltams > 60000) {
+          location.reload()
+          return false
+        }
+        document.getElementById("pbupdate").style.width = (deltams/600).toString() + "%"
+        document.getElementById("pbtext").innerHTML = "T - " + (60-(deltams/1000)).toFixed(0).toString() + " sec"
+        setTimeout(pbtimer, 250) // 1/4 sec is same as an automatic watch...
+      }
+
 
     </script>
   {% endraw %}
@@ -171,7 +187,22 @@
       <p>Current Version: <span id="currentversion"></span></p>
       <p>Available Version: <span id="latestversion"></span></p>
       <button type="button" class="btn btn-primary" onclick="checkupdate()" id="btn_updatecheck">Check For Update</button>
-      <button type="button" class="btn btn-primary" onclick="doupdate()" hidden id="btn_updatedo">Update Now</button>
+      <button type="button" class="btn btn-primary" hidden id="btn_updatedo" onclick="doupdate()" data-bs-toggle="modal" data-bs-target="#updating">Update Now</button>
+    </div>
+  </div>
+  <div class="modal fade" id="updating" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="staticBackdropLabel">Updating, please wait...</h5>
+        </div>
+        <div class="modal-body">
+          <div class="progress">
+            <div class="progress-bar" role="progressbar" id="pbupdate" style="width:0%;" data-secs="0"></div>
+            <small class="justify-content-center d-flex position-absolute w-100" style="color:black;"id="pbtext">T - 60 sec</small>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 {% endblock %}
