@@ -90,7 +90,8 @@ menutimeout_armed = False
 
 # systemd watchdog
 wdev = os.getenv('WATCHDOG_USEC')
-watchdoginterval = 30 # seconds; default
+logging.debug("WATCHDOG_USEC = " + str(wdev))
+watchdoginterval = 15 # seconds; default
 if wdev:
   watchdocinterval = int(wdev)/2000000 # seconds
 
