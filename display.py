@@ -174,18 +174,18 @@ class MemoryDisplay(Display):
   def __init__(self, size=(800,600)):
     super().__init__()
     self._screenlock = Lock()
-    self._hashlock = Lock()
     self._screen = None
     with self._screenlock:
       self._screen = Image.new("RGB", size)
-    self._hash = ""
+    self.hash = ""
     self._updateHash()
   
   def _updateHash(self):
-    self._hash = md5(self._screen.tobytes()).hexdigest() # string is immutable, need not copy or lock
+    with self._screenlock:
+      self.hash = md5(self._screen.tobytes()).hexdigest()
 
   def getHash(self):
-    return self._hash # string is immutable; need not copy or lock
+    return self.hash # string is immutable; need not copy or lock
 
   def getSize(self):
     sz = None
