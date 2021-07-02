@@ -7,7 +7,7 @@ WARNING = logging.WARNING
 ERROR = logging.ERROR
 CRITICAL = logging.CRITICAL
 FATAL = logging.FATAL
-levels = [DEBUG, INFO, WARNING, ERROR, CRITICAL, FATAL]
+levels = {"DEBUG":DEBUG, "INFO":INFO, "WARNING":WARNING, "ERROR":ERROR, "CRITICAL":CRITICAL, "FATAL":FATAL}
 
 # create a top level logger
 logger = logging.getLogger("jjclock")
@@ -24,6 +24,9 @@ knownloggers = {"jjclock"}
 
 # set logging level
 def setLogLevel(level):
+  if isinstance(level, str) and level in levels.keys():
+    level = levels[level]
+  level = int(level)
   for lname in knownloggers:
     logging.getLogger(lname).setLevel(level)
 

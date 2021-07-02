@@ -200,7 +200,6 @@ class MemoryDisplay(Display):
       with self._screenlock:
         self._screen.paste(img2,box=self.cropbox)
       self._updateHash()
-      
   
   def getImage(self):
     img = None
