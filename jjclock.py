@@ -274,6 +274,9 @@ if __name__ == "__main__":
   # load settings
   settings._settingsdefaults["mode"].validationlist = modelist # use mode list to select from
   settings.loadSettings()
+  
+  # change log level as per settings
+  logger.setLevel(settings.getSettingValue("loglevel"))
 
   # init gpio
   logger.info("Initializing GPIO...")

@@ -7,7 +7,6 @@ WARNING = logging.WARNING
 ERROR = logging.ERROR
 CRITICAL = logging.CRITICAL
 FATAL = logging.FATAL
-
 levels = [DEBUG, INFO, WARNING, ERROR, CRITICAL, FATAL]
 
 # create a top level logger
@@ -17,7 +16,7 @@ handler = logging.StreamHandler(sys.stderr)
 handler.setFormatter(formatter)
 logger.handlers.clear()
 logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG) # default is everything
 logger.propagate = False
 
 # known loggers
@@ -25,7 +24,8 @@ knownloggers = {"jjclock"}
 
 # set logging level
 def setLogLevel(level):
-  logger.setLevel(level)
+  for lname in knownloggers:
+    logging.getLogger(lname).setLevel(level)
 
 # get a child
 def getLogger(name=None):
