@@ -8,6 +8,8 @@ ERROR = logging.ERROR
 CRITICAL = logging.CRITICAL
 FATAL = logging.FATAL
 
+levels = [DEBUG, INFO, WARNING, ERROR, CRITICAL, FATAL]
+
 # create a top level logger
 logger = logging.getLogger("jjclock")
 formatter = logging.Formatter('%(levelname)s : %(name)s : %(message)s')
@@ -18,6 +20,13 @@ logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 logger.propagate = False
 
+# known loggers
+knownloggers = {"jjclock"}
+
+# set logging level
+def setLogLevel(level):
+  logger.setLevel(level)
+
 # get a child
 def getLogger(name=None):
   global logger, handler
@@ -25,6 +34,7 @@ def getLogger(name=None):
     return logger
   else:
     childlog = logger.getChild(name)
+    knownloggers.add(childlog.name)
     return childlog
 
 def subsumeLogger(logger=None):
@@ -40,3 +50,4 @@ def subsumeLogger(logger=None):
     for h in lo.handlers:
       lo.removeHandler(h)
     lo.addHandler(handler)
+    knownloggers.add(lo.name)

@@ -247,6 +247,7 @@ event_changemode = Event()
 event_apupdate = Event()
 event_manualtzupdate = Event()
 event_gitcredentials = Event()
+event_loglevel = Event()
 
 def killthreads():
   logger.debug("killing things...")
@@ -333,6 +334,7 @@ if __name__ == "__main__":
   settings.register(["manualtz"], event_manualtzupdate) # update the timezone when manual timezone is changed
   settings.register(["apssid", "appass"], event_apupdate) # register wifimanager to respond to future changes to hostapd settings
   settings.register(["githubuser", "githubtoken"], event_gitcredentials) # update git credentials
+  settings.register(["loglevel"], event_loglevel) # update of logging level
 
   # at this point consider the service ready
   twatchdog = time.monotonic()
@@ -388,6 +390,10 @@ if __name__ == "__main__":
       if wa.updatedorequest.is_set():
         wa.updatedorequest.clear()
         updater.doUpdate() # default tag will be the last checked version
+      
+      if event_loglevel.is_set():
+        event_loglevel.clear()
+        jjlogger.setLogLevel(settings.getSettingValue("loglevel"))
 
       autotz = settings.getSettingValue("autotz")
 
