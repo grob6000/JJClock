@@ -131,11 +131,8 @@ class PygameDisplay(Display):
       logger.debug("waiting for pygame stop...")
       self._pygamethread.join()  
   
-  def __del__(self):
-    if logger:
-      logger.debug("pygamedisplay __del__")
-    self._stopevent.set()
-    self._pygamethread.join() # wait for close of thread
+  def __exit__(self):
+    self.stop()
 
   def _run(self):
     logger.debug("pygame thread start")
