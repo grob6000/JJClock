@@ -27,8 +27,10 @@ def setLogLevel(level):
   if isinstance(level, str) and level in levels.keys():
     level = levels[level]
   level = int(level)
-  for lname in knownloggers:
-    logging.getLogger(lname).setLevel(level)
+  if not level == logger.level:
+    for lname in knownloggers:
+      logging.getLogger(lname).setLevel(level)
+      logging.info("Set log level to: " + level)
 
 # get a child
 def getLogger(name=None):
