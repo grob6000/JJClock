@@ -53,7 +53,7 @@ _settingsdefaults =  {
                           "githubtoken":Setting(name="Github Access Token", value=jjcommon.githubtoken, validation="string"),
                           "githubrepo":Setting(name="Github Repository", value=jjcommon.githubrepo, validation="string"),
                           "owmkey":Setting(name="Open Weather Maps Key", value=jjcommon.owm_key, validation="string"),
-                          "loglevel":Setting(name="Log Level", value=jjlogger.logger.level, validation="list", validationlist=jjlogger.levels.keys()),
+                          "loglevel":Setting(name="Log Level", value=jjlogger.logger.level, validation="list", validationlist=list(jjlogger.levels.keys())),
                      }  
 _registry = {}
 _registrylock = Lock()
