@@ -158,8 +158,7 @@ class PygameDisplay(Display):
         if event.type == pygame.MOUSEBUTTONUP:
           if event.button == pygame.BUTTON_LEFT:
             self.buttonevent.set()
-
-
+            
     logger.info("pygame thread quit")
   
   def isrunning(self):
@@ -174,18 +173,18 @@ class MemoryDisplay(Display):
   def __init__(self, size=(800,600)):
     super().__init__()
     self._screenlock = Lock()
+    self._hashlock = Lock()
     self._screen = None
     with self._screenlock:
       self._screen = Image.new("RGB", size)
-    self.hash = ""
+    self._hash = ""
     self._updateHash()
   
   def _updateHash(self):
-    with self._screenlock:
-      self.hash = md5(self._screen.tobytes()).hexdigest()
+    self._hash = md5(self._screen.tobytes()).hexdigest() # string is immutable, need not copy or lock
 
   def getHash(self):
-    return self.hash # string is immutable; need not copy or lock
+    return self._hash # string is immutable; need not copy or lock
 
   def getSize(self):
     sz = None
@@ -200,6 +199,7 @@ class MemoryDisplay(Display):
       with self._screenlock:
         self._screen.paste(img2,box=self.cropbox)
       self._updateHash()
+      
   
   def getImage(self):
     img = None
