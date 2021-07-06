@@ -30,7 +30,7 @@ def setLogLevel(level):
   if not level == logger.level:
     for lname in knownloggers:
       logging.getLogger(lname).setLevel(level)
-      logging.info("Set log level to: " + level)
+      logging.info("Set log level to: " + str(level))
 
 # get a child
 def getLogger(name=None):
