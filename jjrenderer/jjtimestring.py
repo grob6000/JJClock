@@ -122,22 +122,23 @@ def GetHourString(h, lang="en", format="12h"):
     # if it's midday or middnight, 50% chance of using these terms
     r = random.randint(0,1)
     if h == 0 and r == 1:
-        if lang == "de":
-            hourstring = "Mitternacht"
-        else:
-            hourstring = "Midnight"
+      if lang == "de":
+        hourstring = "Mitternacht"
+      else:
+        hourstring = "Midnight"
     elif h == 12 and r == 1:
-        if lang == "de":
-            hourstring = "Mittag"
-        else:
-            hourstring = "Midday"
+      if lang == "de":
+        hourstring = "Mittag"
+      else:
+        hourstring = "Midday"
     else:
-        if format == "24h":
-            hourstring = GetNumberString(h % 24, lang)
-        else:
-            if h == 0:
-                h += 12
-            hourstring = GetNumberString(h % 12, lang)
+      if format == "24h":
+        hourstring = GetNumberString(h % 24, lang)
+      else:
+        h = h % 12
+        if h == 0:
+          h = 12
+        hourstring = GetNumberString(h, lang)
     return hourstring    
 
 def GetTimeString(dt=datetime.datetime.now(), lang="en"):
@@ -166,7 +167,7 @@ def GetTimeString(dt=datetime.datetime.now(), lang="en"):
                 elif dt.minute == 30:
                     timestring = "Half Past " + GetHourString(h)
                 elif dt.minute == 45:
-                    timestring = "Quarter To " + GetHourString(h + 1)
+                    timestring = "Quarter To " + GetHourString(h1)
             elif r == 2 and dt.minute > 9:
                 # type 2: "hhh mmm"
                 timestring = GetNumberString(h) + " " + GetNumberString(dt.minute)
