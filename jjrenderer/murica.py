@@ -34,9 +34,9 @@ class RendererMuricaClock(Renderer):
         n = n/2
         d = d/2
     
-    t1 = "The Date Today Is:"
+    t1 = "Today Is:"
     s1 = "{0}".format(datevalue)
-    t2 = "Right No It Is:"
+    t2 = "The Time Is:"
     if n == 0:
       s2 = "{0:.0f}".format(int(timevalue))
     else:
