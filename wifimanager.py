@@ -128,18 +128,19 @@ def getChannel(freq):
 
 def getNetworks():
   networks = []
+  iface = settings.getSettingValue("netiface")
   global _wifimanagerlock
   with _wifimanagerlock:
     if "linux" in sys.platform:
       for i in range(0,10): # why would anyone configure more than 10???? yes magic numbers well whoopdeedoo
-        cp = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "get_network", str(i), "ssid"], capture_output=True, text=True)
+        cp = subprocess.run(["wpa_cli", "-i", iface, "get_network", str(i), "ssid"], capture_output=True, text=True)
         if "FAIL" in cp.stdout:
           break
         else:
           network = {"id":i, "ssid":cp.stdout.strip('" \n')}
           # for now, don't need anything else
           networks.append(network)
-        cp = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "status"], capture_output=True, text=True)
+        cp = subprocess.run(["wpa_cli", "-i", iface, "status"], capture_output=True, text=True)
         if not "FAIL" in cp.stdout:
           lines = cp.stdout.strip().split("\n")
           for l in lines:
@@ -160,12 +161,13 @@ def getNetworks():
   
 def scanNetworks(): 
   scannetworks = []
+  iface = settings.getSettingValue("netiface")
   global _wifimanagerlock
   with _wifimanagerlock:
     if "linux" in sys.platform:
-      cp = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "scan"], capture_output=True, text=True)
+      cp = subprocess.run(["wpa_cli", "-i", iface, "scan"], capture_output=True, text=True)
       if "OK" in cp.stdout:
-        cp2 = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "scan_results"], capture_output=True, text=True)
+        cp2 = subprocess.run(["wpa_cli", "-i", iface, "scan_results"], capture_output=True, text=True)
         if cp2.returncode == 0:
           lines = cp2.stdout.strip().split("\n")
           i = 0
@@ -190,13 +192,14 @@ def scanNetworks():
 
 def removeNetwork(netindex):
   global _wifimanagerlock
+  iface = settings.getSettingValue("netiface")
   with _wifimanagerlock:
     # remove network and save config
     if "linux" in sys.platform:
-      cp = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "remove_network", str(netindex)], capture_output=True, text=True)
+      cp = subprocess.run(["wpa_cli", "-i", iface, "remove_network", str(netindex)], capture_output=True, text=True)
       if not "OK" in cp.stdout:
         logger.error("could not delete network " + str(netindex))
-      cp = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "save_config"], capture_output=True, text=True)
+      cp = subprocess.run(["wpa_cli", "-i", iface, "save_config"], capture_output=True, text=True)
       if not "OK" in cp.stdout:
         logger.error("error saving wifi config")
     else:
@@ -211,29 +214,29 @@ def addNetwork(ssid, psk=None):
   netindex = -1
   if not ssid or ssid=="":
     return netindex
-  
+  iface = settings.getSettingValue("netiface")
   global _wifimanagerlock
   with _wifimanagerlock:
     # add network
     if "linux" in sys.platform:
-      cp = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "add_network"], capture_output=True, text=True)
+      cp = subprocess.run(["wpa_cli", "-i", iface, "add_network"], capture_output=True, text=True)
       if cp.returncode == 0:
         netindex = int(cp.stdout.strip())
         logger.debug("netindex={0}".format(netindex))
         allok = True
-        cp2 = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "set_network", str(netindex), "ssid", "\""+str(ssid)+"\""], capture_output=True, text=True)
+        cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "ssid", "\""+str(ssid)+"\""], capture_output=True, text=True)
         if "FAIL" in cp2.stdout:
           allok = False
           logger.debug("set ssid fail: " + cp2.stdout)
         if psk:
-          cp2 = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "set_network", str(netindex), "psk", "\""+str(psk)+"\""], capture_output=True, text=True)
+          cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "psk", "\""+str(psk)+"\""], capture_output=True, text=True)
           if "FAIL" in cp2.stdout:
             allok = False
             logger.debug("set psk fail: " + cp2.stdout)
         else:
           logger.debug("no psk specified; not adding to entry")
         if allok:
-          cp = subprocess.run(["wpa_cli", "-i", jjcommon.iface, "save_config"], capture_output=True, text=True)
+          cp = subprocess.run(["wpa_cli", "-i", iface, "save_config"], capture_output=True, text=True)
           if not "OK" in cp.stdout:
             logger.error("error saving wifi config")
         else:
@@ -256,14 +259,15 @@ def addNetwork(ssid, psk=None):
 
 def _doAPMode():
   newmode = "unknown"
+  iface = settings.getSettingValue("netiface")
   global _wifimanagerlock
   with _wifimanagerlock:
     if "linux" in sys.platform:
       lp = logpipe.LogPipe(jjlogger.DEBUG, logger)
       try:
-        subprocess.run(["wpa_cli", "-i", jjcommon.iface, "disconnect"], check=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-        subprocess.run(["sudo", "ip", "link", "set", "dev", jjcommon.iface, "down"], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["sudo", "ip", "addr", "add", jjcommon.ap_addr+"/25", "dev", jjcommon.iface], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["wpa_cli", "-i", iface, "disconnect"], check=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        subprocess.run(["sudo", "ip", "link", "set", "dev", iface, "down"], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["sudo", "ip", "addr", "add", jjcommon.ap_addr+"/25", "dev", iface], check=True, stderr=lp, stdout=lp)
         subprocess.run(["sudo", "systemctl", "restart", "dnsmasq.service"], check=True, stderr=lp, stdout=lp)
         subprocess.run(["sudo", "systemctl", "restart", "hostapd.service"], check=True, stderr=lp, stdout=lp)
       except subprocess.CalledProcessError:
@@ -278,6 +282,7 @@ def _doAPMode():
   
 def _doClientMode():
   newmode = "unknown"
+  iface = settings.getSettingValue("netiface")
   global _wifimanagerlock
   with _wifimanagerlock:
     if "linux" in sys.platform:
@@ -285,12 +290,12 @@ def _doClientMode():
       try:
         subprocess.run(["sudo", "systemctl", "stop", "hostapd.service"], check=True, stderr=lp, stdout=lp)
         subprocess.run(["sudo", "systemctl", "stop", "dnsmasq.service"], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["sudo", "ip", "link", "set", "dev", jjcommon.iface, "down"], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["sudo", "ip", "addr", "flush", "dev", jjcommon.iface], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["wpa_cli", "-i", jjcommon.iface, "reconfigure"], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["sudo", "ip", "link", "set", "dev", iface, "down"], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["sudo", "ip", "addr", "flush", "dev", iface], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["wpa_cli", "-i", iface, "reconfigure"], check=True, stderr=lp, stdout=lp)
         subprocess.run(["sudo", "systemctl", "daemon-reload"], check=True, stderr=lp, stdout=lp)
         subprocess.run(["sudo", "systemctl", "restart", "dhcpcd.service"], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["sudo", "dhclient", jjcommon.iface], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["sudo", "dhclient", iface], check=True, stderr=lp, stdout=lp)
       except subprocess.CalledProcessError:
         logger.error("unsuccessful changing to client mode")
       else:
@@ -303,12 +308,13 @@ def _doClientMode():
 
 def reconfigureWifi():
   if "linux" in sys.platform:
+    iface = settings.getSettingValue("netiface")
     global _wifimanagerlock
     with _wifimanagerlock:
       global _currentwifimode
       if _currentwifimode == "client":
         try:
-          subprocess.run(["wpa_cli", "-i", jjcommon.iface, "reconfigure"], check=True)
+          subprocess.run(["wpa_cli", "-i", iface, "reconfigure"], check=True)
         except subprocess.CalledProcessError:
           logger.error("unsuccessful reconfiguring wifi")
       else:
@@ -343,3 +349,20 @@ def getWifiMode():
     global _currentwifimode
     thewifimode = _currentwifimode
   return thewifimode
+
+def getWifiInterfaces():
+  ifaces = []
+  global _wifimanagerlock
+  with _wifimanagerlock:
+    # add network
+    if "linux" in sys.platform:
+      cp = subprocess.run(["wpa_cli", "interface"], capture_output=True, text=True)
+      if cp.returncode == 0:
+        lines = cp.stdout.splitlines()
+        if len(lines) > 2:
+          for i in range(2,len(lines)):
+            ifaces.append(lines[i])
+    else:
+      logger.warning("Unable to fetch interfaces on this platform.")
+  logger.debug("ifaces found: " + str(ifaces))
+  return ifaces

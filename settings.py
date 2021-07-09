@@ -4,6 +4,7 @@ from pathlib import Path
 from threading import Lock, Event
 import copy
 from pytz import all_timezones
+import wifimanager
 
 import jjcommon
 import jjlogger
@@ -48,12 +49,13 @@ _settingsdefaults =  {
                           "appass":Setting(name="AP Password",value=jjcommon.ap_pass,validation="password"),
                           "gpson":Setting(name="Enable GPS",value=True,validation="bool"),
                           "autotz":Setting(name="Auto Timezone",value=True,validation="bool"),
-                          "manualtz":Setting(name="Timezone (Manual)",value="UTC",validation="list",validationlist=all_timezones),
+                          "manualtz":Setting(name="Manual Timezone",value="UTC",validation="list",validationlist=all_timezones),
                           "githubuser":Setting(name="Github Username", value=jjcommon.githubuser, validation="string"),
                           "githubtoken":Setting(name="Github Access Token", value=jjcommon.githubtoken, validation="string"),
                           "githubrepo":Setting(name="Github Repository", value=jjcommon.githubrepo, validation="string"),
                           "owmkey":Setting(name="Open Weather Maps Key", value=jjcommon.owm_key, validation="string"),
                           "loglevel":Setting(name="Log Level", value=jjlogger.logger.level, validation="list", validationlist=list(jjlogger.levels.keys())),
+                          "netiface":Setting(name="Network Interface", value="wlan0", validation="list", validationlist=wifimanager.getWifiInterfaces()),
                      }  
 _registry = {}
 _registrylock = Lock()
