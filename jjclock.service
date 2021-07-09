@@ -13,6 +13,7 @@ RestartPreventExitStatus=83
 RestartSec=2
 User=pi
 TimeoutStopSec=10
+TimeoutStartSec=300
 WatchdogSec=30
 Environment=PYTHONUNBUFFERED=1
 

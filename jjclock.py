@@ -248,6 +248,7 @@ event_apupdate = Event()
 event_manualtzupdate = Event()
 event_gitcredentials = Event()
 event_loglevel = Event()
+event_hostname = Event()
 
 def killthreads():
   logger.debug("killing things...")
@@ -305,6 +306,7 @@ if __name__ == "__main__":
   
   # wifi manager init
   logger.info("Setting up Wifi Configuration...")
+  settings.setSetting("hostname", wifimanager.getHostname(), quiet=True)  # align hostname setting with system hostname at start
   wifimanager.readHostapd() # read the official hostapd from system
   wifimanager.updateHostapd(settings.getSettingValue("apssid"), settings.getSettingValue("appass")) # update hostapd with settings
 
@@ -338,6 +340,7 @@ if __name__ == "__main__":
   settings.register(["apssid", "appass"], event_apupdate) # register wifimanager to respond to future changes to hostapd settings
   settings.register(["githubuser", "githubtoken"], event_gitcredentials) # update git credentials
   settings.register(["loglevel"], event_loglevel) # update of logging level
+  settings.register(["hostname"], event_hostname)
 
   # at this point consider the service ready
   twatchdog = time.monotonic()
@@ -397,6 +400,10 @@ if __name__ == "__main__":
       if event_loglevel.is_set():
         event_loglevel.clear()
         jjlogger.setLogLevel(settings.getSettingValue("loglevel"))
+
+      if event_hostname.is_set():
+        event_hostname.clear()
+        wifimanager.setHostname(settings.getSettingValue("hostname"))
 
       autotz = settings.getSettingValue("autotz")
 

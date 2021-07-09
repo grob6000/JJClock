@@ -21,7 +21,7 @@ sudo pip3 install numpy pyserial timezonefinder pytz pydbus pygithub gpiozero Pi
 
 # raspberry pi config
 sudo raspi-config nonint do_spi 0 # enable SPI
-sudo raspi-config nonint do_hostname "jjclock" # set hostname
+sudo raspi-config nonint do_hostname "jjclock-$(xxd -l 4 -c 4 -p < /dev/random)" # set hostname
 sudo raspi-config nonint do_serial 2 # disable serial terminal but enable /dev/serial0
 sudo timedatectl set-ntp True # enable ntp
 
@@ -33,7 +33,7 @@ then
     echo skipping disable bt
 else
     #append
-    echo "dtoverlay=pi3-disable-bt" >> /boot/config.txt
+    sudo echo "dtoverlay=pi3-disable-bt" >> /boot/config.txt
 fi
 
 # install epd driver

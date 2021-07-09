@@ -56,6 +56,7 @@ _settingsdefaults =  {
                           "owmkey":Setting(name="Open Weather Maps Key", value=jjcommon.owm_key, validation="string"),
                           "loglevel":Setting(name="Log Level", value=jjlogger.logger.level, validation="list", validationlist=list(jjlogger.levels.keys())),
                           "netiface":Setting(name="Network Interface", value="wlan0", validation="list", validationlist=wifimanager.getWifiInterfaces()),
+                          "hostname":Setting(name="Hostname", value="jjclock", validation="string"),
                      }  
 _registry = {}
 _registrylock = Lock()

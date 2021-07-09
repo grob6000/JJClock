@@ -89,7 +89,7 @@
                 } else {
                   input = '<input type="text" class="form-control" id="setting_{{key}}" placeholder="{{name}}"></input>';
                 }
-                template = '<tr id="rowsetting_{{key}}"><td>{{name}}</td><td>' + input + '</td></tr>'
+                template = '<tr id="rowsetting_{{key}}"><td>{{name}}</td><td>' + input + '<button type="button" class="btn btn-primary" onclick="makedefault({{key}})" id="btn_makedefault{{key}}">Default</button></td></tr>'
                 tablehtml = tablehtml + Mustache.render(template, v)
               }
             }

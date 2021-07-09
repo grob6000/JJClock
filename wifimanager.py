@@ -354,7 +354,6 @@ def getWifiInterfaces():
   ifaces = []
   global _wifimanagerlock
   with _wifimanagerlock:
-    # add network
     if "linux" in sys.platform:
       cp = subprocess.run(["wpa_cli", "interface"], capture_output=True, text=True)
       if cp.returncode == 0:
@@ -366,3 +365,35 @@ def getWifiInterfaces():
       logger.warning("Unable to fetch interfaces on this platform.")
   logger.debug("ifaces found: " + str(ifaces))
   return ifaces
+
+def getHostname():
+  global _wifimanagerlock
+  with _wifimanagerlock:
+    if "linux" in sys.platform:
+      cp = subprocess.run(["hostname"], capture_output=True, text=True)
+      if cp.returncode == 0:
+        hostname = cp.stdout.strip()
+    else:
+      logger.warning("Unable to fetch hostname on this platform")
+  logger.debug("hostname: " + hostname)
+  return hostname
+
+def setHostname(hostname):
+  if hostname:
+    if "linux" in sys.platform:
+      hostname = str(hostname)
+      currenthostname = getHostname()
+      if hostname == currenthostname:
+        logger.debug("hostname already {0}. not changing".format(hostname))
+      else:
+        logger.debug("setting hostname to: " + hostname)
+        global _wifimanagerlock
+        with _wifimanagerlock:
+          lp = logpipe.LogPipe(jjlogger.DEBUG, logger)
+          try:
+            subprocess.run(["sudo", "hostname", hostname], check=True, stderr=lp, stdout=lp)    
+          except subprocess.CalledProcessError:
+            logger.error("unsuccessful changing hostname")
+          lp.close()
+    else:
+      logger.warning("cannot change hostname on this platform") 
