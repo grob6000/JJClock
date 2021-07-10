@@ -17,7 +17,7 @@ git config --global user.name "grob6000"
 git config --global user.password "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"
 
 # python packages
-sudo pip3 install numpy pyserial timezonefinder pytz pydbus pygithub gpiozero Pillow flask pyowm pygame psutil waitress
+sudo pip3 install numpy pyserial timezonefinder pytz pydbus pygithub gpiozero Pillow flask pyowm pygame psutil waitress cython
 
 # raspberry pi config
 sudo raspi-config nonint do_spi 0 # enable SPI
@@ -38,6 +38,7 @@ fi
 
 # install epd driver
 cd ./IT8951
+export USE_CYTHON
 sudo pip3 install -r requirements.txt
 sudo pip3 install ./
 cd ~/JJClock
