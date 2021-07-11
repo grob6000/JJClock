@@ -45,6 +45,11 @@ sudo pip3 install -r requirements.txt
 sudo pip3 install ./
 cd ~/JJClock
 
+# install python multitouch driver
+cd ./python-multitouch-driver/library
+sudo python3 setup.py install
+cd ~/JJClock
+
 mkdir ./oldconfig
 
 # set up hostapd
