@@ -20,16 +20,20 @@ _Envisaged to display the time in the form of the front page of a newspaper._
 - OS: Raspbian Lite
 - Primary language: Python
 - Key libraries and open source components:
-  - Bootstrap (for web interface)
-  - PyGame (for testing display)
-  - PyTZ (for timezone management)
-  - pyowm (for weather)
-  - pygithub (for updates / connecting to this repository)
+  - Pillow (image manipulation): https://pypi.org/project/Pillow/
+  - Flask (for the web backend): https://pypi.org/project/Flask/
+  - Waitress (serving the flask app): https://pypi.org/project/waitress/
+  - Bootstrap (for web interface make look nicey): https://getbootstrap.com/
+  - Mustache (for in-browser templating): https://mustache.github.io/
+  - PyGame (for testing display): https://pypi.org/project/pygame/
+  - PyTZ (for timezone management): https://pypi.org/project/pytz/
+  - Timezonefinder (gets the timezone from GPS without the net): https://pypi.org/project/timezonefinder/
+  - pyowm (for weather): https://pypi.org/project/pyowm/
+  - pygithub (for checking for updates): https://github.com/PyGithub/PyGithub
+  - IT8951 display driver by GregDMeyer: https://github.com/GregDMeyer/IT8951
 
 ## Documentation
-- Full documentation is unlikely - on request; submit an issue.
+- Full documentation is unlikely - on request; submit an issue...
 
 ## Contributing
 - Fork, branch & submit a pull request!
-  - Welcome new renderers
-  - Welcome improvements to the config interface, for potential use on your other projects!
