@@ -143,7 +143,8 @@ class PygameDisplay(Display):
     y0 = int((sz_surf[1]-boxsize[1])/2)
     self.cropbox = (x0,y0,x0+boxsize[0],y0+boxsize[1])
     pygame.fastevent.init()
-    pygame.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0)) # invisible cursor
+    pygame.mouse.set_visible(0)
+    #pygame.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0)) # invisible cursor
 
     while not self._stopevent.is_set():
       if self._updateevent.is_set():
