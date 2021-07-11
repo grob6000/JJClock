@@ -31,9 +31,7 @@ class DisplayManager:
         d.displayImage(img=self._screen)
 
   def getSize(self):
-    with self._screenlock:
-      sz = self._screen.size
-    return sz
+    return self._screen.size
 
 
 class Display():
