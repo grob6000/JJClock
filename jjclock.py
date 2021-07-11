@@ -299,7 +299,7 @@ if __name__ == "__main__":
     displaymanager.displaylist.append(epddisplay) # register display
   else:
     logger.warning("Cannot use EPD display on this platform.")
-  pygamedisplay = display.PygameDisplay(windowsize=displaymanger.getSize(), start=False) # don't start just yet...
+  pygamedisplay = display.PygameDisplay(windowsize=displaymanager.getSize(), start=False) # don't start just yet...
   pygamedisplay.resize = True
   displaymanager.displaylist.append(pygamedisplay)
   pygamedisplay.restart() # start!
