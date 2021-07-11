@@ -90,9 +90,9 @@ class FT5406TouchInput(InputDevice):
     if event == ft5406.TS_RELEASE:
       print("touchscreen released", touch)
       if touch.slot in self._lastpresses:
-        lasttouch = self._lastpreses[touch.slot]
-        dx = touch.position[0]-lasttouch.position[0]
-        dy = touch.position[1]-lasttouch.position[1]
+        lastpress = self._lastpresses[touch.slot]
+        dx = touch.position[0]-lastpress.position[0]
+        dy = touch.position[1]-lastpress.position[1]
         dsq = (dx**2) + (dy**2)
         if dsq < self.gesturepx**2:
           # is a tap
@@ -101,13 +101,13 @@ class FT5406TouchInput(InputDevice):
           # is long enough to count as a gesture
           a = degrees(atan2(dy,dx))
           if (-1*self.gestureangle < a and a < self.gesturangle):
-            self.actionqueue.put(InputEvent(ACTION_RIGHT, lasttouch.position))
+            self.actionqueue.put(InputEvent(ACTION_RIGHT, lastpress.position))
           elif (90-self.gestureangle < a and a < 90+self.gestureangle):
-            self.actionqueue.put(InputEvent(ACTION_UP, lasttouch.position))
+            self.actionqueue.put(InputEvent(ACTION_UP, lastpress.position))
           elif (-90-self.gestureangle < a and a < -90+self.gestureangle):
-            self.actionqueue.put(InputEvent(ACTION_DOWN, lasttouch.position))
+            self.actionqueue.put(InputEvent(ACTION_DOWN, lastpress.position))
           elif (180-self.gestureangle < a or a < -180+self.gestureangle):
-            self.actionqueue.put(InputEvent(ACTION_LEFT, lasttouch.position))
+            self.actionqueue.put(InputEvent(ACTION_LEFT, lastpress.position))
     if event == ft5406.TS_MOVE:
         print("touchscreen move", touch)
 
