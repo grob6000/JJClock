@@ -1,5 +1,6 @@
 from PIL import Image
 from threading import Lock, Thread, Event
+from queue import Queue
 import sys
 
 from psutil import virtual_memory
@@ -13,6 +14,8 @@ import datetime
 from hashlib import md5
 
 import jjlogger
+import inputmanager
+
 logger = jjlogger.getLogger(__name__)
 
 class DisplayManager:
@@ -92,7 +95,7 @@ class EPDDisplay(Display):
       self._epddisplay.frame_buf.paste(self._rebox(img), self._getorigin()) # paste image as per the cropbox
       self._epddisplay.draw_full(constants.DisplayModes.GC16) # display update    
 
-class PygameDisplay(Display):
+class PygameDisplay(Display, inputmanager.InputDevice):
   
   displayfillcolor = (255, 255 ,255)
 
@@ -106,7 +109,8 @@ class PygameDisplay(Display):
     self._stopevent = Event()
     self._imglock = Lock()
     self._img = None
-    self.buttonevent = Event()
+    #self.buttonevent = Event()
+    self.actionqueue = Queue()
   
   def displayImage(self, img=None):
     if img and self._pygamethread.is_alive(): # only if pygame is running
@@ -144,7 +148,6 @@ class PygameDisplay(Display):
     self.cropbox = (x0,y0,x0+boxsize[0],y0+boxsize[1])
     pygame.fastevent.init()
     pygame.mouse.set_visible(0)
-    #pygame.mouse.set_cursor((8,8),(0,0),(0,0,0,0,0,0,0,0),(0,0,0,0,0,0,0,0)) # invisible cursor
 
     while not self._stopevent.is_set():
       if self._updateevent.is_set():
@@ -163,12 +166,22 @@ class PygameDisplay(Display):
           self._stopevent.set()
         if event.type == pygame.MOUSEBUTTONUP:
           if event.button == pygame.BUTTON_LEFT:
-            self.buttonevent.set()
+            #self.buttonevent.set()
+            self.actionqueue.put(inputmanager.InputEvent(inputmanager.ACTION_CLICK))
     pygame.quit()
     logger.info("pygame thread quit")
   
   def isrunning(self):
     return self._pygamethread.is_alive()
+
+  def open(self):
+    self.restart()
+  
+  def close(self):
+    self.stop()
+  
+  def isopen(self):
+    return self.isrunning()
 
 # display stored in memory only - ideal for web
 # threadsafe access to image (locked & copies buffer)

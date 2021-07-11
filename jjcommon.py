@@ -40,3 +40,6 @@ scriptpath = os.path.dirname(os.path.realpath(sys.argv[0]))
 
 # birthday
 birthday = {"day":12,"month":7,"year":1983}
+
+# touchscreen device
+tsdevice = "raspberrypi-ts"

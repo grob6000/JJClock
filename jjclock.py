@@ -32,6 +32,7 @@ from github import Github
 import psutil
 from time import sleep
 import atexit
+from queue import Empty
 
 if "linux" in sys.platform:
   from gpiozero import Device, Button
@@ -41,6 +42,7 @@ if "linux" in sys.platform:
   import pydbus
   import subprocess
   import sdnotify
+  import ft5406
 
 ## LOCAL MODULES ##
 
@@ -51,6 +53,7 @@ import webadmin
 import settings
 import display
 import updater
+import inputmanager
 
 ## CONSTANTS ##
 
@@ -105,7 +108,7 @@ displayhash = 0
 
 ## FUNCTIONS ##
   
-def onButton():
+def onButton(inputevent=None):
   global menuindexselected
   global menu
   global menutimeout_armed
@@ -279,12 +282,19 @@ if __name__ == "__main__":
   # change log level as per settings
   logger.setLevel(settings.getSettingValue("loglevel"))
 
+  # start inputmanager
+  logger.info("Initializing Input Manager...")
+  im = inputmanager.InputManager()
+
   # init gpio
   logger.info("Initializing GPIO...")
+  userbutton = None
   if "linux" in sys.platform:
     #Device.pin_factory = MockFactory()
-    userbutton = Button(buttongpio, bounce_time=debounce/1000.0)
-    userbutton.when_pressed = onButton
+    #userbutton = Button(buttongpio, bounce_time=debounce/1000.0)
+    #userbutton.when_pressed = onButton
+    userbutton = inputmanager.GPIOButton(pin=buttongpio)
+    im.addinput(userbutton)
   else:
     logger.warning("GPIO not available on this platform, no button enabled.")
   
@@ -302,7 +312,17 @@ if __name__ == "__main__":
   pygamedisplay = display.PygameDisplay(windowsize=displaymanager.getSize(), start=False) # don't start just yet...
   pygamedisplay.resize = True
   displaymanager.displaylist.append(pygamedisplay)
+  im.addinput(pygamedisplay)
   pygamedisplay.restart() # start!
+
+  # init touchscreen
+  logger.info("Connecting Touchscreen Input...")
+  rpits = None
+  if "linux" in sys.platform:
+    rpits = inputmanager.FT5406TouchInput(device=tsdevice)
+    im.addinput(rpits)
+  else:
+    logger.warning("No touchscreen on this platform.")
   
   # wifi manager init
   logger.info("Setting up Wifi Configuration...")
@@ -362,9 +382,18 @@ if __name__ == "__main__":
           sdn.notify("WATCHDOG=1")
           logger.debug("sent watchdog msg")
 
-      if pygamedisplay and pygamedisplay.buttonevent.is_set():
-        pygamedisplay.buttonevent.clear()
-        onButton()
+      #if pygamedisplay and pygamedisplay.buttonevent.is_set():
+      #  pygamedisplay.buttonevent.clear()
+      #  onButton()
+      try:
+        ie = im.eventqueue.get(block=False)
+      except Empty:
+        pass # nothing in the queue
+      else: # got an element; do an action (one per loop)
+        # simply do the button action for click
+        if ie.action == inputmanager.ACTION_CLICK:
+          onButton(ie)
+        im.eventqueue.task_done()
 
       if menutimeout_armed:
         tdiff = t - t_lastbuttonpress
