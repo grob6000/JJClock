@@ -368,14 +368,15 @@ def getWifiInterfaces():
 
 def getHostname():
   global _wifimanagerlock
+  hostname = None
   with _wifimanagerlock:
     if "linux" in sys.platform:
       cp = subprocess.run(["hostname"], capture_output=True, text=True)
       if cp.returncode == 0:
         hostname = cp.stdout.strip()
+        logger.debug("hostname: " + hostname)
     else:
       logger.warning("Unable to fetch hostname on this platform")
-  logger.debug("hostname: " + hostname)
   return hostname
 
 def setHostname(hostname):

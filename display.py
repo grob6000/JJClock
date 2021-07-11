@@ -75,11 +75,11 @@ class EPDDisplay(Display):
   def disconnect(self):
     del self._epddisplay
     self._epddisplay = None
-  
+
   def connect(self):
     try:
       self._epddisplay = AutoEPDDisplay(vcom=self.vcom)
-    except:
+    except IOError:
       logger.warning("EPD Display failed to init; will not function")
       self._epddisplay = None   
 
