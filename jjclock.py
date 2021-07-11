@@ -298,11 +298,11 @@ if __name__ == "__main__":
     epddisplay.cropbox = cropbox # set cropbox to match frame
     displaymanager.displaylist.append(epddisplay) # register display
   else:
-    logger.warning("No display on this platform. Using pygame.")
-    pygamedisplay = display.PygameDisplay(start=False) # don't start just yet...
-    pygamedisplay.resize = True
-    displaymanager.displaylist.append(pygamedisplay)
-    pygamedisplay.restart() # start!
+    logger.warning("Cannot use EPD display on this platform.")
+  pygamedisplay = display.PygameDisplay(windowsize=displaymanger.getSize(), start=False) # don't start just yet...
+  pygamedisplay.resize = True
+  displaymanager.displaylist.append(pygamedisplay)
+  pygamedisplay.restart() # start!
   
   # wifi manager init
   logger.info("Setting up Wifi Configuration...")

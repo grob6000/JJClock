@@ -137,7 +137,13 @@ class PygameDisplay(Display):
   def _run(self):
     logger.debug("pygame thread start")
     pygame.init()
-    surf = pygame.display.set_mode(self._windowsize)
+    surf = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+    sz_surf = surf.get_size()
+    scale = min(sz_surf[0]/self._windowsize[0], sz_surf[1]/self._windowsize[1])
+    boxsize = (int(scale * self._windowsize[0]), int(scale * self._windowsize[1]))
+    x0 = int((sz_surf[0]-boxsize[0])/2)
+    y0 = int((sz_surf[1]-boxsize[1])/2)
+    self.cropbox = (x0,y0,x0+boxsize[0],y0+boxsize[1])
     pygame.fastevent.init()
 
     while not self._stopevent.is_set():
