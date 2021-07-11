@@ -1,6 +1,6 @@
 from ft5406 import Touchscreen, TS_PRESS, TS_RELEASE, TS_MOVE
 
-ts = Touchscreen()
+ts = Touchscreen(device="raspberrypi-ts")
 
 def touch_handler(event, touch):
     if event == TS_PRESS:
