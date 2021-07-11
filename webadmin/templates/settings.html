@@ -63,7 +63,8 @@
         //setTimeout(updateswversion, 20000);
         pbtimer()
       }
-
+      
+      var settingscache = {}
       function updatesettings() {
         var xhttp = new XMLHttpRequest();
         xhttp.open("GET", "api/settings", true);
@@ -72,6 +73,7 @@
             jr = JSON.parse(this.responseText)
             let tablehtml = "";
             if ("settings" in jr) {
+              settingscache = jr["settings"]
               for (let key in jr["settings"]) {
                 let v = jr["settings"][key];
                 v["key"]=key;
@@ -89,7 +91,7 @@
                 } else {
                   input = '<input type="text" class="form-control" id="setting_{{key}}" placeholder="{{name}}"></input>';
                 }
-                template = '<tr id="rowsetting_{{key}}"><td>{{name}}</td><td>' + input + '<button type="button" class="btn btn-primary" onclick="makedefault({{key}})" id="btn_makedefault{{key}}">Default</button></td></tr>'
+                template = '<tr id="rowsetting_{{key}}"><td>{{name}}</td><td>' + input + '</td><td><button type="button" class="btn btn-outline-primary" onclick=\'makedefault("{{key}}")\' id="btn_makedefault_{{key}}">Default</button></td></tr>'
                 tablehtml = tablehtml + Mustache.render(template, v)
               }
             }
@@ -163,6 +165,19 @@
         setTimeout(pbtimer, 250) // 1/4 sec is same as an automatic watch...
       }
 
+      function makedefault(key) {
+        if (key in settingscache) {
+          let element = document.getElementById("setting_" + key)
+          if (element.type == "checkbox") {
+            element.checked = Boolean(settingscache[key]["default"])
+          } else {
+            element.value = settingscache[key]["default"]
+          }
+        } else {
+          updatesettings()
+        }
+      }
+
 
     </script>
   {% endraw %}
@@ -179,6 +194,7 @@
         <tr>
           <th scope="col">Name</th>
           <th scope="col">Value</th>
+          <th scope="col">Default</th>
         </tr>
         <tbody id="settingrows">
         </tbody>

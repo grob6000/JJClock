@@ -11,13 +11,14 @@ import jjlogger
 logger = jjlogger.getLogger(__name__)
 
 class Setting():
-  def __init__(self, name="", value=None, validation=None, validationlist=[]):
+  def __init__(self, name="", value=None, default=None, validation=None, validationlist=[]):
     self.name = str(name) # name of the setting
     self._value = value # value of the setting
     self.validation = validation # for a web interface; "string", "password", "int", "list" - otherwise will allow anything
     self.validationlist = validationlist # list of allowed objects as values (==)
+    self.default = default
   def asDict(self):
-    return {"name":str(self.name), "value":self.getValue(), "validation":self.validation, "validationlist":self.validationlist}
+    return {"name":str(self.name), "value":self.getValue(), "default":self.default, "validation":self.validation, "validationlist":self.validationlist}
   def setValue(self, value):
     if self.validation == "string" or self.validation == "password":
       self._value = str(value)
@@ -38,25 +39,27 @@ class Setting():
         logger.warning("attempted to set " + self.name + " to unlisted value " + str(value))
   def getValue(self):
     return self._value
+  def makeDefault(self):
+    self.setValue(self.default)
 
 _settingspath = os.path.join("~",".config","jjclock.json")
 _settings = {}
 _settingsfilelock = Lock()
 _settingslock = Lock()
 _settingsdefaults =  {
-                          "mode":Setting(name="Mode",value="clock_surprise",validation="list",validationlist=[]),
-                          "apssid":Setting(name="AP SSID", value=jjcommon.ap_ssid, validation="string"),
-                          "appass":Setting(name="AP Password",value=jjcommon.ap_pass,validation="password"),
-                          "gpson":Setting(name="Enable GPS",value=True,validation="bool"),
-                          "autotz":Setting(name="Auto Timezone",value=True,validation="bool"),
-                          "manualtz":Setting(name="Manual Timezone",value="UTC",validation="list",validationlist=all_timezones),
-                          "githubuser":Setting(name="Github Username", value=jjcommon.githubuser, validation="string"),
-                          "githubtoken":Setting(name="Github Access Token", value=jjcommon.githubtoken, validation="string"),
-                          "githubrepo":Setting(name="Github Repository", value=jjcommon.githubrepo, validation="string"),
-                          "owmkey":Setting(name="Open Weather Maps Key", value=jjcommon.owm_key, validation="string"),
-                          "loglevel":Setting(name="Log Level", value=jjlogger.logger.level, validation="list", validationlist=list(jjlogger.levels.keys())),
-                          "netiface":Setting(name="Network Interface", value="wlan0", validation="list", validationlist=wifimanager.getWifiInterfaces()),
-                          "hostname":Setting(name="Hostname", value="jjclock", validation="string"),
+                          "mode":Setting(name="Mode",value="clock_surprise",default="clock_surprise",validation="list",validationlist=[]),
+                          "apssid":Setting(name="AP SSID", value=jjcommon.ap_ssid, default=jjcommon.ap_ssid, validation="string"),
+                          "appass":Setting(name="AP Password",value=jjcommon.ap_pass,default=jjcommon.ap_pass,validation="password"),
+                          "gpson":Setting(name="Enable GPS",value=True,default=True,validation="bool"),
+                          "autotz":Setting(name="Auto Timezone",value=True,default=True,validation="bool"),
+                          "manualtz":Setting(name="Manual Timezone",value="UTC",default="UTC",validation="list",validationlist=all_timezones),
+                          "githubuser":Setting(name="Github Username", value=jjcommon.githubuser, default=jjcommon.githubuser, validation="string"),
+                          "githubtoken":Setting(name="Github Access Token", value=jjcommon.githubtoken, default=jjcommon.githubtoken, validation="string"),
+                          "githubrepo":Setting(name="Github Repository", value=jjcommon.githubrepo, default=jjcommon.githubrepo, validation="string"),
+                          "owmkey":Setting(name="Open Weather Maps Key", value=jjcommon.owm_key, default=jjcommon.owm_key, validation="string"),
+                          "loglevel":Setting(name="Log Level", value="INFO", default="INFO", validation="list", validationlist=list(jjlogger.levels.keys())),
+                          "netiface":Setting(name="Network Interface", value="wlan0", default="wlan0", validation="list", validationlist=wifimanager.getWifiInterfaces()),
+                          "hostname":Setting(name="Hostname", value="jjclock", default="jjclock", validation="string"),
                      }  
 _registry = {}
 _registrylock = Lock()
