@@ -308,23 +308,29 @@ if __name__ == "__main__":
   pygamedisplay = None
   epddisplay = None
   if "linux" in sys.platform:
-    epddisplay = display.EPDDisplay(vcom=display_vcom) # init epd display
-    epddisplay.cropbox = cropbox # set cropbox to match frame
-    displaymanager.displaylist.append(epddisplay) # register display
+      epddisplay = display.EPDDisplay(vcom=display_vcom) # init epd display
+      epddisplay.cropbox = cropbox # set cropbox to match frame
+      displaymanager.displaylist.append(epddisplay) # register display
   else:
-    logger.warning("Cannot use EPD display on this platform.")
-  pygamedisplay = display.PygameDisplay(windowsize=displaymanager.getSize(), start=False) # don't start just yet...
-  pygamedisplay.resize = True
-  displaymanager.displaylist.append(pygamedisplay)
-  im.addinput(pygamedisplay)
-  pygamedisplay.restart() # start!
+    logger.warning("Windows platform - no epddisplay")
+  if not epddisplay:
+    logger.debug("Starting pygame display...")
+    pygamedisplay = display.PygameDisplay(windowsize=displaymanager.getSize(), start=False) # don't start just yet...
+    pygamedisplay.resize = True
+    displaymanager.displaylist.append(pygamedisplay)
+    im.addinput(pygamedisplay)
+    pygamedisplay.restart() # start!
 
   # init touchscreen
   logger.info("Connecting Touchscreen Input...")
   rpits = None
   if "linux" in sys.platform:
-    rpits = inputmanager.FT5406TouchInput(device=tsdevice)
-    im.addinput(rpits)
+    try:
+      rpits = inputmanager.FT5406TouchInput(device=tsdevice)
+    except RuntimeError as e:
+      logger.warning("Error loading touchscreen: " + str(e))
+    else:
+      im.addinput(rpits)
   else:
     logger.warning("No touchscreen on this platform.")
   
