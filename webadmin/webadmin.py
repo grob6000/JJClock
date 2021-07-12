@@ -27,6 +27,7 @@ class WebAdmin():
     jjlogger.subsumeLogger(self._app.logger)
     self._worker = threading.Thread(target=self._run, daemon=True)
     self._stopevent = threading.Event()
+    self.rebootevent = threading.Event()
     self._datalock = threading.Lock()
     self._pages = [
       {"url":"/","name":"Home","id":"index","func":self.getpageindex},
@@ -49,7 +50,8 @@ class WebAdmin():
     self._app.add_url_rule("/api/screenpoll", view_func=self.getpoll, methods=['GET'])
     self._app.add_url_rule("/api/setmode", view_func=self.setmode, methods=['POST'])       
     self._app.add_url_rule("/api/update/check", view_func=self.getupdateversion, methods=['GET'])      
-    self._app.add_url_rule("/api/update/do", view_func=self.doupdate, methods=['GET'])            
+    self._app.add_url_rule("/api/update/do", view_func=self.doupdate, methods=['GET'])
+    self._app.add_url_rule("/api/reboot",view_func=self.doreboot, methods=["GET"])           
     self._app.add_url_rule("/api/icons/<string:iconfile>", view_func=self.geticon, methods=['GET'])    
     self._app.add_url_rule("/<string:fname>", view_func=self.getgeneral, methods=["GET"])
     self._savednetworks = []
@@ -266,4 +268,8 @@ class WebAdmin():
     
   def doupdate(self):
     self.updatedorequest.set() # request an update. browser probably will need refreshing!
+    return {"status":"ok"}
+  
+  def doreboot(self):
+    self.rebootevent.set()
     return {"status":"ok"}

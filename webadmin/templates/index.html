@@ -32,20 +32,12 @@
             document.getElementById("gpstzcell").innerHTML = jr["gps"]["tz"]
           }
           if ("threadstate" in jr) {
-            if (jr["threadstate"]["gps"] == true) {
-              document.getElementById("badge_thread_gps").classList.add("bg-success")
-            } else {
-              document.getElementById("badge_thread_gps").classList.add("bg-danger")
-            }
-            if (jr["threadstate"]["web"] == true) {
-              document.getElementById("badge_thread_web").classList.add("bg-success")
-            } else {
-              document.getElementById("badge_thread_web").classList.add("bg-danger")
-            }            
-            if (jr["threadstate"]["pygame"] == true) {
-              document.getElementById("badge_thread_pygame").classList.add("bg-success")
-            } else {
-              document.getElementById("badge_thread_pygame").classList.add("bg-danger")
+            for (let bk in jr["threadstate"]) {
+              if (jr["threadstate"][bk] == true) {
+                document.getElementById("badge_thread_"+bk).classList.add("bg-success")
+              } else {
+                document.getElementById("badge_thread_"+bk).classList.add("bg-danger")
+              }
             }
           }
           if ("timestamp" in jr) {
@@ -133,6 +125,7 @@
           <span class="badge bg-warning" id="badge_thread_gps">GPS</span>
           <span class="badge bg-warning" id="badge_thread_web">WEB</span>
           <span class="badge bg-warning" id="badge_thread_pygame">PYGAME</span>
+          <span class="badge bg-warning" id="badge_thread_rpits">RPI TS</span>
         </td>
       </tr>  
       <tr>

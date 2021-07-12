@@ -61,6 +61,7 @@
         xhttp.open("GET", "api/update/do", true);
         xhttp.send()
         //setTimeout(updateswversion, 20000);
+        pbtimer = 60
         pbtimer()
       }
       
@@ -151,17 +152,18 @@
       }
 
       let tstart = null
+      let pblength = 60
       function pbtimer() {
         if (tstart == null) {
           tstart = new Date().getTime();
         }
         deltams = new Date().getTime()-tstart;
-        if (deltams > 60000) {
+        if (deltams > (pblength * 1000)) {
           location.reload()
           return false
         }
-        document.getElementById("pbupdate").style.width = (deltams/600).toString() + "%"
-        document.getElementById("pbtext").innerHTML = "T - " + (60-(deltams/1000)).toFixed(0).toString() + " sec"
+        document.getElementById("pbupdate").style.width = (deltams/pblength/10).toString() + "%"
+        document.getElementById("pbtext").innerHTML = "T - " + (pblength-(deltams/1000)).toFixed(0).toString() + " sec"
         setTimeout(pbtimer, 250) // 1/4 sec is same as an automatic watch...
       }
 
@@ -176,6 +178,15 @@
         } else {
           updatesettings()
         }
+      }
+
+      function doreboot() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "api/reboot", true);
+        xhttp.send()
+        //setTimeout(updateswversion, 20000);
+        pblength = 120 // extra time for reboot
+        pbtimer()
       }
 
 
@@ -205,14 +216,18 @@
       <p>Current Version: <span id="currentversion"></span></p>
       <p>Available Version: <span id="latestversion"></span></p>
       <button type="button" class="btn btn-primary" onclick="checkupdate()" id="btn_updatecheck">Check For Update</button>
-      <button type="button" class="btn btn-primary" hidden id="btn_updatedo" onclick="doupdate()" data-bs-toggle="modal" data-bs-target="#updating">Update Now</button>
+      <button type="button" class="btn btn-primary" hidden id="btn_updatedo" onclick="doupdate()" data-bs-toggle="modal" data-bs-target="#pleasewait">Update Now</button>
+    </div>
+    <h2>Other</h2>
+    <div class="col-12 mb-3">
+      <button type="button" class="btn btn-danger" onclick="doreboot()" data-bs-toggle="modal" data-bs-target="#pleasewait" id="btn_reboot">Reboot Device</button>
     </div>
   </div>
-  <div class="modal fade" id="updating" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal fade" id="pleasewait" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="staticBackdropLabel">Updating, please wait...</h5>
+          <h5 class="modal-title" id="staticBackdropLabel">Please wait...</h5>
         </div>
         <div class="modal-body">
           <div class="progress">

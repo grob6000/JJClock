@@ -386,6 +386,16 @@ if __name__ == "__main__":
       
       t = time.monotonic()
 
+      if wa.rebootevent.is_set():
+        wa.rebootevent.clear()
+        killthreads()
+        if "linux" in sys.platform:
+          logging.info("Requesting restart")
+          os.system("sudo shutdown -r now")
+        else:
+          logging.warning("Cannot reboot this system. Quitting.")
+          sys.exit()
+
       if sdn:
         if (t - twatchdog) > watchdoginterval:
           twatchdog = t
@@ -519,7 +529,7 @@ if __name__ == "__main__":
         "mode":currentmode, 
         "gps":gpsstat,
         "memory":memoryusage,
-        "threadstate":{"gps":(gpsh and gpsh.isrunning()),"web":(wa and wa.isrunning()),"pygame":(pygamedisplay and pygamedisplay.isrunning())},
+        "threadstate":{"gps":(gpsh and gpsh.isrunning()),"web":(wa and wa.isrunning()),"pygame":(pygamedisplay and pygamedisplay.isrunning()),"rpits":(rpits and rpits.isopen())},
         "currentversion":updater.currentversion,
         "latestversion":updater.latestversion,
       })
