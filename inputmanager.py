@@ -72,10 +72,12 @@ class FT5406TouchInput(InputDevice):
   def open(self):
     if self._ts:
       self._ts.run()
+      logger.debug("Touchscreen input thread running")
   
   def close(self):
     if self._ts:
       self._ts.stop()
+      logger.debug("Touchscreen input thread stopped")
   
   def isopen(self):
     if self._ts:
@@ -86,9 +88,7 @@ class FT5406TouchInput(InputDevice):
   def _touch_handler(self, event, touch):
     if event == ft5406.TS_PRESS:
       self._lastpresses[touch.slot] = touch
-      logger.debug("touchscreen pressed", touch)
     if event == ft5406.TS_RELEASE:
-      print("touchscreen released", touch)
       if touch.slot in self._lastpresses:
         lastpress = self._lastpresses[touch.slot]
         dx = touch.position[0]-lastpress.position[0]

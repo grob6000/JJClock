@@ -254,6 +254,7 @@ event_loglevel = Event()
 event_hostname = Event()
 
 def killthreads():
+  global wa, gpsh, pygamedisplay, epddisplay, im
   logger.debug("killing things...")
   if wa:
     wa.stop() # stop web admin
@@ -263,6 +264,9 @@ def killthreads():
     pygamedisplay.stop() # kill pygame display
   if epddisplay:
     epddisplay.disconnect() # disconnect epddisplay from SPI (if this is still alive when next version starts, will fail)
+  if im:
+    for id in im.inputdevices:
+      id.close()
   
 atexit.register(killthreads)
 
