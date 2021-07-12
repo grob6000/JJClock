@@ -7,12 +7,12 @@ import sys
 if "linux" in sys.platform:
   import ft5406
 
-ACTION_NONE = 0
-ACTION_CLICK = 1
-ACTION_UP = 2
-ACTION_DOWN = 3
-ACTION_LEFT = 4
-ACTION_RIGHT = 5
+ACTION_NONE = "none"
+ACTION_CLICK = "click"
+ACTION_UP = "up"
+ACTION_DOWN = "down"
+ACTION_LEFT = "left"
+ACTION_RIGHT = "right"
 
 class InputManager():
   def __init__(self):
@@ -94,21 +94,26 @@ class FT5406TouchInput(InputDevice):
         dx = touch.position[0]-lastpress.position[0]
         dy = touch.position[1]-lastpress.position[1]
         dsq = (dx**2) + (dy**2)
+        ie = None
         if dsq < self.gesturepx**2:
           # is a tap
-          self.actionqueue.put(InputEvent(ACTION_CLICK,pos=touch.position))
+          ie = InputEvent(ACTION_CLICK,pos=touch.position)
         else:
           # is long enough to count as a gesture
           a = degrees(atan2(dy,dx))
-          if (-1*self.gestureangle < a and a < self.gesturangle):
-            self.actionqueue.put(InputEvent(ACTION_RIGHT, lastpress.position))
+          if (-1*self.gestureangle < a and a < self.gestureangle):
+            ie = InputEvent(ACTION_RIGHT, lastpress.position)
           elif (90-self.gestureangle < a and a < 90+self.gestureangle):
-            self.actionqueue.put(InputEvent(ACTION_UP, lastpress.position))
+            ie = InputEvent(ACTION_UP, lastpress.position)
           elif (-90-self.gestureangle < a and a < -90+self.gestureangle):
-            self.actionqueue.put(InputEvent(ACTION_DOWN, lastpress.position))
+            ie = InputEvent(ACTION_DOWN, lastpress.position)
           elif (180-self.gestureangle < a or a < -180+self.gestureangle):
-            self.actionqueue.put(InputEvent(ACTION_LEFT, lastpress.position))
-    if event == ft5406.TS_MOVE:
-        print("touchscreen move", touch)
+            ie = InputEvent(ACTION_LEFT, lastpress.position)
+        if ie:
+          self.actionqueue.put(ie)
+          logger.debug("ts action: " + ie.action)
+
+    #if event == ft5406.TS_MOVE:
+    #    print("touchscreen move", touch)
 
 
