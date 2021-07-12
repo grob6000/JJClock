@@ -1,7 +1,7 @@
 from queue import Queue
 import jjlogger
 logger = jjlogger.getLogger(__name__)
-from math import atan2, degrees
+from math import atan2, degrees, sqrt
 import gpiozero
 import sys
 if "linux" in sys.platform:
@@ -91,11 +91,11 @@ class FT5406TouchInput(InputDevice):
     if event == ft5406.TS_RELEASE:
       if touch.slot in self._lastpresses:
         lastpress = self._lastpresses[touch.slot]
-        dx = touch.position[0]-lastpress.position[0]
-        dy = touch.position[1]-lastpress.position[1]
-        d = ((dx**2) + (dy**2))**0.5
+        dx = float(touch.position[0]-lastpress.position[0])
+        dy = float(touch.position[1]-lastpress.position[1])
+        d = sqrt((dx**2) + (dy**2))
         a = degrees(atan2(dy,dx))
-        logger.debug("d = {0:0.1f}, a = {1:0.1f}".format(d,a))
+        logger.debug("dx = {2}, dy = {3}, d = {0:0.1f}, a = {1:0.1f}".format(d,a, dx, dy))
         ie = None
         if d < self.gesturepx:
           # is a tap
