@@ -93,16 +93,15 @@ class FT5406TouchInput(InputDevice):
         lastpress = self._lastpresses[touch.slot]
         dx = touch.position[0]-lastpress.position[0]
         dy = touch.position[1]-lastpress.position[1]
-        dsq = (dx**2) + (dy**2)
+        d = ((dx**2) + (dy**2))**0.5
+        a = degrees(atan2(dy,dx))
+        logger.debug("d = {0:0.1f}, a = {1:0.1f}".format(d,a))
         ie = None
-        if dsq < self.gesturepx**2:
+        if d < self.gesturepx:
           # is a tap
           ie = InputEvent(ACTION_CLICK,pos=touch.position)
-          logger.debug("d = {0:0.2f}".format((dx**2 + dy**2)**0.5))
         else:
           # is long enough to count as a gesture
-          a = degrees(atan2(dy,dx))
-          logger.debug("d = {0:0.1f}, a = {1:0.1f}".format((dx**2 + dy**2)**0.5,a))
           if (-1*self.gestureangle < a and a < self.gestureangle):
             ie = InputEvent(ACTION_RIGHT, lastpress.position)
           elif (90-self.gestureangle < a and a < 90+self.gestureangle):
