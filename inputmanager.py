@@ -91,6 +91,7 @@ class FT5406TouchInput(InputDevice):
     if event == ft5406.TS_RELEASE:
       if touch.slot in self._lastpresses:
         lastpress = self._lastpresses[touch.slot]
+        logger.debug("touch.position = {0}, lastpress.position = {1}".format(touch.position, lastpress.position))
         dx = float(touch.position[0]-lastpress.position[0])
         dy = float(touch.position[1]-lastpress.position[1])
         d = sqrt((dx**2) + (dy**2))
