@@ -313,7 +313,7 @@ if __name__ == "__main__":
       displaymanager.displaylist.append(epddisplay) # register display
   else:
     logger.warning("Windows platform - no epddisplay")
-  if not epddisplay:
+  if not epddisplay or not epddisplay.isopen():
     logger.debug("Starting pygame display...")
     pygamedisplay = display.PygameDisplay(windowsize=displaymanager.getSize(), start=False) # don't start just yet...
     pygamedisplay.resize = True

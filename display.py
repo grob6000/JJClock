@@ -93,7 +93,10 @@ class EPDDisplay(Display):
   def displayImage(self, img=None):
     if img and self._epddisplay:
       self._epddisplay.frame_buf.paste(self._rebox(img), self._getorigin()) # paste image as per the cropbox
-      self._epddisplay.draw_full(constants.DisplayModes.GC16) # display update    
+      self._epddisplay.draw_full(constants.DisplayModes.GC16) # display update
+
+  def isopen(self):
+    return bool(self._epddisplay)
 
 class PygameDisplay(Display, inputmanager.InputDevice):
   
