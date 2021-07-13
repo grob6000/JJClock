@@ -52,7 +52,9 @@
             document.getElementById("tzcell").innerHTML = jr["tz"]
           }
           if ("memory" in jr) {
-            document.getElementById("memoryusage").innerHTML = jr["memory"];
+            f = getfloat(jr["memory"])
+            guidancecomputers = Math.round(f*256.0)
+            document.getElementById("memoryusage").innerHTML = jr["memory"] + " = " + guidancecomputers.toString() + " ";
           }
           if ("currentversion" in jr) {
             document.getElementById("currentversion").innerHTML = jr["currentversion"];
@@ -80,6 +82,10 @@
       }
       xhttp.send();
       setTimeout(pollimage, 2500);
+    }
+    function getfloat(str) { 
+      var num = str.replace(/[^\d.-]/g, ''); 
+      return parseFloat(num); 
     }
   </script>
 {% endblock %}
@@ -136,7 +142,7 @@
       </tr>  
       <tr>
         <th scope="row">Memory Usage:</th>
-        <td id="memoryusage">Unknown</td>
+        <td><span id="memoryusage">Unknown</span><a href=https://en.wikipedia.org/wiki/Apollo_Guidance_Computer>Apollo Guidance Computers</a></td>
       </tr>  
       <tr>
         <th scope="row">Software Version:</th>
