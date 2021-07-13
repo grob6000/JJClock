@@ -30,6 +30,7 @@ class GpsHandler():
   
   _baud = 9600
   _tzcheckinterval = 900
+  _staletime = 5 # seconds
   
   def __init__(self, port='/dev/serial0'):
     logger.debug("initializing gpshandler")
@@ -45,6 +46,7 @@ class GpsHandler():
       self._lng = None
       self._tz = pytz.UTC
       self._tzfound = False
+      self._lastheard = None
     self._worker = threading.Thread(target=self._run, daemon=True)
     atexit.register(self.__del__) # try to terminate thread nicely on quit (give back serial port)
     #self._worker.run() # start the thread listening for NMEA data
@@ -100,7 +102,11 @@ class GpsHandler():
       lat = self._lat
       lng = self._lng
       dt_utc = self._dt_utc
-    return {"hastime":hastime, "hasfix":hasfix, "signalok":signalok, "tz":tz, "lat":lat, "lng":lng, "dtutc":dt_utc}
+      lastheard = self._lastheard
+    hascomms = False
+    if lastheard:
+      hascomms = bool((time.monotonic() - lastheard) < self._staletime)
+    return {"hascomms":hascomms, "hastime":hastime, "hasfix":hasfix, "signalok":signalok, "tz":tz, "lat":lat, "lng":lng, "dtutc":dt_utc}
   
   # check if data has been updated since last call
   def pollUpdated(self):
@@ -134,6 +140,8 @@ class GpsHandler():
         
       if fields[0] == "$GPRMC": # only parse GPRMC messages
         #logger.debug("received message: " + str(fields))
+
+        lastheard = time.monotonic()
         # utc time
         dt_utc = None
         if (len(fields[1]) >= 6) and (len(fields[9]) >= 6):
@@ -183,6 +191,8 @@ class GpsHandler():
             self._tzfound = True
           if sigok:
             self._signalok = sigok
+          if lastheard:
+            self._lastheard = lastheard
             
         self._newdataevent.set() # set event for new data
         #logger.debug("newdataevent status = {0}".format(self._newdataevent.is_set()))

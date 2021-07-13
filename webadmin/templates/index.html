@@ -27,6 +27,11 @@
             } else {
               document.getElementById("badge_gpstime").classList.add("bg-danger")
             }
+            if (jr["gps"]["hascomms"] == true) {
+              document.getElementById("badge_gpscomms").classList.add("bg-success")
+            } else {
+              document.getElementById("badge_gpscomms").classList.add("bg-danger")
+            }
             document.getElementById("gpsloccell").innerHTML = jr["gps"]["loc"]
             document.getElementById("gpstimecell").innerHTML = jr["gps"]["dtutc"]
             document.getElementById("gpstzcell").innerHTML = jr["gps"]["tz"]
@@ -103,6 +108,7 @@
       <tr>
         <th scope="row">GPS Status:</th>
         <td id="gpsstatuscell">
+          <span class="badge bg-warning" id="badge_gpscomms">COMMS</span>
           <span class="badge bg-warning" id="badge_gpsfix">FIX</span>
           <span class="badge bg-warning" id="badge_gpstime">TIME</span>
         </td>
