@@ -141,7 +141,7 @@ class PygameDisplay(Display, inputmanager.InputDevice):
 
   def _run(self):
     logger.debug("pygame thread start")
-    pygame.init()
+    pygame.display.init() # display only
     surf = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
     sz_surf = surf.get_size()
     scale = min(sz_surf[0]/self._windowsize[0], sz_surf[1]/self._windowsize[1])
