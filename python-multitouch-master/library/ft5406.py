@@ -121,7 +121,7 @@ class Touchscreen(object):
         self._running = False
         self._thread = None
         self._f_poll = select.poll()
-        self._f_device = io.open(self._touch_device(), 'rb', self.EVENT_SIZE)
+        #self._f_device = io.open(self._touch_device(), 'rb', self.EVENT_SIZE)
         self._f_poll.register(self._f_device, select.POLLIN)
         self.position = Touch(0, 0, 0)
         self.touches = Touches([Touch(x, 0, 0) for x in range(10)])
@@ -130,9 +130,11 @@ class Touchscreen(object):
 
     def _run(self):
         self._running = True
+        self._f_device = io.open(self._touch_device(), 'rb', self.EVENT_SIZE)
         while self._running:
             self.poll()
             #time.sleep(0.0001)
+        self._f_device.close()
 
     def run(self):
         if self._thread is not None:
