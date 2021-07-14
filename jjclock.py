@@ -268,7 +268,7 @@ def killthreads():
     epddisplay.disconnect() # disconnect epddisplay from SPI (if this is still alive when next version starts, will fail)
   if im:
     for id in im.inputdevices:
-      if not id == rpits:
+      if not id == userbutton:
         logger.debug("killing " + str(id))
         id.close()
   
