@@ -47,10 +47,8 @@ class RendererConfig(Renderer):
       addr = kwargs["ip"]
     
     # append port to addr if not 80
-    if kwargs["port"] == 80:
-      addr = str(kwargs["ip"])
-    else:
-      addr = str(kwargs["ip"]) + ":" + str(kwargs["port"])
+    if not kwargs["port"] == 80:
+      addr = addr + ":" + str(kwargs["port"])
 
     t = [["Wifi SSID:", ssid],
         ["WIFI Password:",pwd],

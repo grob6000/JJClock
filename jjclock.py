@@ -394,7 +394,6 @@ if __name__ == "__main__":
   ## MAIN LOOP ##
 
   tlastupdate = time.monotonic()
-  tlastconfigupdate = time.monotonic()
   while not pleasequit:
       
       t = time.monotonic()
@@ -470,9 +469,8 @@ if __name__ == "__main__":
         event_hostname.clear()
         wifimanager.setHostname(settings.getSettingValue("hostname"))
       
-      if currentmode == "config" and (wifimanager.wifidetailschangedevent.is_set() or t - tlastconfigupdate > 60):
+      if currentmode == "config" and wifimanager.wifidetailschangedevent.is_set():
         wifimanager.wifidetailschangedevent.clear()
-        tlastconfigupdate = t
         # update the config display directly if wifi details have changed
         logger.debug("updating config screen!")
         kwargs = collectkwargs()
