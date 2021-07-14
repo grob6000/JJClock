@@ -99,7 +99,8 @@ def doUpdate(tag=None):
       lp = logpipe.LogPipe(jjlogger.DEBUG, logger)
       try:      
         subprocess.run(["git", "fetch", "--all"], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["git", "checkout", tag], check=True, stderr=lp, stdout=lp)
+        subprocess.run(["git", "reset", "--hard", tag], check=True, stderr=lp, stdout=lp)
+        #subprocess.run(["git", "checkout", tag], check=True, stderr=lp, stdout=lp)
         #s = subprocess.Popen(["bash", str(updatescript), jjcommon.scriptpath, settings.getSettingValue("githubuser"), settings.getSettingValue("githubtoken"), tag])
       except subprocess.CalledProcessError as e:
         logger.error("Problem encountered during update: " + str(e))
