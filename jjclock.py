@@ -447,7 +447,9 @@ if __name__ == "__main__":
       
       if wa.updatedorequest.is_set():
         wa.updatedorequest.clear()
-        updater.doUpdate() # default tag will be the last checked version
+        ecode = updater.doUpdate() # default tag will be the last checked version
+        killthreads()
+        sys.exit(ecode)
       
       if event_loglevel.is_set():
         event_loglevel.clear()
