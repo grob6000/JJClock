@@ -18,6 +18,7 @@ logger = jjlogger.getLogger(__name__)
 _wifimanagerlock = threading.Lock() # locks the wpa_cli resources so they're only used one at a time - if you call while this is being used by another thread, it will block until the lock is freed
 _currentwifimode = "unknown" # global storage of current wifi mode
 _targetwifimode = "unknown" # set for when we run the change routine in the background
+wifidetailschangedevent = threading.Event()
 
 # dummy values for when we're testing in windows
 _dummynetworks = [{"id":0,"ssid":"dummynetwork_a","connected":True},{"id":1,"ssid":"dummynetwork_b","connected":False}]
@@ -91,6 +92,7 @@ def writeHostapd():
       # dummy - return global memory version without reading anything
       logger.warning("no hostapd.conf - will not write")
   if needtochange:
+    wifidetailschangedevent.set()
     _doAPMode()
 
 def updateHostapd(apssid, appass):
@@ -274,6 +276,7 @@ def _doAPMode():
         logger.error("unsuccessful changing to ap mode")
       else:
         newmode = "ap"
+        wifidetailschangedevent.set()
       lp.close()
     else:
       logger.warning("cannot change wifi mode")
@@ -300,11 +303,13 @@ def _doClientMode():
         logger.error("unsuccessful changing to client mode")
       else:
         newmode = "client"
+        wifidetailschangedevent.set()
       lp.close()
     else:
       logger.warning("cannot change wifi mode")
     global _currentwifimode
-    _currentwifimode = newmode  
+    _currentwifimode = newmode
+    
 
 def reconfigureWifi():
   if "linux" in sys.platform:
@@ -317,6 +322,8 @@ def reconfigureWifi():
           subprocess.run(["wpa_cli", "-i", iface, "reconfigure"], check=True)
         except subprocess.CalledProcessError:
           logger.error("unsuccessful reconfiguring wifi")
+        else:
+          wifidetailschangedevent.set()
       else:
         logger.warning("cannot reconfigure wifi; in AP mode")
   else:
@@ -349,6 +356,23 @@ def getWifiMode():
     global _currentwifimode
     thewifimode = _currentwifimode
   return thewifimode
+
+def getWifiStatus():
+  wifistatus = {}
+  if "linux" in sys.platform:
+    global _wifimanagerlock
+    iface = settings.getSettingValue("netiface")
+    with _wifimanagerlock:
+      cp = subprocess.run(["wpa_cli", "-i", iface, "status"], capture_output=True, text=True)
+      if not "FAIL" in cp.stdout:
+        lines = cp.stdout.strip().split("\n")
+        for l in lines:
+          parts = l.strip().split("=")
+          if len(parts)==2:
+            wifistatus[parts[0]] = parts[1]
+  else:
+    logger.warning("cannot retrieve IP address on this platform")
+  return wifistatus
 
 def getWifiInterfaces():
   ifaces = []
@@ -395,6 +419,8 @@ def setHostname(hostname):
             subprocess.run(["sudo", "hostname", hostname], check=True, stderr=lp, stdout=lp)    
           except subprocess.CalledProcessError:
             logger.error("unsuccessful changing hostname")
+          else:
+            wifidetailschangedevent.set()
           lp.close()
     else:
       logger.warning("cannot change hostname on this platform") 

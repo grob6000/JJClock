@@ -137,6 +137,25 @@ def onMenuTimeout():
 def formatIP(ip):
   return "{ip[0]}.{ip[1]}.{ip[2]}.{ip[3]}".format(ip=ip)
 
+def collectkwargs():
+  kwargs = {}
+  kwargs["mode"]=currentmode
+  if gpsh:
+    gpsstat = gpsh.getStatus()
+  else:
+    gpsstat = None
+  kwargs["ssid"] = settings.getSettingValue("apssid")
+  kwargs["password"] = settings.getSettingValue("appass")
+  kwargs["ip"] = ap_addr
+  kwargs["port"] = webadmin_port
+  kwargs["gpsstat"] = gpsstat
+  kwargs["wifimode"] = wifimanager.getWifiMode()
+  kwargs["wifistatus"] = wifimanager.getWifiStatus()
+  kwargs["selecteditem"] = menuindexselected
+  kwargs["menu"] = menu
+  kwargs["timestamp"] = currentdt
+  return kwargs
+
 def changeMode(mode):
   global modelist
   global currentmode
@@ -144,7 +163,6 @@ def changeMode(mode):
   global menu
   global currentrenderer
   r = None
-  kwargs = {"mode":mode}
   if not mode in modelist:
     logger.warning("Unrecognized mode requested: " + mode)
   elif mode == currentmode:
@@ -157,26 +175,16 @@ def changeMode(mode):
     if mode == "config":
       # set wifi to AP mode
       wifimanager.setWifiMode("ap")
-      if gpsh:
-        gpsstat = gpsh.getStatus()
-      else:
-        gpsstat = None
-      kwargs["ssid"] = settings.getSettingValue("apssid")
-      kwargs["password"] = settings.getSettingValue("appass")
-      kwargs["ip"] = ap_addr
-      kwargs["port"] = webadmin_port
-      kwargs["gpsstat"] = gpsstat
     elif mode == "menu":
       # do not change wifimode for menu
-      kwargs["selecteditem"] = menuindexselected
-      kwargs["menu"] = menu
+      pass
     else:
       wifimanager.setWifiMode("client") # all other modes should be in client state (if no wifi configured, will be disconnected...)
     if mode in modelist and not r:
       currentrenderer = jjrenderer.renderers[mode]()
-      kwargs["timestamp"] = currentdt
     else:
       currentrenderer = jjrenderer.Renderer()
+    kwargs = collectkwargs()
     displaymanager.doRender(currentrenderer,**kwargs)
   
 def updateTime(dt, force=False):
@@ -460,6 +468,13 @@ if __name__ == "__main__":
       if event_hostname.is_set():
         event_hostname.clear()
         wifimanager.setHostname(settings.getSettingValue("hostname"))
+      
+      if wifimanager.wifidetailschangedevent.is_set():
+        wifimanager.wifidetailschangedevent.clear()
+        if currentmode == "config":
+          # update the config display directly if wifi details have changed
+          kwargs = collectkwargs()
+          displaymanager.doRender(currentrenderer,**kwargs)
 
       autotz = settings.getSettingValue("autotz")
 

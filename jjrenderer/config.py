@@ -29,9 +29,33 @@ class RendererConfig(Renderer):
       addr = str(kwargs["ip"])
     else:
       addr = str(kwargs["ip"]) + ":" + str(kwargs["port"])
-    t = [["Wifi SSID:", str(kwargs["ssid"])],
-         ["WIFI Password:",str(kwargs["password"])],
-         ["Address:", "http:\\\\{}\\".format(addr)]]
+
+    # get relevant wifi details depending on mode
+    ssid = "****"
+    pwd = "****"
+    addr = "*.*.*.*"
+    if kwargs["wifimode"] == "client":
+      # cautious; might not be present
+      if "ssid" in kwargs["wifistatus"]:
+        ssid = kwargs["wifistatus"]["ssid"]
+      if "ip_address" in kwargs["wifistatus"]:
+        addr = kwargs["wifistatus"]["ip_address"]
+    else:
+      # ap details
+      ssid = kwargs["ssid"]
+      pwd = kwargs["password"]
+      addr = kwargs["ip"]
+    
+    # append port to addr if not 80
+    if kwargs["port"] == 80:
+      addr = str(kwargs["ip"])
+    else:
+      addr = str(kwargs["ip"]) + ":" + str(kwargs["port"])
+
+    t = [["Wifi SSID:", ssid],
+        ["WIFI Password:",pwd],
+        ["Address:", "http:\\\\{}\\".format(addr)]]
+
     y = y0 + configicon.size[1] + 100
     for l in t:
       draw.text((x0, y), l[0], font=RendererConfig.mediumfont, fill=0x00)
