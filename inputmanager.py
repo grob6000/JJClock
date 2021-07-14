@@ -76,6 +76,7 @@ class FT5406TouchInput(InputDevice):
   
   def close(self):
     if self._ts:
+      logger.debug("Stopping touchscreen...")
       self._ts.stop()
       logger.debug("Touchscreen input thread stopped")
   
