@@ -53,7 +53,7 @@
   {% for menuitem in menudata %}
   <div class="col-12 col-sm-6 col-md-4 g-3 mb-2">
     <div class="card text-center h-100" id="card_{{ menuitem.name }}">
-      <img src="/api/icons/{{ menuitem.icon }}" class="card-img-top mx-auto p-3" style="max-width: 200px">
+      <img src="/api/icons/{{ menuitem.icon }}" class="card-img-top mx-auto p-3" style="max-width: 200px; filter:grayscale(1); -webkit-filter:grayscale(1);">
       <div class="card-body">
         <h5 class="card-title">{{ menuitem.text }}</h5>
         <p class="card-text">{{ menuitem.description }}</p>
