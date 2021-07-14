@@ -416,7 +416,8 @@ def setHostname(hostname):
         with _wifimanagerlock:
           lp = logpipe.LogPipe(jjlogger.DEBUG, logger)
           try:
-            subprocess.run(["sudo", "hostname", hostname], check=True, stderr=lp, stdout=lp)    
+            #sudo raspi-config nonint do_hostname 
+            subprocess.run(["sudo", "raspi-config", "nonint", "do_hostname", hostname], check=True, stderr=lp, stdout=lp)    
           except subprocess.CalledProcessError:
             logger.error("unsuccessful changing hostname")
           else:
