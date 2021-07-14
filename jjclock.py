@@ -268,6 +268,7 @@ def killthreads():
     epddisplay.disconnect() # disconnect epddisplay from SPI (if this is still alive when next version starts, will fail)
   if im:
     for id in im.inputdevices:
+      logger.debug("killing " + str(id))
       id.close()
   
 atexit.register(killthreads)
