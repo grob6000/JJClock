@@ -7,7 +7,7 @@ sudo systemctl stop jjclock.service
 
 # install required programs
 sudo apt-get -y update
-sudo apt-get -y install git python3 python3-pip hostapd dnsmasq libjpeg-dev zlib1g-dev libfreetype6-dev liblcms1-dev libopenjp2-7 libtiff5 libsecret-1-0 libsecret-1-dev libatlas-base-dev authbind python3-sdl2 autoconf
+sudo apt-get -y install git python3 python3-pip hostapd dnsmasq libjpeg-dev zlib1g-dev libfreetype6-dev liblcms1-dev libopenjp2-7 libtiff5 libsecret-1-0 libsecret-1-dev libatlas-base-dev authbind python3-sdl2 autoconf dnsutils
 
 wget 
 
