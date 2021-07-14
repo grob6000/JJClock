@@ -126,14 +126,11 @@ class PygameDisplay(Display, inputmanager.InputDevice):
 
   def restart(self):
     self.stop()
-    logger.debug("pygame stopped. restarting...")
     self._pygamethread.start()
   
   def stop(self):
     if self._pygamethread.is_alive():
-      logger.debug("requesting pygame stop...")
       self._stopevent.set()
-      logger.debug("waiting for pygame stop...")
       self._pygamethread.join()  
   
   def __exit__(self):
@@ -171,7 +168,7 @@ class PygameDisplay(Display, inputmanager.InputDevice):
           if event.button == pygame.BUTTON_LEFT:
             #self.buttonevent.set()
             self.actionqueue.put(inputmanager.InputEvent(inputmanager.ACTION_CLICK))
-    pygame.quit()
+    pygame.display.quit()
     logger.info("pygame thread quit")
   
   def isrunning(self):

@@ -232,7 +232,7 @@ def doUpdate():
   if "linux" in sys.platform:
     logger.debug("current version: " + updater.currentversion + ", available: " + updater.latestversion)
     displaymanager.doRender(jjrenderer.renderers["updating"](), version="{0} --> {1}".format(updater.currentversion, updater.latestversion))
-    killthreads() # stop most of the action first; reduce the amount of stuff affected by updating
+    #killthreads() # stop most of the action first; reduce the amount of stuff affected by updating
     updater.doUpdate(updater.latestversion) # will quit
   else:
     logger.warning("will not update on windows")
