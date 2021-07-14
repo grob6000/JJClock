@@ -372,6 +372,7 @@ def getWifiStatus():
             wifistatus[parts[0]] = parts[1]
   else:
     logger.warning("cannot retrieve IP address on this platform")
+  logger.debug(str(wifistatus))
   return wifistatus
 
 def getWifiInterfaces():
