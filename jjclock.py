@@ -233,7 +233,9 @@ def doUpdate():
     logger.debug("current version: " + updater.currentversion + ", available: " + updater.latestversion)
     displaymanager.doRender(jjrenderer.renderers["updating"](), version="{0} --> {1}".format(updater.currentversion, updater.latestversion))
     #killthreads() # stop most of the action first; reduce the amount of stuff affected by updating
-    updater.doUpdate(updater.latestversion) # will quit
+    ecode = updater.doUpdate(updater.latestversion)
+    killthreads() # try to shut down
+    os._exit(ecode) # force quit
   else:
     logger.warning("will not update on windows")
 

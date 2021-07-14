@@ -113,7 +113,7 @@ def doUpdate(tag=None):
     else:
       logger.warning("Not able to update on this system, ignoring request to update.")
       ecode=1
-  sys.exit(ecode) # we always quit
+  return ecode
 
 # asks system to restart the service, and quits
 #def restartService():
