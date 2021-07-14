@@ -235,7 +235,7 @@ def doUpdate():
     #killthreads() # stop most of the action first; reduce the amount of stuff affected by updating
     ecode = updater.doUpdate(updater.latestversion)
     killthreads() # try to shut down
-    os._exit(ecode) # force quit
+    sys.exit(ecode) # force quit
   else:
     logger.warning("will not update on windows")
 
