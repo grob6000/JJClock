@@ -14,7 +14,7 @@ RestartSec=2
 User=pi
 TimeoutStopSec=10
 TimeoutStartSec=300
-WatchdogSec=30
+WatchdogSec=60
 Environment=PYTHONUNBUFFERED=1
 
 [Install]
