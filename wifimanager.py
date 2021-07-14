@@ -370,9 +370,16 @@ def getWifiStatus():
           parts = l.strip().split("=")
           if len(parts)==2:
             wifistatus[parts[0]] = parts[1]
+      # rdns lookup for domain name
+      if "ip_address" in wifistatus:
+        cp = subprocess.run(["nslookup", wifistatus["ip_address"]], capture_output=True, text=True)
+        if cp.returncode == 0:
+          l = cp.stdout.splitlines()[0] # first entry
+          if "name = " in l: # has a name entry
+            wifistatus["dnsname"] = l.split("name = ")[1].strip('.')
   else:
     logger.warning("cannot retrieve IP address on this platform")
-  logger.debug(str(wifistatus))
+  logger.debug("wifistatus = " + str(wifistatus))
   return wifistatus
 
 def getWifiInterfaces():
@@ -426,3 +433,4 @@ def setHostname(hostname):
           lp.close()
     else:
       logger.warning("cannot change hostname on this platform") 
+  

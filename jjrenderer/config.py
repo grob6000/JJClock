@@ -33,26 +33,32 @@ class RendererConfig(Renderer):
     # get relevant wifi details depending on mode
     ssid = "****"
     pwd = "****"
-    addr = "*.*.*.*"
+    ipaddr = "*.*.*.*"
+    addr = "*"
     if kwargs["wifimode"] == "client":
       # cautious; might not be present
       if "ssid" in kwargs["wifistatus"]:
         ssid = kwargs["wifistatus"]["ssid"]
       if "ip_address" in kwargs["wifistatus"]:
-        addr = kwargs["wifistatus"]["ip_address"]
+        ipaddr = kwargs["wifistatus"]["ip_address"]
     else:
       # ap details
       ssid = kwargs["ssid"]
       pwd = kwargs["password"]
-      addr = kwargs["ip"]
-    
+      ipaddr = kwargs["ip"]
+
+    # show rdns lookup name if available
+    if "dnsname" in kwargs["wifistatus"]:
+      addr = kwargs["wifistatus"]["dnsname"]
+
     # append port to addr if not 80
     if not kwargs["port"] == 80:
       addr = addr + ":" + str(kwargs["port"])
 
     t = [["Wifi SSID:", ssid],
         ["WIFI Password:",pwd],
-        ["Address:", "http:\\\\{}\\".format(addr)]]
+        ["Address:", "http:\\\\{}\\".format(addr)],
+        ["IP Address:", ipaddr]]
 
     y = y0 + configicon.size[1] + 100
     for l in t:
