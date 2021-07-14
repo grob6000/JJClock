@@ -50,6 +50,8 @@ class RendererConfig(Renderer):
     # show rdns lookup name if available
     if "dnsname" in kwargs["wifistatus"]:
       addr = kwargs["wifistatus"]["dnsname"]
+    else:
+      addr = ipaddr
 
     # append port to addr if not 80
     if not kwargs["port"] == 80:
