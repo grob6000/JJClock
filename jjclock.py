@@ -262,13 +262,13 @@ def killthreads():
     wa.stop() # stop web admin
   if gpsh:
     gpsh.disconnect() # disconnect gps from serial (if this is still alive when next version starts, will fail)
-  #if pygamedisplay:
-  #  pygamedisplay.stop() # kill pygame display
+  if pygamedisplay:
+    pygamedisplay.stop() # kill pygame display
   if epddisplay:
     epddisplay.disconnect() # disconnect epddisplay from SPI (if this is still alive when next version starts, will fail)
   if im:
     for id in im.inputdevices:
-      if not id == pygamedisplay:
+      if not id == rpits:
         logger.debug("killing " + str(id))
         id.close()
   
