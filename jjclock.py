@@ -473,6 +473,7 @@ if __name__ == "__main__":
         wifimanager.wifidetailschangedevent.clear()
         if currentmode == "config":
           # update the config display directly if wifi details have changed
+          logger.debug("updating config screen!")
           kwargs = collectkwargs()
           displaymanager.doRender(currentrenderer,**kwargs)
 
