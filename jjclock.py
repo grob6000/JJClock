@@ -280,7 +280,7 @@ def killthreads():
       logger.debug("killing " + str(id))
       id.close()
   
-#atexit.register(killthreads)
+atexit.register(killthreads)
 
 ## SCRIPT ##
 if __name__ == "__main__":
