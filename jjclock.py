@@ -234,7 +234,8 @@ def doUpdate():
     displaymanager.doRender(jjrenderer.renderers["updating"](), version="{0} --> {1}".format(updater.currentversion, updater.latestversion))
     #killthreads() # stop most of the action first; reduce the amount of stuff affected by updating
     ecode = updater.doUpdate(updater.latestversion)
-    killthreads() # try to shut down
+    killthreads() # try to shut 
+    sleep(1)
     sys.exit(ecode) # force quit
   else:
     logger.warning("will not update on windows")
@@ -449,6 +450,7 @@ if __name__ == "__main__":
         wa.updatedorequest.clear()
         ecode = updater.doUpdate() # default tag will be the last checked version
         killthreads()
+        sleep(1)
         sys.exit(ecode)
       
       if event_loglevel.is_set():
