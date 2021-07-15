@@ -68,7 +68,10 @@ def readHostapd():
       # dummy - return global memory version without reading anything
       logger.warning("no hostapd.conf - returning internal copy only")
       conf = copy.deepcopy(_hostapdconfdefault)
-  
+  # ensure whatever is read is complete (fill with defaults)
+  for dk, dv in _hostapdconfdefault.items():
+    if not dk in conf:
+      conf[dk] = dv
   logger.debug("read hostapdconf: " + str(conf))
   return conf
 
