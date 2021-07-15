@@ -93,10 +93,10 @@ menutimeout_armed = False
 
 # systemd watchdog
 wdev = os.getenv('WATCHDOG_USEC')
-logger.debug("WATCHDOG_USEC = " + str(wdev))
 watchdoginterval = 15 # seconds; default
 if wdev:
-  watchdocinterval = int(wdev)/2000000 # seconds
+  watchdoginterval = int(wdev)/2000000 # 1/2 the required interval, in seconds
+logger.debug("WATCHDOG_USEC = " + str(wdev) + " watchdoginterval = " + str(watchdoginterval))
 
 tz = pytz.UTC
 pytz.all_timezones
