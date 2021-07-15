@@ -8,6 +8,7 @@ import settings # should be relatively threadsafe...
 import copy
 from PIL import Image
 import waitress
+import subprocess
 
 from jjcommon import *
 from gpshandler import formatlatlon
@@ -53,6 +54,7 @@ class WebAdmin():
     self._app.add_url_rule("/api/update/do", view_func=self.doupdate, methods=['GET'])
     self._app.add_url_rule("/api/reboot",view_func=self.doreboot, methods=["GET"])           
     self._app.add_url_rule("/api/icons/<string:iconfile>", view_func=self.geticon, methods=['GET'])    
+    self._app.add_url_rule("/api/log", view_func=self.getlog, methods=['GET'])    
     self._app.add_url_rule("/<string:fname>", view_func=self.getgeneral, methods=["GET"])
     self._savednetworks = []
     self._scannetworks = []
@@ -273,3 +275,15 @@ class WebAdmin():
   def doreboot(self):
     self.rebootevent.set()
     return {"status":"ok"}
+
+  def getlog(self):
+    journaltext = ""
+    try:
+      cp = subprocess.run(["journalctl", "-u", "jjclock.service"], capture_output=True, text=True, check=True)
+      journaltext = cp.stdout
+    except subprocess.CalledProcessError as e:
+      logger.error("error while reading log: " + str(e))
+      abort(500)
+    r = Response(journaltext, mimetype="text/plain", direct_passthrough=True)
+    return r
+    
