@@ -1,5 +1,7 @@
 from jjrenderer.renderer import *
 
+import qrcode
+
 class RendererConfig(Renderer):
 
   name = "config"
@@ -8,6 +10,7 @@ class RendererConfig(Renderer):
 
   bigfont = getFont(fontsize=100)
   mediumfont = getFont(fontsize=50)
+  smallfont = getFont(fontsize=20)
 
   def doRender(self, screen, **kwargs):
     
@@ -18,7 +21,7 @@ class RendererConfig(Renderer):
     tsz = RendererConfig.bigfont.getsize(t)
     configicon = getImage("icon_config")
     x0 = int((screen.size[0] - configicon.size[0] - tsz[0] - 150) / 2)
-    y0 = 200
+    y0 = 100
     screen.paste(configicon, (x0, y0))
     x = x0 + configicon.size[0] + 150
     draw = ImageDraw.Draw(screen)
@@ -56,17 +59,41 @@ class RendererConfig(Renderer):
     # append port to addr if not 80
     if not kwargs["port"] == 80:
       addr = addr + ":" + str(kwargs["port"])
+    
+    addr = "http://" + addr + "/"
 
     t = [["Wifi SSID:", ssid],
         ["WIFI Password:",pwd],
-        ["Address:", "http:\\\\{}\\".format(addr)],
+        ["Address:", addr],
         ["IP Address:", ipaddr]]
 
-    y = y0 + configicon.size[1] + 100
+    y = y0 + configicon.size[1] + 80
     x0 = 150
     for l in t:
-      draw.text((x0, y), l[0], font=RendererConfig.mediumfont, fill=0x00)
-      draw.text((x0+400, y), l[1], font=RendererConfig.mediumfont, fill=0x00)
+      draw.text((x0, y), l[0], font=self.mediumfont, fill=0x00)
+      draw.text((x0+400, y), l[1], font=self.mediumfont, fill=0x00)
       y = y + 80
+    
+    # generate qrcode for wifi
+    qrcodesize = 250
+    y_qrt = y + qrcodesize
+    if kwargs["wifimode"] == "ap":
+      wifiqrstring = "WIFI:S:{0};T:WPA;P:{1};;".format(ssid, pwd)
+      wifiqrimg = qrcode.make(wifiqrstring)
+      wifiqrimg = wifiqrimg.resize((qrcodesize,qrcodesize))
+      x = int((screen.size[0] - qrcodesize*3)/2)
+      screen.paste(wifiqrimg, (x, y))
+      tsz = self.smallfont.getsize("Connect Wifi")
+      draw.text((x + int((250 - tsz[0])/2), y_qrt), "Connect Wifi", font=self.smallfont, fill=0x00)
+      x = x + (qrcodesize * 2)
+    else:
+      x = int((screen.size[0] - qrcodesize)/2)
+
+    # generate qrcode for link
+    qrimg = qrcode.make(addr)
+    qrimg = qrimg.resize((qrcodesize,qrcodesize))
+    screen.paste(qrimg, (x,y))
+    tsz = self.smallfont.getsize("Open Page")
+    draw.text((x + int((250 - tsz[0])/2), y_qrt), "Open Page", font=self.smallfont, fill=0x00)
     
     return screen

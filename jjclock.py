@@ -12,7 +12,7 @@ import jjlogger
 logger = jjlogger.getLogger(None)
 
 ## INSTALL ANY MISSING PACKAGES ##
-required = {"numpy", "pyserial", "timezonefinder", "pytz", "pydbus", "pygithub", "gpiozero", "pillow", "flask", "pyowm", "pygame", "psutil", "waitress", "sdnotify"}
+required = {"numpy", "pyserial", "timezonefinder", "pytz", "pydbus", "pygithub", "gpiozero", "pillow", "flask", "pyowm", "pygame", "psutil", "waitress", "sdnotify", "qrcode"}
 installed = {pkg.key for pkg in pkg_resources.working_set}
 missing = required - installed
 if missing:
