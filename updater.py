@@ -63,7 +63,7 @@ def getLatestVersion():
       tag = latestrel.tag_name
       logger.info("Latest github repo version: " + tag)
     latestversion = tag
-    lastchecked = datetime.datetime.utcnow()
+  lastchecked = datetime.datetime.utcnow()
   return tag
 
 def setGitCredentials():
