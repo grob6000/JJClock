@@ -41,6 +41,9 @@ def getTimeSinceLastChecked():
 def getLatestVersion():
   global latestversion
   global lastchecked
+  g = None
+  repo = None
+  rels = None
   try:
     g = github.Github(settings.getSettingValue("githubtoken"))
     repo = g.get_repo(settings.getSettingValue("githubrepo"))
@@ -51,15 +54,16 @@ def getLatestVersion():
   latestpub = datetime.datetime.min
   latestrel = None
   tag = None
-  for r in rels:
-    if r.published_at > latestpub:
-      latestpub = r.published_at
-      latestrel = r
-  if latestrel:
-    tag = latestrel.tag_name
-    logger.info("Latest github repo version: " + tag)
-  latestversion = tag
-  lastchecked = datetime.datetime.utcnow()
+  if rels:
+    for r in rels:
+      if r.published_at > latestpub:
+        latestpub = r.published_at
+        latestrel = r
+    if latestrel:
+      tag = latestrel.tag_name
+      logger.info("Latest github repo version: " + tag)
+    latestversion = tag
+    lastchecked = datetime.datetime.utcnow()
   return tag
 
 def setGitCredentials():
