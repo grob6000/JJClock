@@ -288,6 +288,7 @@ def _doAPMode():
         badcalls.append("restart hostapd")
       if len(badcalls) == 0:
         newmode = "ap"
+        logger.debug("wifi mode succesfully set to ap")
       else:
         logger.error("error when changing to ap mode: " + str(badcalls))
         newmode = "unknown"
@@ -297,7 +298,7 @@ def _doAPMode():
       logger.warning("cannot change wifi mode")
     global _currentwifimode
     _currentwifimode = newmode
-  
+      
 def _doClientMode():
   newmode = "unknown"
   iface = settings.getSettingValue("netiface")
@@ -332,6 +333,7 @@ def _doClientMode():
         badcalls.append("dhclient")
       if len(badcalls) == 0:
         newmode = "client"
+        logger.debug("wifi mode succesfully set to ap")
       else:
         newmode = "unknown"
         logger.error("unsuccessful changing to client mode")
