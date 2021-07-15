@@ -32,7 +32,17 @@ daystrings_et = ["esmaspäev", "teisipäev", "kolmapäev", "neljapäev", "reede"
 daystrings_ru = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"]
 monthstrings_ru = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "сентябрь", "октябрь", "ноябрь", "декабрь"]
 
+languages = ["en", "de", "es", "fr", "it", "et", "ru"]
+"""List of currently supported language codes"""
+
 def HalfAndHalf(sentence):
+  """Splits a string into two lines.
+  
+  Keyword Arguments:
+  sentence -- string to split in two
+  
+  Returns:
+  list object: ["first line", "second line"]"""
   sentence = str(sentence)
   imin = len(sentence)
   for i in range(0,len(sentence)):
@@ -45,7 +55,13 @@ def HalfAndHalf(sentence):
       
 
 def GetNumberString(n, lang="en"):
-
+    """Gets a number from 0-99 written out in the specified language.
+    
+    Keyword Arguments:
+    n -- integer 0-99, to be written out (REQUIRED)
+    lang -- string, two-letter code for language to use (default = "en")
+    
+    See jjtimestring.languages for list of supported languages"""
     if lang == "de":
         numberstrings = numberstrings_de
         decadestrings = decadestrings_de
@@ -99,6 +115,14 @@ def GetNumberString(n, lang="en"):
     return s
     
 def GetDateString(dt, lang="en", includeday=False):
+    """Gets a date written out in the specified language.
+    
+    Keyword Arguments:
+    dt -- datetime.datetime, containing date to be written out (REQUIRED)
+    lang -- string, two-letter code for language to use (default = "en")
+    includeday -- whether to include the day (default = False)
+    
+    See jjtimestring.languages for list of supported languages"""
     if lang == "fr":
       monthstrings = monthstrings_fr
       daystrings = daystrings_fr
@@ -119,6 +143,15 @@ def GetDateString(dt, lang="en", includeday=False):
     return s
 
 def GetHourString(h, lang="en", format="12h"):
+    """Gets the hour written out in the specified language.
+    
+    Keyword Arguments:
+    h -- integer, hour from 0-23, to be written out (REQUIRED)
+    lang -- string, two-letter code for language to use (default = "en")
+    format -- string, either "12h" for 12-hour format, or "24h" for 24h format (default = "12h")
+
+    See jjtimestring.languages for list of supported languages
+    Note also supports "en_mil" (military time) and "en_idiomatic" (crappy approximate time)"""
     # if it's midday or middnight, 50% chance of using these terms
     r = random.randint(0,1)
     if h == 0 and r == 1:
@@ -142,6 +175,13 @@ def GetHourString(h, lang="en", format="12h"):
     return hourstring    
 
 def GetTimeString(dt=datetime.datetime.now(), lang="en"):
+    """Gets the time written out in the specified language.
+    
+    Keyword Arguments:
+    dt -- datetime.datetime, containing time to be written out (REQUIRED)
+    lang -- string, two-letter code for language to use (default = "en")
+    
+    See jjtimestring.languages for list of supported languages"""
     timestring = ""
     # prepare for 12h times with only numbers
     h = dt.hour % 12
