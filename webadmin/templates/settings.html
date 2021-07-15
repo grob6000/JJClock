@@ -189,7 +189,6 @@
         pbtimer()
       }
 
-
     </script>
   {% endraw %}
 {% endblock %}
@@ -221,6 +220,7 @@
     <h2>Other</h2>
     <div class="col-12 mb-3">
       <button type="button" class="btn btn-danger" onclick="doreboot()" data-bs-toggle="modal" data-bs-target="#pleasewait" id="btn_reboot">Reboot Device</button>
+      <a class="btn btn-success" href="/api/log.txt" target="_blank">Google</a>
     </div>
   </div>
   <div class="modal fade" id="pleasewait" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">

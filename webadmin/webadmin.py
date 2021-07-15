@@ -54,7 +54,7 @@ class WebAdmin():
     self._app.add_url_rule("/api/update/do", view_func=self.doupdate, methods=['GET'])
     self._app.add_url_rule("/api/reboot",view_func=self.doreboot, methods=["GET"])           
     self._app.add_url_rule("/api/icons/<string:iconfile>", view_func=self.geticon, methods=['GET'])    
-    self._app.add_url_rule("/api/log", view_func=self.getlog, methods=['GET'])    
+    self._app.add_url_rule("/api/log.txt", view_func=self.getlog, methods=['GET'])    
     self._app.add_url_rule("/<string:fname>", view_func=self.getgeneral, methods=["GET"])
     self._savednetworks = []
     self._scannetworks = []
