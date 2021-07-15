@@ -333,7 +333,7 @@ def _doClientMode():
         badcalls.append("dhclient")
       if len(badcalls) == 0:
         newmode = "client"
-        logger.debug("wifi mode succesfully set to ap")
+        logger.debug("wifi mode succesfully set to client")
       else:
         newmode = "unknown"
         logger.error("unsuccessful changing to client mode")
