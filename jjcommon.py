@@ -10,7 +10,7 @@ cly = int((cropbox[3] + cropbox[1])/2)
 
 # gpio
 buttongpio = 23
-debounce = 50 #ms
+debounce = 10 #ms
 
 # wifi
 iface = "wlan0"
