@@ -101,8 +101,8 @@ def updateHostapd(apssid, appass):
   apssid = str(apssid)
   appass = str(appass)
   global _wifimanagerlock
+  conf = readHostapd()
   with _wifimanagerlock:
-    conf = readHostapd()
     if not apssid == conf["ssid"]:
       conf["ssid"] = apssid
       modified = True
