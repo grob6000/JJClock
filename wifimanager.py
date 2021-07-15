@@ -25,7 +25,7 @@ _dummynetworks = [{"id":0,"ssid":"dummynetwork_a","connected":True},{"id":1,"ssi
 _dummyscanresult = [{"bssid":"00:00:00:00","freq":2412,"channel":1,"rssi":-60,"flags":["WPA"],"ssid":"scannetwork_a","id":0},
 {"bssid":"00:00:00:00","freq":2437,"channel":6,"rssi":-58,"flags":["WPA"],"ssid":"scannetwork_b","id":1}]
 
-_hostapdconf = {  "interface":jjcommon.iface,
+_hostapdconfdefault = {  "interface":jjcommon.iface,
                   "ssid":jjcommon.ap_ssid,
                   "hw_mode":"g",
                   "channel":"6",
@@ -63,34 +63,35 @@ def readHostapd():
         conf = _parseconftext(hostapdtext)
       except subprocess.CalledProcessError:
         logger.error("could not read hostapd.conf - using default")
-        conf = copy.deepcopy(_hostapdconf)
+        conf = copy.deepcopy(_hostapdconfdefault)
     else:
       # dummy - return global memory version without reading anything
       logger.warning("no hostapd.conf - returning internal copy only")
-      conf = copy.deepcopy(_hostapdconf)
+      conf = copy.deepcopy(_hostapdconfdefault)
   
-  logger.debug("read hostapdconf: " + str(_hostapdconf))
+  logger.debug("read hostapdconf: " + str(conf))
   return conf
 
-def writeHostapd():
+def writeHostapd(conf=None):
   needtochange = False
-  global _wifimanagerlock
-  with _wifimanagerlock:
-    global _hostapdconf, _currentwifimode
-    logger.debug("writing hostapdconf: " + str(_hostapdconf))
-    if "linux" in sys.platform:
-      with open("/tmp/hostapd.conf", "w") as f:
-        f.write(_makeconftext(_hostapdconf))
-      try:
-        subprocess.run(["sudo", "cp", "/tmp/hostapd.conf", "/etc/hostapd/hostapd.conf"], check=True)
-      except subprocess.CalledProcessError:
-        logger.error("could not copy hostapd.conf")
-      if _currentwifimode == "ap":
-        # restart ap mode
-        needtochange = True
-    else:
-      # dummy - return global memory version without reading anything
-      logger.warning("no hostapd.conf - will not write")
+  if conf:
+    global _wifimanagerlock
+    with _wifimanagerlock:
+      global _currentwifimode
+      if "linux" in sys.platform:
+        logger.debug("writing hostapdconf: " + str(conf))
+        with open("/tmp/hostapd.conf", "w") as f:
+          f.write(_makeconftext(conf))
+        try:
+          subprocess.run(["sudo", "cp", "/tmp/hostapd.conf", "/etc/hostapd/hostapd.conf"], check=True)
+        except subprocess.CalledProcessError:
+          logger.error("could not copy hostapd.conf")
+        if _currentwifimode == "ap":
+          # restart ap mode
+          needtochange = True
+      else:
+        # dummy - return global memory version without reading anything
+        logger.warning("no hostapd.conf - will not write")
   if needtochange:
     wifidetailschangedevent.set()
     _doAPMode()
@@ -101,15 +102,15 @@ def updateHostapd(apssid, appass):
   appass = str(appass)
   global _wifimanagerlock
   with _wifimanagerlock:
-    global _hostapdconf
-    if not apssid == _hostapdconf["ssid"]:
-      _hostapdconf["ssid"] = apssid
+    conf = readHostapd()
+    if not apssid == conf["ssid"]:
+      conf["ssid"] = apssid
       modified = True
-    if not appass == _hostapdconf["wpa_passphrase"]:
-      _hostapdconf["wpa_passphrase"] = appass
+    if not appass == conf["wpa_passphrase"]:
+      conf["wpa_passphrase"] = appass
       modified = True
   if modified:
-    writeHostapd()
+    writeHostapd(conf)
   else:
     logger.debug("no need to update hostapd; details not changed")
 
@@ -266,17 +267,28 @@ def _doAPMode():
   with _wifimanagerlock:
     if "linux" in sys.platform:
       lp = logpipe.LogPipe(jjlogger.DEBUG, logger)
-      try:
-        subprocess.run(["wpa_cli", "-i", iface, "disconnect"], check=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-        subprocess.run(["sudo", "ip", "link", "set", "dev", iface, "down"], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["sudo", "ip", "addr", "add", jjcommon.ap_addr+"/25", "dev", iface], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["sudo", "systemctl", "restart", "dnsmasq.service"], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["sudo", "systemctl", "restart", "hostapd.service"], check=True, stderr=lp, stdout=lp)
-      except subprocess.CalledProcessError:
-        logger.error("unsuccessful changing to ap mode")
-      else:
+      badcalls = []
+      cp = subprocess.run(["wpa_cli", "-i", iface, "disconnect"], check=False, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+      if not cp.returncode == 0:
+        badcalls.append("wpa_cli")
+      cp = subprocess.run(["sudo", "ip", "link", "set", "dev", iface, "down"], check=False, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("ip link set")
+      cp = subprocess.run(["sudo", "ip", "addr", "add", jjcommon.ap_addr+"/25", "dev", iface], check=False, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("wpa_cli")
+      cp = subprocess.run(["sudo", "systemctl", "restart", "dnsmasq.service"], check=True, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("restart dnsmasq")
+      cp = subprocess.run(["sudo", "systemctl", "restart", "hostapd.service"], check=True, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("restart hostapd")
+      if len(badcalls) == 0:
         newmode = "ap"
-        wifidetailschangedevent.set()
+      else:
+        logger.error("error when changing to ap mode: " + str(badcalls))
+        newmode = "unknown"
+      wifidetailschangedevent.set()
       lp.close()
     else:
       logger.warning("cannot change wifi mode")
@@ -290,20 +302,37 @@ def _doClientMode():
   with _wifimanagerlock:
     if "linux" in sys.platform:
       lp = logpipe.LogPipe(jjlogger.DEBUG, logger)
-      try:
-        subprocess.run(["sudo", "systemctl", "stop", "hostapd.service"], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["sudo", "systemctl", "stop", "dnsmasq.service"], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["sudo", "ip", "link", "set", "dev", iface, "down"], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["sudo", "ip", "addr", "flush", "dev", iface], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["wpa_cli", "-i", iface, "reconfigure"], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["sudo", "systemctl", "daemon-reload"], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["sudo", "systemctl", "restart", "dhcpcd.service"], check=True, stderr=lp, stdout=lp)
-        subprocess.run(["sudo", "dhclient", iface], check=True, stderr=lp, stdout=lp)
-      except subprocess.CalledProcessError:
-        logger.error("unsuccessful changing to client mode")
-      else:
+      badcalls = []
+      cp = subprocess.run(["sudo", "systemctl", "stop", "hostapd.service"], check=False, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("stop hostapd")
+      cp = subprocess.run(["sudo", "systemctl", "stop", "dnsmasq.service"], check=False, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("stop dnsmasq")
+      cp = subprocess.run(["sudo", "ip", "link", "set", "dev", iface, "down"], check=False, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("ip link down")
+      cp = subprocess.run(["sudo", "ip", "addr", "flush", "dev", iface], check=False, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("ip addr flush")
+      cp = subprocess.run(["wpa_cli", "-i", iface, "reconfigure"], check=False, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("wpa_cli reconfigure")
+      cp = subprocess.run(["sudo", "systemctl", "daemon-reload"], check=False, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("daemon-reload")
+      cp = subprocess.run(["sudo", "systemctl", "restart", "dhcpcd.service"], check=False, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("restart dhcpcd")
+      cp = subprocess.run(["sudo", "dhclient", iface], check=False, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("dhclient")
+      if len(badcalls) == 0:
         newmode = "client"
-        wifidetailschangedevent.set()
+      else:
+        newmode = "unknown"
+        logger.error("unsuccessful changing to client mode")
+      wifidetailschangedevent.set()
       lp.close()
     else:
       logger.warning("cannot change wifi mode")
