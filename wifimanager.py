@@ -377,7 +377,7 @@ def reconfigureWifi():
 _modechangefuncs = {"ap":_doAPMode, "client":_doClientMode}
 
 def setWifiMode(newwifimode):
-  global _wifimanagerlock, _changethread:
+  global _wifimanagerlock, _changethread
   if _changethread and _changethread.is_alive():
     logger.warning("mode change currently in progress. will ignore request to change to " + newwifimode)
   else:
