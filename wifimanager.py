@@ -19,6 +19,7 @@ _wifimanagerlock = threading.Lock() # locks the wpa_cli resources so they're onl
 _currentwifimode = "unknown" # global storage of current wifi mode
 _targetwifimode = "unknown" # set for when we run the change routine in the background
 wifidetailschangedevent = threading.Event()
+_changethread = None
 
 # dummy values for when we're testing in windows
 _dummynetworks = [{"id":0,"ssid":"dummynetwork_a","connected":True},{"id":1,"ssid":"dummynetwork_b","connected":False}]
@@ -275,6 +276,9 @@ def _doAPMode():
     if "linux" in sys.platform:
       lp = logpipe.LogPipe(jjlogger.DEBUG, logger)
       badcalls = []
+      cp = subprocess.run(["sudo", "dhclient", iface, "-x"], check=False, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("dhclient -x")
       cp = subprocess.run(["wpa_cli", "-i", iface, "disconnect"], check=False, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
       if not cp.returncode == 0:
         badcalls.append("wpa_cli")
@@ -332,7 +336,10 @@ def _doClientMode():
       cp = subprocess.run(["sudo", "systemctl", "restart", "dhcpcd.service"], check=False, stderr=lp, stdout=lp)
       if not cp.returncode == 0:
         badcalls.append("restart dhcpcd")
-      cp = subprocess.run(["sudo", "dhclient", iface], check=False, stderr=lp, stdout=lp)
+      cp = subprocess.run(["sudo", "dhclient", iface, "-x"], check=False, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("dhclient -x")
+      cp = subprocess.run(["sudo", "dhclient", iface, "-nw"], check=False, stderr=lp, stdout=lp)
       if not cp.returncode == 0:
         badcalls.append("dhclient")
       if len(badcalls) == 0:
@@ -370,23 +377,26 @@ def reconfigureWifi():
 _modechangefuncs = {"ap":_doAPMode, "client":_doClientMode}
 
 def setWifiMode(newwifimode):
-  global _wifimanagerlock
-  with _wifimanagerlock:
-    global _currentwifimode
-    if _currentwifimode == "changing":
-      logger.warning("wifi mode currently changing; request ignored")
-    elif (newwifimode == _currentwifimode):
-      logger.info("wifi mode unchanged")
-    elif newwifimode == "ap" or newwifimode == "client":
-      logger.info("wifi mode changing to " + newwifimode)
-      global _targetwifimode
-      _targetwifimode = newwifimode
-      _currentwifimode = "changing"
-      global _modechangefuncs
-      t = threading.Thread(target=_modechangefuncs[newwifimode], daemon=False)
-      t.start()
-    else:
-      logger.info("invalid wifi mode, no change")
+  global _wifimanagerlock, _changethread:
+  if _changethread and _changethread.is_alive():
+    logger.warning("mode change currently in progress. will ignore request to change to " + newwifimode)
+  else:
+    with _wifimanagerlock:
+      global _currentwifimode
+      if _currentwifimode == "changing":
+        logger.warning("wifi mode currently changing; request ignored")
+      elif (newwifimode == _currentwifimode):
+        logger.info("wifi mode unchanged")
+      elif newwifimode == "ap" or newwifimode == "client":
+        logger.info("wifi mode changing to " + newwifimode)
+        global _targetwifimode
+        _targetwifimode = newwifimode
+        _currentwifimode = "changing"
+        global _modechangefuncs
+        _changethread = threading.Thread(target=_modechangefuncs[newwifimode], daemon=True)
+        _changethread.start()
+      else:
+        logger.info("invalid wifi mode, no change")
 
 def getWifiMode():
   global _wifimanagerlock
