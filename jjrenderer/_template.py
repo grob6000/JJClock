@@ -1,8 +1,13 @@
 from jjrenderer.renderer import *
 
+# Copy this template, save as a new file in the jjrenderer module folder (anything, but without a _ at the beginning, please - e.g. "euro.py")
+# The app will discover the contents automatically when starting.
+
+# change my name - clocks should be format "Renderer[Name]Clock", others "Renderer[Name]". Must be unique!
 class RendererTemplate(Renderer):
-  
-  name = "template" # a unique name. if it's a clock, please use format "clock_*"
+  """Template Renderer"""
+
+  name = "template" # a unique name, used for mode and menu selection. if it's a clock, please prepend "clock_", e.g. "clock_euro"
   isclock = True # True if this is a clock, and False if it is not (only clocks will be added to the menu)
   # icon should be 200x200, added to the "img" folder; and should start with "icon_"
   # text: the friendly name of the item (displayed on the menu screen and web)
