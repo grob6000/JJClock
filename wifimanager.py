@@ -471,12 +471,15 @@ def _runWifiStatusMonitor():
   while not _wifistatusmonitorquit.is_set():
     newwifistatus = getWifiStatus()
     for k,v in newwifistatus.items():
-      if not (k in oldwifistatus and oldwifistatus[k] == v):
-        logger.debug("{0} changed to {1}".format(k,v))
+      if not (k in oldwifistatus):
+        logger.debug("{0}={1} added".format(k,v))
         wifidetailschangedevent.set() # something added or changed, send signal
         break # look nae further
-    oldwifistatus = newwifistatus
-
+      elif not (oldwifistatus[k] == v):
+        logger.debug("{0} changed from {1} to {2}".format(k,oldwifistatus[k],v))
+        wifidetailschangedevent.set() # something added or changed, send signal
+        break # look nae further
+    oldwifistatus = copy.copy(newwifistatus)
     sleep(2)
   logger.debug("wifi status monitor stopped")
 
