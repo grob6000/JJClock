@@ -410,13 +410,6 @@ def getWifiMode():
   """Get current wifi mode, "ap or "client"."""
   global _currentwifimode
   thewifimode = _currentwifimode
-  # in case of uncertainty, check wpa_cli (if this is connected, we're in 'client' mode)
-  if not thewifimode in ["client", "ap"]:
-    wifistatus = getWifiStatus()
-    if wifistatus["wpa_state"] == "COMPLETED":
-      with _wifimanagerlock:
-        _currentwifimode = "client"
-        thewifimode = "client"
   return thewifimode
 
 def checkIfInClientMode():
