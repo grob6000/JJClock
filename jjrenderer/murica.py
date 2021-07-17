@@ -3,7 +3,7 @@ from jjrenderer.renderer import *
 class RendererMuricaClock(Renderer):
   name = "clock_murica"
   isclock = True
-  menuitem = {"icon":"icon_murica.png","text":"'Murica","description":"Like Clockwork. A well regulated Clock, being necessary to the security of a free State, the right of the people to keep and bear Hands shall not be infringed."}
+  menuitem = {"icon":"icon_murica.png","text":"'Murica","description":"A well regulated Clock, being necessary to the security of a free State, the right of the people to keep and bear Hands shall not be infringed."}
   updateinterval = 5
   gundeathindex = 39566 # deaths per year
   text_y1=330
