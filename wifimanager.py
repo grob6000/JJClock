@@ -444,9 +444,10 @@ _wifistatusmonitorquit = threading.Event()
 def startWifiStatusMonitor():
   """Start monitoring change of wpa_cli status, trigger event on change."""
   global _wifistatusmonitorthread
-  if not _wifistatusmonitorthread:
+  if not _wifistatusmonitorthread and not _wifistatusmonitorthread.is_alive():
     _wifistatusmonitorquit.clear()
     _wifistatusmonitorthread = threading.Thread(target=_runWifiStatusMonitor, daemon=True)
+    _wifistatusmonitorthread.start()
 
 def stopWifiStatusMonitor():
   """Stop monitoring change of wpa_cli status."""
