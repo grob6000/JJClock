@@ -388,11 +388,10 @@ _modechangefuncs = {"ap":_doAPMode, "client":_doClientMode}
 
 def setWifiMode(newwifimode):
   """Set wifi mode to "ap" or "client"."""
-  global _wifimanagerlock, _changethread, _targetwifimode, _modechangefuncs
+  global _wifimanagerlock, _changethread, _targetwifimode, _modechangefuncs, _currentwifimode
   if _changethread and _changethread.is_alive():
     logger.warning("mode change currently in progress. will ignore request to change to " + newwifimode)
   else:
-      global _currentwifimode
       if _currentwifimode == "changing":
         logger.warning("wifi mode currently changing; request ignored")
       elif (newwifimode == _currentwifimode):
@@ -419,6 +418,16 @@ def getWifiMode():
         _currentwifimode = "client"
         thewifimode = "client"
   return thewifimode
+
+def checkIfInClientMode():
+  """Check wpa_cli and update mode if in client mode (for boot without reconfiguring)."""
+  global _currentwifimode
+  if not _currentwifimode in ["client", "ap"]:
+    wifistatus = getWifiStatus()
+    if wifistatus["wpa_state"] == "COMPLETED":
+      logger.debug("Assuming wifi in client mode.")
+      with _wifimanagerlock:
+        _currentwifimode = "client"
 
 def getWifiStatus():
   """Get wifi status using wpa_cli, plus rdns lookup name."""

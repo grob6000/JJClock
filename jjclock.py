@@ -358,6 +358,7 @@ if __name__ == "__main__":
   settings.setSetting("hostname", wifimanager.getHostname(), quiet=True)  # align hostname setting with system hostname at start
   wifimanager.readHostapd() # read the official hostapd from system
   wifimanager.updateHostapd(settings.getSettingValue("apssid"), settings.getSettingValue("appass")) # update hostapd with settings
+  wifimanager.checkIfInClientMode() # check if in client mode; should be for most boots; will save unnecessary reconfigure each boot
 
   # now screen is running, check for update
   logger.info("Checking for Update...")
