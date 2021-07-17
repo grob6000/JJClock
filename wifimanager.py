@@ -4,6 +4,7 @@ import sys
 import subprocess
 import threading
 import copy
+from time import sleep
 
 ## MODULES ##
 
@@ -40,12 +41,14 @@ _hostapdconfdefault = {  "interface":jjcommon.iface,
                   "rsn_pairwise":"CCMP", }
 
 def _makeconftext(dict):
+  """Convert dictionary into config file text."""
   t = ""
   for k, v in dict.items():
     t += "{0}={1}\n".format(k,v)
   return t
 
 def _parseconftext(t):
+  r"""Split config file into dictionary."""
   conf = {}
   t = ""
   for l in t.splitlines():
@@ -55,20 +58,20 @@ def _parseconftext(t):
   return conf
 
 def readHostapd():
+  """Read hostapd.conf file, ensure it's complete (fill with defaults if not) and return dict."""
   conf = {}
-  global _wifimanagerlock
-  with _wifimanagerlock:
-    if "linux" in sys.platform:
-      try:
-        hostapdtext = subprocess.run(["cat", "/etc/hostapd/hostapd.conf"], capture_output=True, text=True, check=True)
-        conf = _parseconftext(hostapdtext)
-      except subprocess.CalledProcessError:
-        logger.error("could not read hostapd.conf - using default")
-        conf = copy.deepcopy(_hostapdconfdefault)
-    else:
-      # dummy - return global memory version without reading anything
-      logger.warning("no hostapd.conf - returning internal copy only")
+  if "linux" in sys.platform:
+    try:
+      # using cat, because python file read has trouble with file permissions
+      hostapdtext = subprocess.run(["cat", "/etc/hostapd/hostapd.conf"], capture_output=True, text=True, check=True)
+      conf = _parseconftext(hostapdtext)
+    except subprocess.CalledProcessError:
+      logger.error("could not read hostapd.conf - using default")
       conf = copy.deepcopy(_hostapdconfdefault)
+  else:
+    # dummy - return global memory version without reading anything
+    logger.warning("no hostapd.conf - returning internal copy only")
+    conf = copy.deepcopy(_hostapdconfdefault)
   # ensure whatever is read is complete (fill with defaults)
   changed = False
   for dk, dv in _hostapdconfdefault.items():
@@ -81,6 +84,7 @@ def readHostapd():
   return conf
 
 def writeHostapd(conf=None):
+  """Write hostapd.conf file."""
   needtochange = False
   if conf:
     global _wifimanagerlock
@@ -105,6 +109,7 @@ def writeHostapd(conf=None):
     _doAPMode()
 
 def updateHostapd(apssid, appass):
+  """Update ssid and password settings in hostapd (no effect if unchanged)."""
   modified = False
   apssid = str(apssid)
   appass = str(appass)
@@ -124,6 +129,7 @@ def updateHostapd(apssid, appass):
 
 
 def getChannel(freq):
+  """Convert wifi frequency to channel number."""
   if 2412 <= freq <= 2472:
     return int((freq - 2412)/5)+1
   elif freq == 2484:
@@ -138,6 +144,7 @@ def getChannel(freq):
 ## MODULE FUNCTIONS ##
 
 def getNetworks():
+  """Get current wifi client list."""
   networks = []
   iface = settings.getSettingValue("netiface")
   global _wifimanagerlock
@@ -170,7 +177,8 @@ def getNetworks():
       networks = _dummynetworks
   return networks
   
-def scanNetworks(): 
+def scanNetworks():
+  """Scan for wifi networks."""
   scannetworks = []
   iface = settings.getSettingValue("netiface")
   global _wifimanagerlock
@@ -202,6 +210,7 @@ def scanNetworks():
   return scannetworks
 
 def removeNetwork(netindex):
+  """Remove network from the wifi client list."""
   global _wifimanagerlock
   iface = settings.getSettingValue("netiface")
   with _wifimanagerlock:
@@ -222,6 +231,7 @@ def removeNetwork(netindex):
       
   
 def addNetwork(ssid, psk=None):
+  """Add a network to the wifi client list."""
   netindex = -1
   if not ssid or ssid=="":
     return netindex
@@ -269,6 +279,7 @@ def addNetwork(ssid, psk=None):
   return netindex
 
 def _doAPMode():
+  """Change to AP mode - call this in a thread, takes a while."""
   newmode = "unknown"
   iface = settings.getSettingValue("netiface")
   global _wifimanagerlock
@@ -300,7 +311,6 @@ def _doAPMode():
       else:
         logger.error("error when changing to ap mode: " + str(badcalls))
         newmode = "unknown"
-      wifidetailschangedevent.set()
       lp.close()
     else:
       logger.warning("cannot change wifi mode")
@@ -308,6 +318,7 @@ def _doAPMode():
     _currentwifimode = newmode
       
 def _doClientMode():
+  """Change to client mode - call this in a thread; takes a while."""
   newmode = "unknown"
   iface = settings.getSettingValue("netiface")
   global _wifimanagerlock
@@ -354,14 +365,13 @@ def _doClientMode():
       logger.warning("cannot change wifi mode")
     global _currentwifimode
     _currentwifimode = newmode
-    
 
 def reconfigureWifi():
+  """Asks wpa_cli to reconfigure wifi interface (i.e. reconnect)."""
   if "linux" in sys.platform:
     iface = settings.getSettingValue("netiface")
-    global _wifimanagerlock
+    global _wifimanagerlock, _currentwifimode
     with _wifimanagerlock:
-      global _currentwifimode
       if _currentwifimode == "client":
         try:
           subprocess.run(["wpa_cli", "-i", iface, "reconfigure"], check=True)
@@ -377,11 +387,11 @@ def reconfigureWifi():
 _modechangefuncs = {"ap":_doAPMode, "client":_doClientMode}
 
 def setWifiMode(newwifimode):
-  global _wifimanagerlock, _changethread
+  """Set wifi mode to "ap" or "client"."""
+  global _wifimanagerlock, _changethread, _targetwifimode, _modechangefuncs
   if _changethread and _changethread.is_alive():
     logger.warning("mode change currently in progress. will ignore request to change to " + newwifimode)
   else:
-    with _wifimanagerlock:
       global _currentwifimode
       if _currentwifimode == "changing":
         logger.warning("wifi mode currently changing; request ignored")
@@ -389,77 +399,102 @@ def setWifiMode(newwifimode):
         logger.info("wifi mode unchanged")
       elif newwifimode == "ap" or newwifimode == "client":
         logger.info("wifi mode changing to " + newwifimode)
-        global _targetwifimode
-        _targetwifimode = newwifimode
-        _currentwifimode = "changing"
-        global _modechangefuncs
+        with _wifimanagerlock:
+          _targetwifimode = newwifimode
+          _currentwifimode = "changing"
         _changethread = threading.Thread(target=_modechangefuncs[newwifimode], daemon=True)
         _changethread.start()
       else:
         logger.info("invalid wifi mode, no change")
 
 def getWifiMode():
-  global _wifimanagerlock
-  with _wifimanagerlock:
-    global _currentwifimode
-    thewifimode = _currentwifimode
+  """Get current wifi mode, "ap or "client"."""
+  global _currentwifimode
+  thewifimode = _currentwifimode
   return thewifimode
 
 def getWifiStatus():
+  """Get wifi status using wpa_cli, plus rdns lookup name."""
   wifistatus = {}
   if "linux" in sys.platform:
     global _wifimanagerlock
     iface = settings.getSettingValue("netiface")
-    with _wifimanagerlock:
-      cp = subprocess.run(["wpa_cli", "-i", iface, "status"], capture_output=True, text=True)
-      if not "FAIL" in cp.stdout:
-        lines = cp.stdout.strip().split("\n")
-        for l in lines:
-          parts = l.strip().split("=")
-          if len(parts)==2:
-            wifistatus[parts[0]] = parts[1]
-      # rdns lookup for domain name
-      if "ip_address" in wifistatus:
-        cp = subprocess.run(["nslookup", wifistatus["ip_address"]], capture_output=True, text=True)
-        if cp.returncode == 0:
-          l = cp.stdout.splitlines()[0] # first entry
-          if "name = " in l: # has a name entry
-            wifistatus["dnsname"] = l.split("name = ")[1].strip('.')
+    cp = subprocess.run(["wpa_cli", "-i", iface, "status"], capture_output=True, text=True)
+    if not "FAIL" in cp.stdout:
+      lines = cp.stdout.strip().split("\n")
+      for l in lines:
+        parts = l.strip().split("=")
+        if len(parts)==2:
+          wifistatus[parts[0]] = parts[1]
+    # rdns lookup for domain name
+    if "ip_address" in wifistatus:
+      cp = subprocess.run(["nslookup", wifistatus["ip_address"]], capture_output=True, text=True)
+      if cp.returncode == 0:
+        l = cp.stdout.splitlines()[0] # first entry
+        if "name = " in l: # has a name entry
+          wifistatus["dnsname"] = l.split("name = ")[1].strip('.')
   else:
     logger.warning("cannot retrieve IP address on this platform")
   logger.debug("wifistatus = " + str(wifistatus))
   return wifistatus
 
+_wifistatusmonitorthread = None
+_wifistatusmonitorquit = threading.Event()
+
+def startWifiStatusMonitor():
+  """Start monitoring change of wpa_cli status, trigger event on change."""
+  global _wifistatusmonitorthread
+  if not _wifistatusmonitorthread:
+    _wifistatusmonitorquit.clear()
+    _wifistatusmonitorthread = threading.Thread(target=_runWifiStatusMonitor, daemon=True)
+
+def stopWifiStatusMonitor():
+  """Stop monitoring change of wpa_cli status."""
+  global _wifistatusmonitorthread
+  if _wifistatusmonitorthread and _wifistatusmonitorthread.is_alive():
+    _wifistatusmonitorquit.set()
+    _wifistatusmonitorthread.join()
+
+def _runWifiStatusMonitor():
+  logger.debug("wifi status monitor started")
+  oldwifistatus = {}
+  while not _wifistatusmonitorquit.is_set():
+    newwifistatus = getWifiStatus()
+    for k,v in newwifistatus.items():
+      if not (k in oldwifistatus and oldwifistatus[k] == v):
+        wifidetailschangedevent.set() # something added or changed, send signal
+    sleep(1)
+  logger.debug("wifi status monitor stopped")
+
 def getWifiInterfaces():
+  """Get list of wifi interfaces available using wpa_cli."""
   ifaces = []
-  global _wifimanagerlock
-  with _wifimanagerlock:
-    if "linux" in sys.platform:
-      cp = subprocess.run(["wpa_cli", "interface"], capture_output=True, text=True)
-      if cp.returncode == 0:
-        lines = cp.stdout.splitlines()
-        if len(lines) > 2:
-          for i in range(2,len(lines)):
-            ifaces.append(lines[i])
-    else:
-      logger.warning("Unable to fetch interfaces on this platform.")
+  if "linux" in sys.platform:
+    cp = subprocess.run(["wpa_cli", "interface"], capture_output=True, text=True)
+    if cp.returncode == 0:
+      lines = cp.stdout.splitlines()
+      if len(lines) > 2:
+        for i in range(2,len(lines)):
+          ifaces.append(lines[i])
+  else:
+    logger.warning("Unable to fetch interfaces on this platform.")
   logger.debug("ifaces found: " + str(ifaces))
   return ifaces
 
 def getHostname():
-  global _wifimanagerlock
+  """Get device hostname."""
   hostname = None
-  with _wifimanagerlock:
-    if "linux" in sys.platform:
-      cp = subprocess.run(["hostname"], capture_output=True, text=True)
-      if cp.returncode == 0:
-        hostname = cp.stdout.strip()
-        logger.debug("hostname: " + hostname)
-    else:
-      logger.warning("Unable to fetch hostname on this platform")
+  if "linux" in sys.platform:
+    cp = subprocess.run(["hostname"], capture_output=True, text=True)
+    if cp.returncode == 0:
+      hostname = cp.stdout.strip()
+      logger.debug("hostname: " + hostname)
+  else:
+    logger.warning("Unable to fetch hostname on this platform")
   return hostname
 
 def setHostname(hostname):
+  """Set device hostname."""
   if hostname:
     if "linux" in sys.platform:
       hostname = str(hostname)

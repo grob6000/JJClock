@@ -174,11 +174,13 @@ def changeMode(mode):
     r = None
     if mode == "config":
       # set wifi to AP mode
+      wifimanager.startWifiStatusMonitor()
       wifimanager.setWifiMode("ap")
     elif mode == "menu":
       # do not change wifimode for menu
       pass
     else:
+      wifimanager.stopWifiStatusMonitor()
       wifimanager.setWifiMode("client") # all other modes should be in client state (if no wifi configured, will be disconnected...)
     if mode in modelist and not r:
       currentrenderer = jjrenderer.renderers[mode]()
