@@ -172,16 +172,21 @@ def changeMode(mode):
     currentmode = mode
     settings.setSetting("mode", mode, quiet=True) # update quietly; don't trigger registered events (they might have come here!)
     r = None
+    # start stop monitoring wifi details for config screen:
     if mode == "config":
-      # set wifi to AP mode
       wifimanager.startWifiStatusMonitor()
-      wifimanager.setWifiMode("ap")
-    elif mode == "menu":
-      # do not change wifimode for menu
-      pass
     else:
       wifimanager.stopWifiStatusMonitor()
+    # enable/disable ap mode:
+    if mode == "config":
+      # set wifi to AP mode
+      wifimanager.setWifiMode("ap")
+    elif mode == "menu":
+      # do not change wifimode for menu; will change when a clock is enabled
+      pass
+    else:
       wifimanager.setWifiMode("client") # all other modes should be in client state (if no wifi configured, will be disconnected...)
+    # render the relevant display
     if mode in modelist and not r:
       currentrenderer = jjrenderer.renderers[mode]()
     else:
