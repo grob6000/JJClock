@@ -475,7 +475,7 @@ def _runWifiStatusMonitor():
         logger.debug("{0} changed to {1}".format(k,v))
         wifidetailschangedevent.set() # something added or changed, send signal
         break # look nae further
-      oldwifistatus = newwifistatus
+    oldwifistatus = newwifistatus
 
     sleep(2)
   logger.debug("wifi status monitor stopped")
