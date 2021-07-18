@@ -465,7 +465,24 @@ def checkIfInClientMode():
       with _wifimanagerlock:
         _currentwifimode = "client"
 
+def getDHCPDStatus():
   """Get DHCPCD dump"""
+  # get dhcpcd dump
+  dhcpdstatus = {}
+  if "linux" in sys.platform:
+    iface = settings.getSettingValue("netiface")
+    cp = subprocess.run(["dhcpcd", "-U", iface], capture_output=True, text=True)
+    if not "FAIL" in cp.stdout:
+      lines = cp.stdout.strip().split("\n")
+      for l in lines:
+        parts = l.strip().split("=")
+        if len(parts)==2:
+          dhcpdstatus[parts[0]] = parts[1]
+  else:
+    logger.warning("cannot retrieve dhcpd status on this platform")
+  logger.debug("dhcpdstatus = " + str(dhcpdstatus))
+  return dhcpdstatus
+
 def getWifiStatus():
   """Get wifi status using wpa_cli, plus rdns lookup name."""
   wifistatus = {}
