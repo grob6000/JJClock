@@ -193,9 +193,30 @@ def getNetworks():
             n["connected"] = False
           logger.error("could not get wifi status")
     else:
-      logger.error("cannot access wifi config")
-      global _dummynetworks
-      networks = _dummynetworks
+      lines = cp.stdout.splitlines()
+      for l in lines:
+        if not l.startswith("network id"):
+          lsplit = l.split()
+          network = {"id":int(lsplit[0]), "ssid":lsplit[1]}
+          networks.append(network)
+      cp = subprocess.run(["wpa_cli", "-i", iface, "status"], capture_output=True, text=True)
+      if not "FAIL" in cp.stdout:
+        lines = cp.stdout.strip().split("\n")
+        for l in lines:
+          parts = l.strip().split("=")
+          if len(parts)==2 and parts[0]=="id":
+            connectedid = int(parts[1])
+            for n in networks:
+              n["connected"] = bool(n["id"] == connectedid)
+            break
+      else:
+        for n in networks:
+          n["connected"] = False
+        logger.error("could not get wifi status")
+  else:
+    logger.error("cannot access wifi config")
+    global _dummynetworks
+    networks = _dummynetworks   
   return networks
   
 def scanNetworks():
