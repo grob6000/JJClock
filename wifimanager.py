@@ -465,6 +465,7 @@ def checkIfInClientMode():
       with _wifimanagerlock:
         _currentwifimode = "client"
 
+  """Get DHCPCD dump"""
 def getWifiStatus():
   """Get wifi status using wpa_cli, plus rdns lookup name."""
   wifistatus = {}
