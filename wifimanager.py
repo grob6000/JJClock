@@ -393,9 +393,9 @@ def _doClientMode():
       #cp = subprocess.run(["sudo", "dhclient", iface, "-x"], check=False, stderr=lp, stdout=lp)
       #if not cp.returncode == 0:
       #  badcalls.append("dhclient -x")
-      cp = subprocess.run(["sudo", "dhclient", iface, "-nw"], check=False, stderr=lp, stdout=lp)
+      cp = subprocess.run(["sudo", "dhcpcd", "-N", iface], check=False, stderr=lp, stdout=lp)
       if not cp.returncode == 0:
-        badcalls.append("dhclient")
+        badcalls.append("dhcpd renew")
       if len(badcalls) == 0:
         newmode = "client"
         logger.debug("wifi mode succesfully set to client")
@@ -487,7 +487,6 @@ def getWifiStatus():
   """Get wifi status using wpa_cli, plus rdns lookup name."""
   wifistatus = {}
   if "linux" in sys.platform:
-    global _wifimanagerlock
     iface = settings.getSettingValue("netiface")
     cp = subprocess.run(["wpa_cli", "-i", iface, "status"], capture_output=True, text=True)
     if not "FAIL" in cp.stdout:
@@ -496,7 +495,7 @@ def getWifiStatus():
         parts = l.strip().split("=")
         if len(parts)==2:
           wifistatus[parts[0]] = parts[1]
-    # rdns lookup for domain name
+    # rdns lookup for domain name - ensures the router actually does serve the name
     if "ip_address" in wifistatus:
       cp = subprocess.run(["nslookup", wifistatus["ip_address"]], capture_output=True, text=True)
       if cp.returncode == 0:
