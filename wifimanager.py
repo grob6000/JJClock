@@ -57,26 +57,26 @@ def _parseconftext(t):
       conf[kv[0]] = kv[1]
   return conf
 
-def updateDhcpdConf(iface, wifimode):
-  # read from source
-  logger.debug("writing dhcpd.conf for iface={0} mode={1}".format(iface,wifimode))
-  if "linux" in sys.platform:
-    if wifimode in ["ap", "client"]:
-      with open("dhcpcd-"+wifimode+".conf", "r") as f:
-        dhcpcdconf = f.readlines()
-      for l in dhcpcdconf:
-        if l.startswith("interface"):
-          l = "interface " + iface
-      with open("/tmp/dhcpcd.conf", "w") as f:
-        f.writelines(dhcpcdconf)
-      try:
-        subprocess.run(["sudo", "cp", "/tmp/dhcpcd.conf", "/etc/dhcpcd.conf"], check=True)
-      except subprocess.CalledProcessError:
-        logger.error("could not copy dhcpcd.conf")
-    else:
-      logger.warning("bad wifi mode specified: " + wifimode)
-  else:
-    logger.warning("no dhcpcd.conf on this platform")
+#def updateDhcpdConf(iface, wifimode):
+#  # read from source
+#  logger.debug("writing dhcpd.conf for iface={0} mode={1}".format(iface,wifimode))
+#  if "linux" in sys.platform:
+#    if wifimode in ["ap", "client"]:
+#      with open("dhcpcd-"+wifimode+".conf", "r") as f:
+#        dhcpcdconf = f.readlines()
+#      for l in dhcpcdconf:
+#        if l.startswith("interface"):
+#          l = "interface " + iface
+#      with open("/tmp/dhcpcd.conf", "w") as f:
+#        f.writelines(dhcpcdconf)
+#      try:
+#        subprocess.run(["sudo", "cp", "/tmp/dhcpcd.conf", "/etc/dhcpcd.conf"], check=True)
+#      except subprocess.CalledProcessError:
+#        logger.error("could not copy dhcpcd.conf")
+#    else:
+#      logger.warning("bad wifi mode specified: " + wifimode)
+#  else:
+#    logger.warning("no dhcpcd.conf on this platform")
 
 def readHostapd():
   """Read hostapd.conf file, ensure it's complete (fill with defaults if not) and return dict."""
