@@ -34,21 +34,27 @@ class RendererConfig(Renderer):
       addr = str(kwargs["ip"]) + ":" + str(kwargs["port"])
 
     # get relevant wifi details depending on mode
-    ssid = "****"
+    ssid = "[ERROR - TRY AGAIN]"
     pwd = "****"
-    ipaddr = "*.*.*.*"
-    addr = "*"
+    ipaddr = "[ERROR - NOT ASSIGNED]"
+    addr = ""
+    
     if kwargs["wifimode"] == "client":
       # cautious; might not be present
       if "ssid" in kwargs["wifistatus"]:
         ssid = kwargs["wifistatus"]["ssid"]
+      else:
+        ssid = ["[ERROR - NOT CONNECTED]"]
       if "ip_address" in kwargs["wifistatus"]:
         ipaddr = kwargs["wifistatus"]["ip_address"]
-    else:
+    elif kwargs["wifimode"] == "ap":
       # ap details
       ssid = kwargs["ssid"]
       pwd = kwargs["password"]
-      ipaddr = kwargs["ip"]
+      if "ip_address" in kwargs["wifistatus"]:
+        ipaddr = kwargs["wifistatus"]["ip_address"]
+      else:
+        ipaddr = kwargs["ip"]
 
     # show rdns lookup name if available
     if "dnsname" in kwargs["wifistatus"]:
@@ -90,10 +96,11 @@ class RendererConfig(Renderer):
       x = int((screen.size[0] - qrcodesize)/2)
 
     # generate qrcode for link
-    qrimg = qrcode.make(addr)
-    qrimg = qrimg.resize((qrcodesize,qrcodesize))
-    screen.paste(qrimg, (x,y))
-    tsz = self.smallfont.getsize("Open Page")
-    draw.text((x + int((250 - tsz[0])/2), y_qrt), "Open Page", font=self.smallfont, fill=0x00)
+    if not ipaddr == "[ERROR - NOT ASSIGNED]":
+      qrimg = qrcode.make(addr)
+      qrimg = qrimg.resize((qrcodesize,qrcodesize))
+      screen.paste(qrimg, (x,y))
+      tsz = self.smallfont.getsize("Open Page")
+      draw.text((x + int((250 - tsz[0])/2), y_qrt), "Open Page", font=self.smallfont, fill=0x00)
     
     return screen
