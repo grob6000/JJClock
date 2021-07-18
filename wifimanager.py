@@ -57,6 +57,27 @@ def _parseconftext(t):
       conf[kv[0]] = kv[1]
   return conf
 
+def updateDhcpdConf(iface, wifimode):
+  # read from source
+  logger.debug("writing dhcpd.conf for iface={0} mode={1}".format(iface,wifimode))
+  if "linux" in sys.platform:
+    if wifimode in ["ap", "client"]:
+      with open("dhcpcd-"+wifimode+".conf", "r") as f:
+        dhcpcdconf = f.readlines()
+      for l in dhcpcdconf:
+        if l.startswith("interface"):
+          l = "interface " + iface
+      with open("/tmp/dhcpcd.conf", "w") as f:
+        f.writelines(l)
+      try:
+        subprocess.run(["sudo", "cp", "/tmp/dhcpcd.conf", "/etc/dhcpcd.conf"], check=True)
+      except subprocess.CalledProcessError:
+        logger.error("could not copy dhcpcd.conf")
+    else:
+      logger.warning("bad wifi mode specified: " + wifimode)
+  else:
+    logger.warning("no dhcpcd.conf on this platform")
+
 def readHostapd():
   """Read hostapd.conf file, ensure it's complete (fill with defaults if not) and return dict."""
   conf = {}
@@ -290,7 +311,7 @@ def _doAPMode():
       cp = subprocess.run(["sudo", "dhclient", iface, "-x"], check=False, stderr=lp, stdout=lp)
       if not cp.returncode == 0:
         badcalls.append("dhclient -x")
-      cp = subprocess.run(["wpa_cli", "-i", iface, "disconnect"], check=False, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+      cp = subprocess.run(["wpa_cli", "-i", iface, "disconnect"], check=False, stderr=lp, stdout=lp)
       if not cp.returncode == 0:
         badcalls.append("wpa_cli")
       cp = subprocess.run(["sudo", "ip", "link", "set", "dev", iface, "down"], check=False, stderr=lp, stdout=lp)
@@ -298,7 +319,14 @@ def _doAPMode():
         badcalls.append("ip link set")
       cp = subprocess.run(["sudo", "ip", "addr", "add", jjcommon.ap_addr+"/25", "dev", iface], check=False, stderr=lp, stdout=lp)
       if not cp.returncode == 0:
-        badcalls.append("wpa_cli")
+        badcalls.append("ip addr add")
+      updateDhcpdConf(iface, "ap")
+      cp = subprocess.run(["sudo", "systemctl", "daemon-reload"], check=False, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("daemon-reload")
+      cp = subprocess.run(["sudo", "systemctl", "restart", "dhcpcd.service"], check=True, stderr=lp, stdout=lp)
+      if not cp.returncode == 0:
+        badcalls.append("restart dhcpcd")
       cp = subprocess.run(["sudo", "systemctl", "restart", "dnsmasq.service"], check=True, stderr=lp, stdout=lp)
       if not cp.returncode == 0:
         badcalls.append("restart dnsmasq")
@@ -342,6 +370,7 @@ def _doClientMode():
       if not cp.returncode == 0:
         badcalls.append("wpa_cli reconfigure")
       cp = subprocess.run(["sudo", "systemctl", "daemon-reload"], check=False, stderr=lp, stdout=lp)
+      updateDhcpdConf(iface, "ap")
       if not cp.returncode == 0:
         badcalls.append("daemon-reload")
       cp = subprocess.run(["sudo", "systemctl", "restart", "dhcpcd.service"], check=False, stderr=lp, stdout=lp)
