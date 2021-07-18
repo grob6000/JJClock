@@ -47,7 +47,7 @@ class GPIOButton(InputDevice):
   def __init__(self, pin=23, pressaction=ACTION_CLICK):
     super().__init__()
     self.pressaction = pressaction
-    self._button = gpiozero.Button(pin=pin, bounce_time=0.050)
+    self._button = gpiozero.Button(pin=pin, bounce_time=0.020, pull_up=True)
     self._button.when_pressed = self.onButton
   
   def onButton(self):
