@@ -276,7 +276,19 @@ def addNetwork(ssid, psk=None):
             allok = False
             logger.debug("set psk fail: " + cp2.stdout)
         else:
-          logger.debug("no psk specified; not adding to entry")
+          logger.debug("no psk specified; making this an open network")
+          cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "key_mgmt", "NONE"], capture_output=True, text=True)
+          if "FAIL" in cp2.stdout:
+            allok = False
+            logger.debug("set key_mgmt fail: " + cp2.stdout)
+        cp2 = subprocess.run(["wpa_cli", "-i", iface, "set_network", str(netindex), "ssid", "\""+str(ssid)+"\""], capture_output=True, text=True)
+        if "FAIL" in cp2.stdout:
+          allok = False
+          logger.debug("set ssid fail: " + cp2.stdout)
+        cp2 = subprocess.run(["wpa_cli", "-i", iface, "enable_network", str(netindex)], capture_output=True, text=True)
+        if "FAIL" in cp2.stdout:
+          allok = False
+          logger.debug("enable network fail: " + cp2.stdout)
         if allok:
           cp = subprocess.run(["wpa_cli", "-i", iface, "save_config"], capture_output=True, text=True)
           if not "OK" in cp.stdout:
