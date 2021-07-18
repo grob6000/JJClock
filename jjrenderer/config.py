@@ -57,6 +57,9 @@ class RendererConfig(Renderer):
       pwd = kwargs["password"]
       ipaddr = kwargs["ip"]
       hasip = True
+    else:
+      ssid = "Connecting..."
+      ipaddr = "Assigning..."
 
     # show rdns lookup name if available
     if "dnsname" in kwargs["wifistatus"]:
