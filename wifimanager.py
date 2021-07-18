@@ -320,9 +320,9 @@ def _doAPMode():
     if "linux" in sys.platform:
       lp = logpipe.LogPipe(jjlogger.DEBUG, logger)
       badcalls = []
-      cp = subprocess.run(["sudo", "dhclient", iface, "-x"], check=False, stderr=lp, stdout=lp)
-      if not cp.returncode == 0:
-        badcalls.append("dhclient -x")
+      #cp = subprocess.run(["sudo", "dhclient", iface, "-x"], check=False, stderr=lp, stdout=lp)
+      #if not cp.returncode == 0:
+      #  badcalls.append("dhclient -x")
       cp = subprocess.run(["wpa_cli", "-i", iface, "disconnect"], check=False, stderr=lp, stdout=lp)
       if not cp.returncode == 0:
         badcalls.append("wpa_cli")
@@ -388,9 +388,9 @@ def _doClientMode():
       cp = subprocess.run(["sudo", "systemctl", "restart", "dhcpcd.service"], check=False, stderr=lp, stdout=lp)
       if not cp.returncode == 0:
         badcalls.append("restart dhcpcd")
-      cp = subprocess.run(["sudo", "dhclient", iface, "-x"], check=False, stderr=lp, stdout=lp)
-      if not cp.returncode == 0:
-        badcalls.append("dhclient -x")
+      #cp = subprocess.run(["sudo", "dhclient", iface, "-x"], check=False, stderr=lp, stdout=lp)
+      #if not cp.returncode == 0:
+      #  badcalls.append("dhclient -x")
       cp = subprocess.run(["sudo", "dhclient", iface, "-nw"], check=False, stderr=lp, stdout=lp)
       if not cp.returncode == 0:
         badcalls.append("dhclient")
