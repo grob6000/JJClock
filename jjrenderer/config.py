@@ -34,39 +34,43 @@ class RendererConfig(Renderer):
       addr = str(kwargs["ip"]) + ":" + str(kwargs["port"])
 
     # get relevant wifi details depending on mode
-    ssid = "[ERROR - TRY AGAIN]"
-    pwd = "****"
-    ipaddr = "[ERROR - NOT ASSIGNED]"
-    addr = ""
+    ssid = ""
+    pwd = "******"
+    ipaddr = ""
+    addr = None
+    hasip = False
     
     if kwargs["wifimode"] == "client":
       # cautious; might not be present
       if "ssid" in kwargs["wifistatus"]:
         ssid = kwargs["wifistatus"]["ssid"]
       else:
-        ssid = ["[ERROR - NOT CONNECTED]"]
+        ssid = "Connecting..."
       if "ip_address" in kwargs["wifistatus"]:
         ipaddr = kwargs["wifistatus"]["ip_address"]
+        hasip = True
+      else:
+        ipaddr = "Assigning..."
     elif kwargs["wifimode"] == "ap":
       # ap details
       ssid = kwargs["ssid"]
       pwd = kwargs["password"]
-      if "ip_address" in kwargs["wifistatus"]:
-        ipaddr = kwargs["wifistatus"]["ip_address"]
-      else:
-        ipaddr = kwargs["ip"]
+      ipaddr = kwargs["ip"]
+      hasip = True
 
     # show rdns lookup name if available
     if "dnsname" in kwargs["wifistatus"]:
       addr = kwargs["wifistatus"]["dnsname"]
-    else:
+    elif hasip:
       addr = ipaddr
 
     # append port to addr if not 80
-    if not kwargs["port"] == 80:
-      addr = addr + ":" + str(kwargs["port"])
-    
-    addr = "http://" + addr + "/"
+    if addr:
+      if not kwargs["port"] == 80:
+        addr = addr + ":" + str(kwargs["port"])
+      addr = "http://" + addr + "/"
+    else:
+      addr = "Please Wait..."
 
     t = [["Wifi SSID:", ssid],
         ["WIFI Password:",pwd],
@@ -96,7 +100,7 @@ class RendererConfig(Renderer):
       x = int((screen.size[0] - qrcodesize)/2)
 
     # generate qrcode for link
-    if not ipaddr == "[ERROR - NOT ASSIGNED]":
+    if hasip:
       qrimg = qrcode.make(addr)
       qrimg = qrimg.resize((qrcodesize,qrcodesize))
       screen.paste(qrimg, (x,y))
