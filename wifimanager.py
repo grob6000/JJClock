@@ -168,30 +168,11 @@ def getNetworks():
   """Get current wifi client list."""
   networks = []
   iface = settings.getSettingValue("netiface")
-  global _wifimanagerlock
-  with _wifimanagerlock:
-    if "linux" in sys.platform:
-      for i in range(0,10): # why would anyone configure more than 10???? yes magic numbers well whoopdeedoo
-        cp = subprocess.run(["wpa_cli", "-i", iface, "get_network", str(i), "ssid"], capture_output=True, text=True)
-        if "FAIL" in cp.stdout:
-          break
-        else:
-          network = {"id":i, "ssid":cp.stdout.strip('" \n')}
-          # for now, don't need anything else
-          networks.append(network)
-        cp = subprocess.run(["wpa_cli", "-i", iface, "status"], capture_output=True, text=True)
-        if not "FAIL" in cp.stdout:
-          lines = cp.stdout.strip().split("\n")
-          for l in lines:
-            parts = l.strip().split("=")
-            if len(parts)==2 and parts[0]=="id":
-              connectedid = int(parts[1])
-              for n in networks:
-                n["connected"] = bool(n["id"] == connectedid)
-        else:
-          for n in networks:
-            n["connected"] = False
-          logger.error("could not get wifi status")
+  if "linux" in sys.platform:
+    # get list of network indices & ssids
+    cp = subprocess.run(["wpa_cli", "-i", iface, "list_networks"], capture_output=True, text=True)
+    if "FAIL" in cp.stdout:
+      logger.error("could not list networks")
     else:
       lines = cp.stdout.splitlines()
       for l in lines:
