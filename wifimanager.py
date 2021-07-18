@@ -68,7 +68,7 @@ def updateDhcpdConf(iface, wifimode):
         if l.startswith("interface"):
           l = "interface " + iface
       with open("/tmp/dhcpcd.conf", "w") as f:
-        f.writelines(l)
+        f.writelines(dhcpcdconf)
       try:
         subprocess.run(["sudo", "cp", "/tmp/dhcpcd.conf", "/etc/dhcpcd.conf"], check=True)
       except subprocess.CalledProcessError:
