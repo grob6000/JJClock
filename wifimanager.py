@@ -457,13 +457,16 @@ def getWifiMode():
 
 def checkIfInClientMode():
   """Check wpa_cli and update mode if in client mode (for boot without reconfiguring)."""
-  global _currentwifimode
-  if not _currentwifimode in ["client", "ap"]:
-    wifistatus = getWifiStatus()
-    if wifistatus["wpa_state"] == "COMPLETED":
-      logger.debug("Assuming wifi in client mode.")
-      with _wifimanagerlock:
-        _currentwifimode = "client"
+  if "linux" in sys.platform:
+    global _currentwifimode
+    if not _currentwifimode in ["client", "ap"]:
+      wifistatus = getWifiStatus()
+      if wifistatus["wpa_state"] == "COMPLETED":
+        logger.debug("Assuming wifi in client mode.")
+        with _wifimanagerlock:
+          _currentwifimode = "client"
+  else:
+    logger.warning("cannot check if in client mode on this platform")
 
 def getDHCPDStatus():
   """Get DHCPCD dump"""

@@ -3,6 +3,10 @@ from jjrenderer.renderer import *
 # Copy this template, save as a new file in the jjrenderer module folder (anything, but without a _ at the beginning, please - e.g. "euro.py")
 # The app will discover the contents automatically when starting.
 
+# Test me using /test/rendertest.py. Usage:
+#  >> python3 rendertest.py template
+# where 'template' is replaced with the name of your face (see below...)
+
 # change my name - clocks should be format "Renderer[Name]Clock", others "Renderer[Name]". Must be unique!
 class RendererTemplate(Renderer):
   """Template Renderer"""
