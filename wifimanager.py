@@ -498,13 +498,11 @@ def getWifiStatus():
         parts = l.strip().split("=")
         if len(parts)==2:
           wifistatus[parts[0]] = parts[1]
-    # rdns lookup for domain name - ensures the router actually does serve the name
+    # rdns lookup for domain name - gets the authoritative domain name for the device
     if "ip_address" in wifistatus:
-      cp = subprocess.run(["nslookup", wifistatus["ip_address"]], capture_output=True, text=True)
+      cp = subprocess.run(["hostname", "-A"], capture_output=True, text=True)
       if cp.returncode == 0:
-        l = cp.stdout.splitlines()[0] # first entry
-        if "name = " in l: # has a name entry
-          wifistatus["dnsname"] = l.split("name = ")[1].strip('.')
+          wifistatus["dnsname"] = cp.stdout.strip()
   else:
     logger.warning("cannot retrieve IP address on this platform")
   logger.debug("wifistatus = " + str(wifistatus))
