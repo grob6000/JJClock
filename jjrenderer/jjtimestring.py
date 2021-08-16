@@ -16,6 +16,8 @@ daystrings_de = ["montag", "dienstag", "mittwoch", "donnerstag", "freitag", "sam
 
 numberstrings_es = ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce", "trece", "catorce", "quince", "dieceséis", "diecisiete", "dieciocho", "diecinueve", "viente", "vientiuno", "vientidós", "vientitrés", "vienticuatro", "vienticinco", "vientiséis", "vientisiete", "vientiocho", "vientinueve"]
 decadestrings_es = ["viente", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"]
+monthstrings_es = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre" ]
+daystrings_es = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 
 numberstrings_fr = ["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"]
 decadestrings_fr = ["vingt", "trente", "quarante", "cinguante"]
@@ -136,6 +138,10 @@ def GetDateString(dt, lang="en", includeday=False):
       s = "{0} {1} {2} года".format(dt.day, monthstrings_ru[dt.month], dt.year)
       if includeday:
         s = daystrings_ru[dt.weekday()] + ", " + s
+    elif lang == "es":
+      s = "{0} de {1} de {2}".format(dt.day, monthstrings_es[dt.month-1], dt.year)
+      if (includeday):
+        s = daystrings_es[dt.weekday()] + " " + s
     else: # en
       s = str(dt.day) + " " + monthstrings[dt.month - 1] + " " + str(dt.year)
       if (includeday):

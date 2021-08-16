@@ -267,7 +267,48 @@ class _StyleGerman(RendererEuroClock):
 
     return screen
 
-       
+class _StyleSpanish(RendererEuroClock):
+  def doRender(self, screen, **kwargs):       
+    
+    # textcolor
+    textcolor = ImageColor.getcolor("black", screen.mode)
+    
+    # background
+    bg = getImage("bg_elpais")
+    screen.paste(bg)
+
+    # draw obj
+    draw = ImageDraw.Draw(screen)
+    
+    # date line
+    p = [347,257]
+    dstring = ts.GetDateString(kwargs["timestamp"], lang="es", includeday=False).upper()
+    dstring = dstring + " | Numero 12345 | EDICION MADRID | "
+    daystr = ts.daystrings_es[kwargs["timestamp"].weekday()]
+    dfont1 = getFont("arialbold", 16)
+    dfont2 = getFont("arial", 16)
+    tsz = dfont1.getsize(daystr)
+    draw.text(p, daystr, font=dfont1, fill=textcolor)
+    p[0] = p[0] + tsz[0] + 5
+    draw.text(p, dstring, font=dfont2, fill=textcolor)
+    tsz = dfont2.getsize(dstring)
+    p[0] = p[0] + tsz[0] + 5
+    draw.text(p, "Precio: 2,80 EUR", font=dfont1, fill=textcolor)
+
+    # headline
+    y = 410
+    dy = 110
+    hfont = getFont("timesbold", 100)
+    htext = ts.GetTimeString(kwargs["timestamp"], lang="es")
+    htext_split = ts.HalfAndHalf(htext)
+    for l in htext_split:
+      x = int((screen.size[0] - hfont.getsize(l)[0])/2)
+      draw.text((x,y), l, font=hfont, fill=textcolor)
+      y = y + dy
+    
+    return screen
+
+
 
 # automated luxury space communist style collection
 
