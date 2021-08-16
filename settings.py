@@ -42,7 +42,7 @@ class Setting():
   def makeDefault(self):
     self.setValue(self.default)
 
-_settingspath = os.path.join("~",".config","jjclock.json")
+_settingspath = os.path.join(os.path.expanduser("~"),".config","jjclock.json")
 _settings = {}
 _settingsfilelock = Lock()
 _settingslock = Lock()
