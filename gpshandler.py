@@ -135,7 +135,7 @@ class GpsHandler():
       try:
         fields = line.decode('ascii').split(",")
       except UnicodeDecodeError:
-        logger.warning("GPS serial data garbage line - ignoring")
+        logger.warning("GPS serial data garbage line - ignoring ["+str(line)+"]")
         fields = [""]
         
       if fields[0] == "$GPRMC": # only parse GPRMC messages
