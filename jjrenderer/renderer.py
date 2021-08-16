@@ -87,15 +87,16 @@ def getWeatherIcon(wicon):
 
   See https://openweathermap.org/weather-conditions
   """
-  p = os.path.join(_imgpath, "owmico_{0}.png".format(wicon))
-  if not os.path.isfile(p):
-    logging.debug("icon {0} not present, downloading from open weather maps".format(wicon))
+  img = None
+  try:
+    img = getImage("owmico_{0}.png".format(wicon))
+  except:
     urllib.request.urlretrieve("http://openweathermap.org/img/wn/{0}.png".format(wicon), os.path.join(_imgpath, "owmico_{0}.png".format(wicon)))
-  if os.path.isfile(p):
-    img = getImage("owmico_{0}".format(wicon)) # cached icon
-  else:
-    logging.warning("OWM icon was not found and could not be downloaded. Using default.")
-    img = getImage("owmico_default")
+    try:
+      img = getImage("owmico_{0}.png".format(wicon))
+    except:
+      logging.warning("OWM icon was not found and could not be downloaded. Using default.")
+      img = getImage("owmico_default") # this is definitely there
   return img
 
 def fill(img, color=0xFF):
