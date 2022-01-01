@@ -284,7 +284,7 @@ class _StyleSpanish(RendererEuroClock):
     p = [347,257]
     dstring = ts.GetDateString(kwargs["timestamp"], lang="es", includeday=False).upper()
     dstring = dstring + " | Numero 12345 | EDICION MADRID | "
-    daystr = ts.daystrings_es[kwargs["timestamp"].weekday()]
+    daystr = ts.daystrings_es[kwargs["timestamp"].weekday()].title()
     dfont1 = getFont("arialbold", 16)
     dfont2 = getFont("arial", 16)
     tsz = dfont1.getsize(daystr)

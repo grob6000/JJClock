@@ -4,10 +4,10 @@ import random
 
 ## LANGUAGE NUMBER ELEMENTS ##
 
-numberstrings_en = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"]
-decadestrings_en = ["Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"]
-monthstrings_en = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-daystrings_en = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+numberstrings_en = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"]
+decadestrings_en = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+monthstrings_en = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
+daystrings_en = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
 numberstrings_de = ["null", "ein", "zwei", "drei", "vier", "funf", "sechs", "sieben", "acht", "neun", "zehn", "elf", "zwölf", "dreizehn", "vierzehn", "funfzehn", "sechzehn", "siebzehn", "achtzehn", "neunzehn"]
 decadestrings_de = ["zwanzig", "dreizig", "vierzig", "funfzig", "sechzig", "siebzig", "achtzig", "neunzig"]
@@ -17,7 +17,7 @@ daystrings_de = ["montag", "dienstag", "mittwoch", "donnerstag", "freitag", "sam
 numberstrings_es = ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce", "trece", "catorce", "quince", "dieceséis", "diecisiete", "dieciocho", "diecinueve", "viente", "vientiuno", "vientidós", "vientitrés", "vienticuatro", "vienticinco", "vientiséis", "vientisiete", "vientiocho", "vientinueve"]
 decadestrings_es = ["viente", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"]
 monthstrings_es = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre" ]
-daystrings_es = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+daystrings_es = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
 
 numberstrings_fr = ["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"]
 decadestrings_fr = ["vingt", "trente", "quarante", "cinguante"]
@@ -38,23 +38,51 @@ languages = ["en", "de", "es", "fr", "it", "et", "ru"]
 """List of currently supported language codes"""
 
 def HalfAndHalf(sentence):
-  """Splits a string into two lines.
+  """Splits a string into two lines. DEPRECATED - please use SplitSentence(sentence, 2)
   
   Keyword Arguments:
   sentence -- string to split in two
   
   Returns:
   list object: ["first line", "second line"]"""
-  sentence = str(sentence)
-  imin = len(sentence)
-  for i in range(0,len(sentence)):
-    if sentence[i] == " ":
-      if abs(i - len(sentence)/2) < abs(imin-len(sentence)/2):
-        imin = i
-  r = [sentence[:imin],sentence[imin+1:]]
-  logging.debug("halfandhalf: " + str(r))
-  return r
+  #sentence = str(sentence)
+  #imin = len(sentence)
+  #for i in range(0,len(sentence)):
+  #  if sentence[i] == " ":
+  #    if abs(i - len(sentence)/2) < abs(imin-len(sentence)/2):
+  #      imin = i
+  #r = [sentence[:imin],sentence[imin+1:]]
+  #logging.debug("halfandhalf: " + str(r))
+  #return r
+  return SplitSentence(sentence, 2)
       
+def SplitSentence(sentence, n=2):
+  """Splits a string into n lines.
+  
+  Keyword Arguments:
+  sentence -- string to split in two
+  n - number of lines to split into
+
+  Returns:
+  list object: ["first line", "second line", ... , "nth line"]"""    
+  sentence = str(sentence)
+  n = int(n)
+  if n < 2:
+      n = 2
+  r = []
+  for n1 in range(n,0,-1):
+    imin = len(sentence)
+    if n1 > 1:
+      for i in range(0,len(sentence)):
+        if sentence[i] == " ":
+          if abs(i - len(sentence)/n1) < abs(imin-len(sentence)/n1):
+            imin = i
+      r.append(sentence[:imin])
+      sentence = sentence[imin+1:]
+    else:
+      r.append(sentence)
+  logging.debug("splitsentence: " + str(r))
+  return r
 
 def GetNumberString(n, lang="en"):
     """Gets a number from 0-99 written out in the specified language.
@@ -115,6 +143,18 @@ def GetNumberString(n, lang="en"):
                 else:
                     s += "-" + numberstrings[i]
     return s
+
+def GetDayOfWeek(dt, lang="en"):
+    daystrings = daystrings_en
+    if lang == "de":
+        daystrings = daystrings_de
+    elif lang == "es":
+        daystrings = daystrings_es
+    elif lang == "fr":
+        daystrings = daystrings_fr
+    elif lang == "et":
+        daystrings = daystrings_et
+    return daystrings[dt.weekday()]
     
 def GetDateString(dt, lang="en", includeday=False):
     """Gets a date written out in the specified language.
@@ -139,13 +179,13 @@ def GetDateString(dt, lang="en", includeday=False):
       if includeday:
         s = daystrings_ru[dt.weekday()] + ", " + s
     elif lang == "es":
-      s = "{0} de {1} de {2}".format(dt.day, monthstrings_es[dt.month-1], dt.year)
+      s = "{0} de {1} de {2}".format(dt.day, monthstrings_es[dt.month-1].title(), dt.year)
       if (includeday):
         s = daystrings_es[dt.weekday()] + " " + s
     else: # en
-      s = str(dt.day) + " " + monthstrings[dt.month - 1] + " " + str(dt.year)
+      s = str(dt.day) + " " + monthstrings[dt.month - 1].title() + " " + str(dt.year)
       if (includeday):
-        s = daystrings[dt.weekday()] + ", " + s
+        s = daystrings[dt.weekday()].title() + ", " + s
     return s
 
 def GetHourString(h, lang="en", format="12h"):
@@ -209,11 +249,11 @@ def GetTimeString(dt=datetime.datetime.now(), lang="en"):
                 if dt.minute == 0:
                     timestring = GetNumberString(h, lang) + " O'Clock"
                 elif dt.minute == 15:
-                    timestring = "Quarter Past " + GetHourString(h, "en")
+                    timestring = "Quarter Past " + GetHourString(h, "en").title()
                 elif dt.minute == 30:
-                    timestring = "Half Past " + GetHourString(h)
+                    timestring = "Half Past " + GetHourString(h).title()
                 elif dt.minute == 45:
-                    timestring = "Quarter To " + GetHourString(h1)
+                    timestring = "Quarter To " + GetHourString(h1).title()
             elif r == 2 and dt.minute > 9:
                 # type 2: "hhh mmm"
                 timestring = GetNumberString(h) + " " + GetNumberString(dt.minute)
@@ -224,7 +264,7 @@ def GetTimeString(dt=datetime.datetime.now(), lang="en"):
                     midtext = " Minutes To "
                 else:
                     midtext = " To "
-                timestring = GetNumberString(60-dt.minute) + midtext + GetHourString(dt.hour + 1)
+                timestring = GetNumberString(60-dt.minute).title() + midtext + GetHourString(dt.hour + 1).title()
             elif r == 4:
                 # type 5 special cases
                 if dt.hour == 0 and dt.minute == 0:
@@ -240,18 +280,18 @@ def GetTimeString(dt=datetime.datetime.now(), lang="en"):
                     h = dt.hour
                     if h == 0:
                         h += 12
-                    timestring = "Half " + GetHourString(h)
+                    timestring = "Half " + GetHourString(h).title()
     elif lang=="en_mil":
       # type 3: military
       if dt.hour < 10:
           timestring = "Zero "
-      timestring += GetNumberString(dt.hour)
+      timestring += GetNumberString(dt.hour).title()
       if dt.minute == 0:
           timestring += " Hundred"
       else:
           if dt.minute < 10:
               timestring += " Zero"
-          timestring += " " + GetNumberString(dt.minute)
+          timestring += " " + GetNumberString(dt.minute).title()
       # randomly determine if we're in the army or navy
       r2 = random.randint(0,1)
       if r2 == 1:
@@ -264,15 +304,67 @@ def GetTimeString(dt=datetime.datetime.now(), lang="en"):
       elif dt.minute <= 20:
         timestring = "It's a fair bit after " + GetHourString(h)
       elif dt.minute < 30:
-        timestring = "It's Nearly half " + GetHourString(h)
+        timestring = "It's nearly half " + GetHourString(h)
       elif dt.minute == 30:
-        timestring = "It's Half " + GetHourString(h)
+        timestring = "It's Half " + GetHourString(h).title()
       elif dt.minute <= 40:
         timestring = "It's a touch after half past " + GetHourString(h)
       elif dt.minute <= 55:
         timestring = "It's banging on towards " + GetHourString(h1)
       else:
         timestring = "It's a smidge before " + GetHourString(h1)
+
+    elif lang=="en_oz":
+      r2 = random.randint(0,9) # 20% profanity
+      profanity = ""
+      if r2 == 0:
+          profanity = "bloody "
+      elif r2 == 1:
+          profanity = "farkin "
+      if dt.minute <= 5:
+        r2 = random.randint(0,9) # profanity 10%
+        if r2 == 0:
+          timestring = "It's a bee's dick past " + profanity + GetHourString(h)
+        else:
+          timestring = "It's a bee's whisker past " + profanity + GetHourString(h)
+      elif dt.minute <= 10:
+        timestring = "It's a " + profanity + "tenner or so past " + GetHourString(h)
+      elif dt.minute <= 20:
+        timestring = "It's a fair " + profanity + "wack after " + GetHourString(h)
+      elif dt.minute < 30:
+        r2 = random.randint(0,1)
+        if r2 == 0:
+          timestring = "Hold ya " + profanity + "horses it's nearly half past " + GetHourString(h)
+        else:
+          timestring = "It's cooee of half past " + profanity + GetHourString(h)
+      elif dt.minute == 30:
+        timestring = "It's bang on half past " + profanity + GetHourString(h)
+      elif dt.minute <= 40:
+        timestring = "It's a blouse after half past " + profanity + GetHourString(h)
+      elif dt.minute <= 55:
+        timestring = "Hang on a tick and it'll be " + profanity + GetHourString(h1)
+        if dt.hour == 23 and random.randint(0,1) == 0: # 50% chance of harold holt
+            timestring = "Today's about to chuck a " + profanity +  "Harold"
+      else:
+        timestring = "It's a smidge before " + profanity + GetHourString(h1)
+      if random.randint(0,2) == 0: # 1/3 of the time stick in 'o'clock'
+          timestring += " o'clock"
+      if dt.hour <= 3:
+        timestring += " sparrow's fart"
+      elif dt.hour <= 12:
+        timestring += " in the morning"
+      elif dt.hour <= 16:
+        timestring += " in the arvo"
+      elif dt.hour <= 20:
+        timestring += " in the evening"
+      else:
+        timestring += " at night"
+      r2 = random.randint(0,19) #10% bunch of guff
+      if r2 == 0:
+          timestring += " and she's apples"
+      elif r2 == 1:
+          timestring += " and she'll be right"
+       
     elif lang=="de":
         # Deutsche, mein Kommandant
         timestring = "Es ist "
@@ -280,44 +372,44 @@ def GetTimeString(dt=datetime.datetime.now(), lang="en"):
             r2 = random.randint(0,4)
             if r2 == 0:
                 # "Es ist funfzehn Uhr[ zwei]" ** 24H **
-                timestring += GetNumberString(dt.hour, "de") + " Uhr"
+                timestring += GetNumberString(dt.hour, "de").title() + " Uhr"
                 if dt.minute > 0:
-                    timestring += " " + GetNumberString(dt.minute, "de")
+                    timestring += " " + GetNumberString(dt.minute, "de").title()
             elif r2 == 1 and dt.minute % 15 == 0:
                 # "Es ist [viertel nach / halb / viertel vor] zwei"
                 if dt.minute == 0:
-                    timestring += "um " + GetNumberString(dt.hour, "de")
+                    timestring += "um " + GetNumberString(dt.hour, "de").title()
                 elif dt.minute == 15:
-                    timestring += "Viertel nach " + GetHourString(dt.hour, "de", "12h")
+                    timestring += "Viertel nach " + GetHourString(dt.hour, "de", "12h").title()
                 elif dt.minute == 30:
-                    timestring += "halb " + GetNumberString(h1, "de")
+                    timestring += "halb " + GetNumberString(h1, "de").title()
                 elif dt.minute == 45:
-                    timestring += "Viertel vor " + GetHourString(dt.hour+1, "de", "12h")
+                    timestring += "Viertel vor " + GetHourString(dt.hour+1, "de", "12h").title()
                 elif dt.minute >= 25 and dt.minute < 30:
                     # zwei vor halb seiben
-                    timestring += GetNumberString(30-dt.minute, "de") + " vor halb " + GetNumberString(h1, "de")
+                    timestring += GetNumberString(30-dt.minute, "de") + " vor halb " + GetNumberString(h1, "de").title()
                 elif dt.minute <= 35 and dt.minute > 30:
-                    timestring += GetNumberString(dt.minute-30, "de") + " nach halb " + GetNumberString(h1, "de")   
+                    timestring += GetNumberString(dt.minute-30, "de") + " nach halb " + GetNumberString(h1, "de").title()   
             elif r2 == 2 and dt.minute > 0:
                 # "Es ist zwei nach elf
                 r3 = random.randint(0,1)
                 if r3 == 1 or dt.hour == 12 or dt.hour == 0:
-                    timestring += GetNumberString(dt.minute, "de") + " nach " + GetHourString(dt.hour, "de", "12h")
+                    timestring += GetNumberString(dt.minute, "de") + " nach " + GetHourString(dt.hour, "de", "12h").title()
             elif r2 == 3 and dt.minute > 30:
                 # "Es ist funfundzwanzig vor ein
                 r3 = random.randint(0,1)
                 if r3 == 1 or dt.hour == 12 or dt.hour == 0:
-                    timestring += GetNumberString(60-dt.minute, "de") + " vor " + GetHourString(dt.hour+1, "de", "12h")
+                    timestring += GetNumberString(60-dt.minute, "de") + " vor " + GetHourString(dt.hour+1, "de", "12h").title()
             elif r2 == 4:
                 # Kurz vor halb acht
                 if dt.minute < 5:
-                    timestring += "Kurz nach um " + GetHourString(dt.hour, "de", "12h")
+                    timestring += "Kurz nach um " + GetHourString(dt.hour, "de", "12h").title()
                 elif dt.minute > 25 and dt.minute < 30:
-                    timestring += "Kurz vor halb " + GetNumberString(h1, "de")
+                    timestring += "Kurz vor halb " + GetNumberString(h1, "de").title()
                 elif dt.minute > 30 and dt.minute < 35:
-                    timestring += "Kurz nach halb " + GetNumberString(h1, "de")
+                    timestring += "Kurz nach halb " + GetNumberString(h1, "de").title()
                 elif dt.minute > 55:
-                    timestring += "Kurz vor um " + GetNumberString(h1, "de")
+                    timestring += "Kurz vor um " + GetNumberString(h1, "de").title()
     elif lang == "es":
         # espanol mamacita
         r2 = random.randint(0,1)
