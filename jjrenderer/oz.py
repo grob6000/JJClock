@@ -43,40 +43,13 @@ class _StyleAustralian(RendererOzClock):
     draw.text((x-sz[0],y), ds, font=datefont, fill=0x00)
     
     # time headline
-    bgcolor = 0xFF
-    textcolor = 0x00
-    pad = 0
-    bbox = (53, 400, 523, 691)
-    T = kwargs["tstring"]
-    lines = [T]
-    hmax = bbox[3]-bbox[1]
-    nlines = int(len(T)/20)+1
-    lines = ts.SplitSentence(T,nlines)
-    hmax = int((bbox[3]-bbox[1]-(pad*(nlines-1)))/nlines)
-    logging.debug(lines)
-    headlinefont = getFont("timesbold", 200)
-    y = bbox[1]
-    ascent, descent = headlinefont.getmetrics()
-    for n in range(0,nlines):
-      l = lines[n]
-      if len(l)>0:
-        tsz = (headlinefont.getsize(l)[0], ascent+descent)
-        img = Image.new("L", tsz)
-        fill(img, color=bgcolor)
-        hd = ImageDraw.Draw(img)
-        hd.text((0,0),l,font=headlinefont,fill=textcolor)
-        img = img.crop((0,headlinefont.getoffset(l)[1],img.size[0],img.size[1]))
-        s = min((bbox[2]-bbox[0])/img.size[0], hmax/img.size[1])
-        #print(s)
-        img = img.resize((int(img.size[0]*s), hmax), Image.ANTIALIAS)
-        screen.paste(img, (bbox[0], y), mask=ImageOps.invert(img))
-        y = y + hmax + pad
+    blockHeadline(screen, bbox=(53, 400, 523, 691), text=kwargs["tstring"], pad=0, fontname="timesbold")
     
     # smaller heading today's date
     x = 555
     y = 383
     subheadfont = getFont("timesbold", 48)
-    draw.text((x,y),"Today is " + kwargs["dstring"],font=subheadfont,fill=textcolor)
+    draw.text((x,y),"Today is " + kwargs["dstring"],font=subheadfont,fill=0x00)
     
     # random ozzie image
     plonkImage(screen, (554, 448, 1167, 1050), getImage("oz_*"))

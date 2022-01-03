@@ -9,6 +9,7 @@ import urllib.request # for downloading images/data
 from random import randint
 
 from jjcommon import owm_key
+import jjrenderer.jjtimestring as ts
 
 import settings
 
@@ -194,6 +195,33 @@ def plonkImage(screen, bbox, img):
   y0 = int((img.height-bbox_sz[1])/2.0)
   ozimg = img.crop( ( x0, y0, x0+bbox_sz[0], y0+bbox_sz[1] ) )
   screen.paste(ozimg, (bbox[0], bbox[1]))
+
+def blockHeadline(screen, bbox, text, nlines=None, charsperline=20, fontname="arialbold", bgcolor=0xFF, textcolor=0x00, pad=20):
+  # time headline
+  lines = [text]
+  hmax = bbox[3]-bbox[1]
+  if nlines == None:
+    nlines = int(len(text)/charsperline)+1
+  lines = ts.SplitSentence(text,nlines)
+  hmax = int((bbox[3]-bbox[1]-(pad*(nlines-1)))/nlines)
+  logging.debug(lines)
+  headlinefont = getFont(fontname, 200)
+  y = bbox[1]
+  ascent, descent = headlinefont.getmetrics()
+  for n in range(0,nlines):
+    l = lines[n]
+    if len(l)>0:
+      tsz = (headlinefont.getsize(l)[0], ascent+descent)
+      img = Image.new("L", tsz)
+      fill(img, color=bgcolor)
+      hd = ImageDraw.Draw(img)
+      hd.text((0,0),l,font=headlinefont,fill=textcolor)
+      img = img.crop((0,headlinefont.getoffset(l)[1],img.size[0],img.size[1]))
+      s = min((bbox[2]-bbox[0])/img.size[0], hmax/img.size[1])
+      #print(s)
+      img = img.resize((int(img.size[0]*s), hmax), Image.ANTIALIAS)
+      screen.paste(img, (bbox[0], y), mask=ImageOps.invert(img))
+      y = y + hmax + pad  
 
 #renderer base class
 class Renderer:
