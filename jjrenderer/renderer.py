@@ -6,6 +6,7 @@ from pathlib import Path
 import logging
 from pyowm import OWM # weather api
 import urllib.request # for downloading images/data
+from random import randint
 
 from jjcommon import owm_key
 
@@ -138,6 +139,7 @@ def getFont(fontname="ebgaramondmedium", fontsize=24):
 
 def getImagePath(imagename):
   """Gets the full path of an image; if no extension specified looks for a png.
+  Can use wildcards; if multiple matches found will pick at random.
   
   Keyword Arguments:
   imagename -- name of image to find, can be filename or basename (i.e. with no extension) (REQUIRED)
@@ -149,8 +151,12 @@ def getImagePath(imagename):
   if not os.path.isfile(p):
     p = Path(_imgpath).joinpath(imagename + ".png").absolute()
     if not os.path.isfile(p):
-      p = None
-      logging.warning("could not find image " + imagename)
+      plist = glob.glob(pathname=imagename+".*",root_dir=_imgpath)
+      if len(plist) == 0:
+        p = None
+        logging.warning("could not find image " + imagename)
+      else:
+        p = Path(_imgpath).joinpath(plist[randint(0,len(plist)-1)]).absolute() # pick a random from glob; allows using wildcard to select a random image
   return p
 
 def getImage(imagename):
@@ -167,6 +173,27 @@ def getImage(imagename):
   else:
     img = None
   return img
+
+def plonkImage(screen, bbox, img):
+  """Plonk img on screen in bbox. Resizes until one dimension is matched, then crops to center of image.
+  
+  Keyword Arguments:
+  screen -- screen/image to paste onto (REQUIRED)
+  bbox -- integer rectangle, coordinates on screen to paste into (x0, y0, x1, y1) (REQUIRED)
+  img -- image to plonk
+
+  Returns:
+   
+  Nothing"""
+  #bbox = (554, 448, 1167, 1050)
+  bbox_sz = (bbox[2]-bbox[0],bbox[3]-bbox[1])
+  #ozimg = getImage("oz_*")
+  s = max(float(bbox_sz[0]) / float(img.width), float(bbox_sz[1]) / float(img.height))*1.02
+  img = img.resize((int(img.width * s), int(img.height * s)), Image.ANTIALIAS)
+  x0 = int((img.width-bbox_sz[0])/2.0)
+  y0 = int((img.height-bbox_sz[1])/2.0)
+  ozimg = img.crop( ( x0, y0, x0+bbox_sz[0], y0+bbox_sz[1] ) )
+  screen.paste(ozimg, (bbox[0], bbox[1]))
 
 #renderer base class
 class Renderer:
@@ -211,3 +238,4 @@ class Renderer:
       draw.text((50,100+i*tsz[1]*1.5), t, font=stdfnt, fill=0x00)
       i=i+1
     return screen
+
