@@ -45,7 +45,7 @@ class _StyleAustralian(RendererOzClock):
     # time headline
     bgcolor = 0xFF
     textcolor = 0x00
-    pad = 20
+    pad = 0
     bbox = (53, 400, 523, 691)
     T = kwargs["tstring"]
     lines = [T]
@@ -78,7 +78,12 @@ class _StyleAustralian(RendererOzClock):
     subheadfont = getFont("timesbold", 48)
     draw.text((x,y),"Today is " + kwargs["dstring"],font=subheadfont,fill=textcolor)
     
-    return screen    
+    # random ozzie image
+    plonkImage(screen, (554, 448, 1167, 1050), getImage("oz_*"))
+
+    return screen   
+
+ 
     
 # automated luxury space communist style collection
 styles = []
