@@ -67,9 +67,10 @@ def SplitSentence(sentence, n=2):
   list object: ["first line", "second line", ... , "nth line"]"""    
   sentence = str(sentence)
   n = int(n)
-  if n < 2:
-      n = 2
   r = []
+  if n < 2:
+      r.append(sentence)
+      return r
   for n1 in range(n,0,-1):
     imin = len(sentence)
     if n1 > 1:

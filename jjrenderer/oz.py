@@ -19,7 +19,7 @@ class RendererOzClock(Renderer):
       kwargs["dstring"] = "Today"
     if len(styles) > 0:
       r = random.randint(0,len(styles)-1) # select a random style
-      #r = 4
+      #r = len(styles) - 1 # do most recent (for testing)
       return styles[r].doRender(self, screen, **kwargs) # pass the render down to the selected style
     else:
       return super().doRender(screen, **kwargs) # use default...
@@ -56,7 +56,29 @@ class _StyleAustralian(RendererOzClock):
 
     return screen   
 
- 
+class _StyleSMH(RendererOzClock):
+  def doRender(self, screen, **kwargs):
+    bg = getImage("bg_smh")
+    screen.paste(bg)
+    draw = ImageDraw.Draw(screen)
+    datefont = getFont("georgiabold", 20)
+
+    # dateline
+    x = 21
+    y = 150
+    sz = datefont.getsize(kwargs["dstring"])
+    draw.text((x,y), kwargs["dstring"], font=datefont, fill=0x00)
+    
+    # time headline
+    blockHeadline(screen, bbox=(44, 500, 44+1311, 490+114), text=kwargs["tstring"], fontname="georgiabold",nlines=1)
+    
+    # smaller heading today's date
+    blockHeadline(screen, bbox=(1108, 628, 1108+250, 628+98), text="Today is " + kwargs["dstring"], fontname="georgiabold", pad=0, nlines=2)
+    
+    # random ozzie image
+    plonkImage(screen, (309,628, 1088, 1050), getImage("oz_*"))
+
+    return screen    
     
 # automated luxury space communist style collection
 styles = []
