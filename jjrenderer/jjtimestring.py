@@ -244,17 +244,17 @@ def GetTimeString(dt=datetime.datetime.now(), lang="en"):
             r = random.randint(0,5)
             if r == 0 and dt.minute > 0:
                 # type 0: "mmm past hhh"
-                timestring = GetNumberString(dt.minute) + " Past " + GetHourString(h)
+                timestring = GetNumberString(dt.minute) + " Past " + GetHourString(dt.hour)
             elif r == 1 and dt.minute % 15 == 0:
                 # type 1: o'clock, quarter past, half past, quarter to
                 if dt.minute == 0:
                     timestring = GetNumberString(h, lang) + " O'Clock"
                 elif dt.minute == 15:
-                    timestring = "Quarter Past " + GetHourString(h, "en").title()
+                    timestring = "Quarter Past " + GetHourString(dt.hour, "en").title()
                 elif dt.minute == 30:
-                    timestring = "Half Past " + GetHourString(h).title()
+                    timestring = "Half Past " + GetHourString(dt.hour).title()
                 elif dt.minute == 45:
-                    timestring = "Quarter To " + GetHourString(h1).title()
+                    timestring = "Quarter To " + GetHourString(dt.hour+1).title()
             elif r == 2 and dt.minute > 9:
                 # type 2: "hhh mmm"
                 timestring = GetNumberString(h) + " " + GetNumberString(dt.minute)
@@ -281,7 +281,7 @@ def GetTimeString(dt=datetime.datetime.now(), lang="en"):
                     h = dt.hour
                     if h == 0:
                         h += 12
-                    timestring = "Half " + GetHourString(h).title()
+                    timestring = "Half " + GetHourString(dt.hour).title()
     elif lang=="en_mil":
       # type 3: military
       if dt.hour < 10:
@@ -299,21 +299,21 @@ def GetTimeString(dt=datetime.datetime.now(), lang="en"):
           timestring += " Hours"
     elif lang=="en_idiomatic":
       if dt.minute <= 5:
-        timestring = "It's " + GetHourString(h) + "-ish"
+        timestring = "It's " + GetHourString(dt.hour) + "-ish"
       elif dt.minute <= 10:
-        timestring = "It's a tad after " + GetHourString(h)
+        timestring = "It's a tad after " + GetHourString(dt.hour)
       elif dt.minute <= 20:
-        timestring = "It's a fair bit after " + GetHourString(h)
+        timestring = "It's a fair bit after " + GetHourString(dt.hour)
       elif dt.minute < 30:
-        timestring = "It's nearly half " + GetHourString(h)
+        timestring = "It's nearly half " + GetHourString(dt.hour)
       elif dt.minute == 30:
-        timestring = "It's Half " + GetHourString(h).title()
+        timestring = "It's Half " + GetHourString(dt.hour).title()
       elif dt.minute <= 40:
-        timestring = "It's a touch after half past " + GetHourString(h)
+        timestring = "It's a touch after half past " + GetHourString(dt.hour)
       elif dt.minute <= 55:
-        timestring = "It's banging on towards " + GetHourString(h1)
+        timestring = "It's banging on towards " + GetHourString(dt.hour+1)
       else:
-        timestring = "It's a smidge before " + GetHourString(h1)
+        timestring = "It's a smidge before " + GetHourString(dt.hour+1)
 
     elif lang=="en_oz":
       r2 = random.randint(0,9) # 20% profanity
@@ -325,29 +325,29 @@ def GetTimeString(dt=datetime.datetime.now(), lang="en"):
       if dt.minute <= 5:
         r2 = random.randint(0,9) # profanity 10%
         if r2 == 0:
-          timestring = "It's a bee's dick past " + profanity + GetHourString(h)
+          timestring = "It's a bee's dick past " + profanity + GetHourString(dt.hour)
         else:
-          timestring = "It's a bee's whisker past " + profanity + GetHourString(h)
+          timestring = "It's a bee's whisker past " + profanity + GetHourString(dt.hour)
       elif dt.minute <= 10:
-        timestring = "It's a " + profanity + "tenner or so past " + GetHourString(h)
+        timestring = "It's a " + profanity + "tenner or so past " + GetHourString(dt.hour)
       elif dt.minute <= 20:
-        timestring = "It's a fair " + profanity + "wack after " + GetHourString(h)
+        timestring = "It's a fair " + profanity + "wack after " + GetHourString(dt.hour)
       elif dt.minute < 30:
         r2 = random.randint(0,1)
         if r2 == 0:
-          timestring = "Hold ya " + profanity + "horses it's nearly half past " + GetHourString(h)
+          timestring = "Hold ya " + profanity + "horses it's nearly half past " + GetHourString(dt.hour)
         else:
-          timestring = "It's cooee of half past " + profanity + GetHourString(h)
+          timestring = "It's cooee of half past " + profanity + GetHourString(dt.hour)
       elif dt.minute == 30:
-        timestring = "It's bang on half past " + profanity + GetHourString(h)
+        timestring = "It's bang on half past " + profanity + GetHourString(dt.hour)
       elif dt.minute <= 40:
-        timestring = "It's a blouse after half past " + profanity + GetHourString(h)
+        timestring = "It's a blouse after half past " + profanity + GetHourString(dt.hour)
       elif dt.minute <= 55:
-        timestring = "Hang on a tick and it'll be " + profanity + GetHourString(h1)
+        timestring = "Hang on a tick and it'll be " + profanity + GetHourString(dt.hour+1)
         if dt.hour == 23 and random.randint(0,1) == 0: # 50% chance of harold holt
             timestring = "Today's about to chuck a " + profanity +  "Harold"
       else:
-        timestring = "It's a smidge before " + profanity + GetHourString(h1)
+        timestring = "It's a smidge before " + profanity + GetHourString(dt.hour+1)
       if random.randint(0,2) == 0: # 1/3 of the time stick in 'o'clock'
           timestring += " o'clock"
       if dt.hour <= 3:
