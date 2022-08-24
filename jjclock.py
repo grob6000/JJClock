@@ -5,6 +5,7 @@
 import subprocess
 import sys
 import pkg_resources
+from pathlib import Path
 
 # set up logger
 import logging
@@ -12,13 +13,10 @@ import jjlogger
 logger = jjlogger.getLogger(None)
 
 ## INSTALL ANY MISSING PACKAGES ##
-required = {"numpy", "pyserial", "timezonefinder", "pytz", "pydbus", "pygithub", "gpiozero", "pillow", "flask", "pyowm", "pygame", "psutil", "waitress", "sdnotify", "qrcode"}
-installed = {pkg.key for pkg in pkg_resources.working_set}
-missing = required - installed
-if missing:
-    # implement pip as a subprocess:
-    logger.info("installing packages: " + str(missing))
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install',*missing])
+# implement pip as a subprocess:
+logger.info("Ensuring package installation:")
+requirementfile = Path("requirements.txt").absolute()
+subprocess.check_call([sys.executable, '-m', 'pip', 'install','-r',str(requirementfile)])
 
 ## INCLUDES (remaining) ##
 import datetime
