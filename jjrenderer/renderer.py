@@ -1,3 +1,4 @@
+import pstats
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageColor
 import glob
 import os.path
@@ -152,7 +153,8 @@ def getImagePath(imagename):
   if not os.path.isfile(p):
     p = Path(_imgpath).joinpath(imagename + ".png").absolute()
     if not os.path.isfile(p):
-      plist = glob.glob(pathname=imagename+".*",root_dir=_imgpath)
+      ps = str(Path(_imgpath).joinpath(imagename).absolute()) + ".*"
+      plist = glob.glob(ps)
       if len(plist) == 0:
         p = None
         logging.warning("could not find image " + imagename)
@@ -172,7 +174,7 @@ def getImage(imagename):
   if p:
     img = Image.open(p)
   else:
-    img = None
+    img = Image.new(mode="1",size=(1,1)) # blank 1x1 image (reduce errors)
   return img
 
 def plonkImage(screen, bbox, img):
